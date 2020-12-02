@@ -14,7 +14,7 @@ Allows players to play music from a phonograph object.
 
 # Example
 
-[![Example](https://i.imgur.com/BTkglVYm.jpg)](https://imgur.com/BTkglVY)
+[![Attenuation Example](https://i.imgur.com/BTkglVYm.jpg)](https://imgur.com/BTkglVY)
 
 # Commands
 

@@ -12,6 +12,10 @@ Allows players to play music from a phonograph object.
 
 - Dynamic sound attenuation based on whether the player and phonograph are in the same interior room
 
+# Example
+
+[![Example](https://i.imgur.com/BTkglVYm.jpg)](https://imgur.com/BTkglVY)
+
 # Commands
 
 ```

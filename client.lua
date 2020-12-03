@@ -177,10 +177,11 @@ function ListPresets()
 	else
 		table.sort(presets)
 
-		TriggerEvent('chat:addMessage', {
-			color = {255, 255, 128},
-			args = {'Presets', table.concat(presets, ', ')}
-		})
+		for _, preset in ipairs(presets) do
+			TriggerEvent('chat:addMessage', {
+				args = {preset, Config.Presets[preset].title}
+			})
+		end
 	end
 end
 

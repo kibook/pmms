@@ -295,7 +295,7 @@ function updateUi(data) {
 			inactivePhonographsSelect.appendChild(option);
 		});
 
-		var presetKeys = Object.keys(presets);
+		var presetKeys = Object.keys(presets).sort();
 
 		if (presetKeys.length > 0) {
 			presetKeys.forEach(key => {

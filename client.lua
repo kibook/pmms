@@ -67,13 +67,27 @@ function GetClosestPhonograph()
 	return ObjToNet(closestPhonograph)
 end
 
+function GetRandomPreset()
+	local presets = {}
+
+	for preset, url in pairs(Config.Presets) do
+		table.insert(presets, preset)
+	end
+
+	return presets[math.random(#presets)]
+end
+
 function StartPhonograph(handle, url, volume, offset)
+	if url == 'random' then
+		url = GetRandomPreset()
+	end
+
 	if not volume then
 		volume = 100
 	end
 
 	if not offset then
-		offset = 0
+		offset = '0'
 	end
 
 	SendNUIMessage({
@@ -109,9 +123,12 @@ function StopClosestPhonograph()
 end
 
 function StatusPhonograph(handle)
+	local phonograph = Phonographs[handle]
+
 	SendNUIMessage({
 		type = 'status',
-		handle = handle
+		handle = handle,
+		startTime = phonograph and phonograph.startTime
 	})
 end
 
@@ -146,6 +163,28 @@ function IsInSameRoom(entity1, entity2)
 	return true
 end
 
+function ListPresets()
+	local presets = {}
+
+	for preset, url in pairs(Config.Presets) do
+		table.insert(presets, preset)
+	end
+
+	if #presets == 0 then
+		TriggerEvent('chat:addMessage', {
+			color = {255, 255, 128},
+			args = {'No presets available'}
+		})
+	else
+		table.sort(presets)
+
+		TriggerEvent('chat:addMessage', {
+			color = {255, 255, 128},
+			args = {'Presets', table.concat(presets, ', ')}
+		})
+	end
+end
+
 RegisterCommand('phono', function(source, args, raw)
 	if #args > 0 then
 		local command = args[1]
@@ -154,7 +193,8 @@ RegisterCommand('phono', function(source, args, raw)
 			if #args > 1 then
 				local url = args[2]
 				local volume = tonumber(args[3])
-				local offset = tonumber(args[4])
+				local offset = args[4]
+
 				StartClosestPhonograph(url, volume, offset)
 			else
 				PauseClosestPhonograph()
@@ -165,6 +205,8 @@ RegisterCommand('phono', function(source, args, raw)
 			StopClosestPhonograph()
 		elseif command == 'status' then
 			StatusClosestPhonograph()
+		elseif command == 'songs' then
+			ListPresets()
 		end
 	end
 end)
@@ -198,7 +240,7 @@ RegisterNUICallback('status', function(data, cb)
 
 	if phonograph then
 		TriggerEvent('chat:addMessage', {
-			args = {string.format('[%x] %s 🔊%d 🕒%d %s', data.handle, phonograph.url, phonograph.volume, data.now - phonograph.startTime, phonograph.paused and '⏸' or '▶️')}
+			args = {string.format('[%x] %s 🔊%d 🕒%s %s', data.handle, phonograph.url, phonograph.volume, data.timecode, phonograph.paused and '⏸' or '▶️')}
 		})
 	else
 		TriggerEvent('chat:addMessage', {
@@ -240,14 +282,14 @@ AddEventHandler('phonograph:showControls', function()
 end)
 
 CreateThread(function()
-	TriggerEvent('chat:addSuggestion', '/phono', 'Play music on the nearest phonograph (no arguments to stop)', {
-		{name = 'command', help = 'play|pause|stop|status'},
-		{name = 'url', help = 'URL of the music to play'},
-		{name = 'volume', help = 'Volume to play the music at (0-100)'},
-		{name = 'time', help = 'Time in seconds to start playing at'}
+	TriggerEvent('chat:addSuggestion', '/phono', 'Interact with the nearest phonograph', {
+		{name = 'command', help = 'play|pause|stop|status|songs'},
+		{name = 'url', help = 'URL or preset name of music to play. Use "random" to play a random preset.'},
+		{name = 'volume', help = 'Volume to play the music at (0-100).'},
+		{name = 'time', help = 'Time in seconds to start playing at.'}
 	})
 
-	TriggerEvent('chat:addSuggestion', '/phonoctl', 'Open phonograph control panel')
+	TriggerEvent('chat:addSuggestion', '/phonoctl', 'Open the phonograph control panel')
 end)
 
 CreateThread(function()

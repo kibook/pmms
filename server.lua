@@ -16,6 +16,10 @@ function RemovePhonograph(handle)
 end
 
 function PausePhonograph(handle, paused)
+	if not Phonographs[handle] then
+		return
+	end
+
 	if Phonographs[handle].paused then
 		Phonographs[handle].startTime = Phonographs[handle].startTime + (paused - Phonographs[handle].paused)
 		Phonographs[handle].paused = nil
@@ -24,47 +28,48 @@ function PausePhonograph(handle, paused)
 	end
 end
 
+function ErrorMessage(player, message)
+	TriggerClientEvent('chat:addMessage', player, {
+		color = {255, 0, 0},
+		args = {'Error', message}
+	})
+end
+
 AddEventHandler('phonograph:init', function(handle, url, volume, startTime)
-	if IsPlayerAceAllowed(source, 'command.phono') then
-		AddPhonograph(handle, url, volume, startTime)
+	if IsPlayerAceAllowed(source, 'phonograph.interact') then
+		url = Config.Presets[url] or (IsPlayerAceAllowed(source, 'phonograph.anyUrl') and url)
+
+		if url then
+			AddPhonograph(handle, url, volume, startTime)
+		else
+			ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
+		end
 	else
-		TriggerClientEvent('chat:addMessage', source, {
-			color = {255, 0, 0},
-			args = {'Error', 'You do not have permission to use the /phono command'}
-		})
+		ErrorMessage(source, 'You do not have permission to play a song on a phonograph')
 	end
 end)
 
 AddEventHandler('phonograph:pause', function(handle, paused)
-	if IsPlayerAceAllowed(source, 'command.phono') then
+	if IsPlayerAceAllowed(source, 'phonograph.interact') then
 		PausePhonograph(handle, paused)
 	else
-		TriggerClientEvent('chat:addMessage', source, {
-			color = {255, 0, 0},
-			args = {'Error', 'You do not have permission to use the /phono command'}
-		})
+		ErrorMessage(source, 'You do not have permission to pause/resume phonographs')
 	end
 end)
 
 AddEventHandler('phonograph:stop', function(handle)
-	if IsPlayerAceAllowed(source, 'command.phono') then
+	if IsPlayerAceAllowed(source, 'phonograph.interact') then
 		RemovePhonograph(handle)
 	else
-		TriggerClientEvent('chat:addMessage', source, {
-			color = {255, 0, 0},
-			args = {'Error', 'You do not have permission to use the /phono command'}
-		})
+		ErrorMessage(source, 'You do not have permission to stop phonographs')
 	end
 end)
 
 AddEventHandler('phonograph:showControls', function()
-	if IsPlayerAceAllowed(source, 'command.phonoctl') then
+	if IsPlayerAceAllowed(source, 'phonograph.controlPanel') then
 		TriggerClientEvent('phonograph:showControls', source)
 	else
-		TriggerClientEvent('chat:addMessage', source, {
-			color = {255, 0, 0},
-			args = {'Error', 'You do not have permission to use the /phonoctl command'}
-		})
+		ErrorMessage(source, 'You do not have permission to open the phonograph control panel')
 	end
 end)
 

@@ -25,7 +25,18 @@ function getPlayer(handle, create) {
 	return player;
 }
 
+function parseTimecode(timecode) {
+	if (timecode.includes(':')) {
+		var a = timecode.split(':');
+		return parseInt(a[0]) * 3600 + parseInt(a[1]) * 60 + parseInt(a[2]);
+	} else {
+		return parseInt(timecode);
+	}
+}
+
 function init(handle, url, volume, offset) {
+	offset = parseTimecode(offset);
+
 	sendMessage('init', {
 		handle: handle,
 		url: url,
@@ -86,15 +97,14 @@ function update(handle, url, baseVolume, startTime, paused, distance, sameRoom) 
 				setVolumeFactor(4.0);
 			}
 
-			var volume = ((baseVolume - distance * attenuationFactor) / 100) / volumeFactor;
-
-			var currentTime = (Math.floor(Date.now() / 1000) - startTime) % player.duration;
-
 			if (player.src != url) {
 				player.src = url;
 			}
 
 			if (player.readyState > 0) {
+				var volume = ((baseVolume - distance * attenuationFactor) / 100) / volumeFactor;
+				var currentTime = (Math.floor(Date.now() / 1000) - startTime) % player.duration;
+
 				if (Math.abs(currentTime - player.currentTime) > 2) {
 					player.currentTime = currentTime;
 				}
@@ -248,14 +258,14 @@ function startPhonograph() {
 	var handle = parseInt(handleInput.value);
 	var url = urlInput.value;
 	var volume = parseInt(volumeInput.value);
-	var offset = parseInt(offsetInput.value);
+	var offset = offsetInput.value;
 
 	if (!volume) {
 		volume = 100;
 	}
 
 	if (!offset) {
-		offset = 0;
+		offset = '0';
 	}
 
 	sendMessage('play', {
@@ -267,13 +277,21 @@ function startPhonograph() {
 
 	urlInput.value = '';
 	volumeInput.value = 100;
-	offsetInput.value = 0;
+	offsetInput.value = '00:00:00';
 }
 
-function showStatus(handle) {
+function showStatus(handle, startTime) {
+	var timecode;
+
+	if (startTime) {
+		timecode = timeToString(Math.floor(Date.now() / 1000) - startTime);
+	} else {
+		timecode = '0'
+	}
+
 	sendMessage('status', {
 		handle: handle,
-		now: Math.floor(Date.now() / 1000)
+		timecode: timecode
 	});
 }
 
@@ -292,7 +310,7 @@ window.addEventListener('message', event => {
 			stop(event.data.handle);
 			break;
 		case 'status':
-			showStatus(event.data.handle);
+			showStatus(event.data.handle, event.data.startTime);
 			break;
 		case 'update':
 			update(event.data.handle, event.data.url, event.data.volume, event.data.startTime, event.data.paused, event.data.distance, event.data.sameRoom);

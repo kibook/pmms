@@ -99,6 +99,7 @@ option {
 
 #volume-container, #offset-container {
 	padding: 0 0.2vw;
+	white-space: nowrap;
 }
 
 #active-phonographs {

@@ -271,11 +271,10 @@ RegisterCommand('phono', function(source, args, raw)
 		elseif command == 'songs' then
 			ListPresets()
 		end
+	else
+		TriggerServerEvent('phonograph:showControls')
 	end
-end)
 
-RegisterCommand('phonoctl', function(source, args, raw)
-	TriggerServerEvent('phonograph:showControls')
 end)
 
 RegisterNUICallback('init', function(data, cb)
@@ -363,14 +362,12 @@ AddEventHandler('phonograph:showControls', function()
 end)
 
 CreateThread(function()
-	TriggerEvent('chat:addSuggestion', '/phono', 'Interact with the nearest phonograph', {
+	TriggerEvent('chat:addSuggestion', '/phono', 'Interact with phonographs. No arguments will open the phonograph control panel.', {
 		{name = 'command', help = 'play|pause|stop|status|songs'},
 		{name = 'url', help = 'URL or preset name of music to play. Use "random" to play a random preset.'},
 		{name = 'volume', help = 'Volume to play the music at (0-100).'},
 		{name = 'time', help = 'Time in seconds to start playing at.'}
 	})
-
-	TriggerEvent('chat:addSuggestion', '/phonoctl', 'Open the phonograph control panel')
 end)
 
 CreateThread(function()

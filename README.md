@@ -12,6 +12,10 @@ Allows players to play music from a phonograph object.
 
 - Dynamic sound attenuation based on whether the player and phonograph are in the same interior room
 
+- YouTube video support
+
+- Optional "phonograph" filter can be applied to any audio
+
 # Example
 
 [![Attenuation Example](https://i.imgur.com/BTkglVYm.jpg)](https://imgur.com/BTkglVY)
@@ -19,16 +23,11 @@ Allows players to play music from a phonograph object.
 # Commands
 
 ```
+/phono
 /phono play [url] [volume] [time]
 /phono pause
 /phono stop
 /phono status
 ```
 
-Interact with the closest phonograph.
-
-```
-/phonoctl
-```
-
-Open the phonograph control panel.
+Interact with phonographs. No arguments will open the phonograph control panel.

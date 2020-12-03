@@ -291,18 +291,26 @@ function updateUi(data) {
 			inactivePhonographsSelect.appendChild(option);
 		});
 
-		Object.keys(presets).forEach(key => {
-			var option = document.createElement('option');
+		var presetKeys = Object.keys(presets);
 
-			option.value = key;
-			option.innerHTML = key;
+		if (presetKeys.length > 0) {
+			presetKeys.forEach(key => {
+				var option = document.createElement('option');
 
-			if (key == presetValue) {
-				option.selected = true;
-			}
+				option.value = key;
+				option.innerHTML = key;
 
-			presetSelect.appendChild(option);
-		});
+				if (key == presetValue) {
+					option.selected = true;
+				}
+
+				presetSelect.appendChild(option);
+			});
+
+			presetSelect.style.display = 'block';
+		} else {
+			presetSelect.style.display = 'none';
+		}
 
 		inactivePhonographsSelect.disabled = false;
 		presetSelect.disabled = false;

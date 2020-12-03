@@ -34,8 +34,33 @@ function parseTimecode(timecode) {
 	}
 }
 
+function getYoutubeUrl(id) {
+	return 'https://redm.khzae.net/phonograph/yt?v=' + id;
+}
+
+function interpretUrl(url) {
+	var isYoutube = url.match(/(?:youtu|youtube)(?:\.com|\.be)\/([\w\W]+)/i);
+
+	if (isYoutube) {
+		var id = isYoutube[1].match(/watch\?v=|[\w\W]+/gi);
+		id = (id.length > 1) ? id.splice(1) : id;
+		id = id.toString();
+		return getYoutubeUrl(id);
+	} else {
+		return url;
+	}
+}
+
 function initPlayer(handle, url, title, volume, offset) {
 	var player = getPlayer(handle, true);
+
+	url = interpretUrl(url);
+
+	player.addEventListener('error', () => {
+		sendMessage('initError', {
+			url: url
+		});
+	});
 
 	player.addEventListener('canplay', () => {
 		sendMessage('init', {

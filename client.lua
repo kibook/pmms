@@ -254,6 +254,11 @@ RegisterNUICallback('init', function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback('initError', function(data, cb)
+	print('Error loading ' .. data.url)
+	cb({})
+end)
+
 RegisterNUICallback('play', function(data, cb)
 	StartPhonograph(data.handle, data.url, data.volume, data.offset)
 	cb({})

@@ -191,9 +191,8 @@ function updateUi(data) {
 
 	activePhonographsDiv.innerHTML = '';
 
-	Object.keys(activePhonographs).forEach(key => {
-		var handle = parseInt(key);
-		var player = getPlayer(handle, false);
+	activePhonographs.forEach(phonograph => {
+		var player = getPlayer(phonograph.handle, false);
 
 		if (player) {
 			var div = document.createElement('div');
@@ -201,15 +200,15 @@ function updateUi(data) {
 
 			var handleDiv = document.createElement('div');
 			handleDiv.className = 'active-phonograph-handle';
-			handleDiv.innerHTML = handle.toString(16);
+			handleDiv.innerHTML = phonograph.handle.toString(16);
 
 			var titleDiv = document.createElement('div');
 			titleDiv.className = 'active-phonograph-title';
-			titleDiv.innerHTML = activePhonographs[key].title;
+			titleDiv.innerHTML = phonograph.info.title;
 
 			var volumeDiv = document.createElement('div');
 			volumeDiv.className = 'active-phonograph-volume';
-			volumeDiv.innerHTML = '<i class="fa fa-volume-up"></i> ' + activePhonographs[key].volume;
+			volumeDiv.innerHTML = '<i class="fa fa-volume-up"></i> ' + phonograph.info.volume;
 
 			var timeDiv = document.createElement('div');
 			timeDiv.className = 'active-phonograph-time';
@@ -223,20 +222,20 @@ function updateUi(data) {
 			controlsDiv.className = 'active-phonograph-controls';
 
 			var pauseResumeButton = document.createElement('button');
-			if (activePhonographs[handle].paused) {
+			if (phonograph.info.paused) {
 				pauseResumeButton.innerHTML = '<i class="fa fa-play"></i>';
 			} else {
 				pauseResumeButton.innerHTML = '<i class="fa fa-pause"></i>';
 			}
 			pauseResumeButton.addEventListener('click', event => {
-				pause(handle);
+				pause(phonograph.handle);
 			});
 
 			var stopButton = document.createElement('button');
 			stopButton.innerHTML = '<i class="fa fa-stop"></i>';
 			stopButton.addEventListener('click', event => {
 				sendMessage('stop', {
-					handle: handle
+					handle: phonograph.handle
 				});
 			});
 
@@ -254,17 +253,24 @@ function updateUi(data) {
 	});
 
 	var inactivePhonographs = JSON.parse(data.inactivePhonographs);
+	var presets = JSON.parse(data.presets);
 
 	var inactivePhonographsSelect = document.getElementById('inactive-phonographs');
+	var presetSelect = document.getElementById('preset');
 	var urlInput = document.getElementById('url');
 	var volumeInput = document.getElementById('volume');
 	var offsetInput = document.getElementById('offset');
 	var playButton = document.getElementById('play-button');
 
+	var inactivePhonographsValue = inactivePhonographsSelect.value;
+	var presetValue = presetSelect.value;
+
 	inactivePhonographsSelect.innerHTML = '';
+	presetSelect.innerHTML = '<option></option>';
 
 	if (inactivePhonographs.length == 0) {
 		inactivePhonographsSelect.disabled = true;
+		presetSelect.disabled = true;
 		urlInput.disabled = true;
 		volumeInput.disabled = true;
 		offsetInput.disabled = true;
@@ -272,28 +278,46 @@ function updateUi(data) {
 		urlInput.value = '';
 		urlInput.placeholder = 'No inactive phonographs';
 	} else {
-		var value = inactivePhonographsSelect.value;
-
 		inactivePhonographs.forEach(phonograph => {
 			var option = document.createElement('option');
 
 			option.value = phonograph.handle;
 			option.innerHTML = phonograph.handle.toString(16) + ' (' + Math.floor(phonograph.distance) + 'm)';
 
-			if (phonograph.handle == value) {
+			if (phonograph.handle == inactivePhonographsValue) {
 				option.selected = true;
 			}
 
 			inactivePhonographsSelect.appendChild(option);
 		});
 
+		Object.keys(presets).forEach(key => {
+			var option = document.createElement('option');
+
+			option.value = key;
+			option.innerHTML = key;
+
+			if (key == presetValue) {
+				option.selected = true;
+			}
+
+			presetSelect.appendChild(option);
+		});
+
 		inactivePhonographsSelect.disabled = false;
+		presetSelect.disabled = false;
 		urlInput.disabled = false;
 		volumeInput.disabled = false;
 		offsetInput.disabled = false;
 		playButton.disabled = false;
 
 		urlInput.placeholder = 'Enter URL...';
+	}
+
+	if (data.anyUrl) {
+		urlInput.style.display = 'block';
+	} else {
+		urlInput.style.display = 'none';
 	}
 }
 
@@ -307,12 +331,20 @@ function hideUi() {
 
 function startPhonograph() {
 	var handleInput = document.getElementById('inactive-phonographs');
+	var presetSelect = document.getElementById('preset');
 	var urlInput = document.getElementById('url');
 	var volumeInput = document.getElementById('volume');
 	var offsetInput = document.getElementById('offset');
 
 	var handle = parseInt(handleInput.value);
-	var url = urlInput.value;
+
+	var url;
+	if (presetSelect.value == '') {
+		url = urlInput.value;
+	} else {
+		url = presetSelect.value;
+	}
+
 	var volume = parseInt(volumeInput.value);
 	var offset = offsetInput.value;
 

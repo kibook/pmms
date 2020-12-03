@@ -71,16 +71,15 @@ AddEventHandler('phonograph:stop', function(handle)
 end)
 
 AddEventHandler('phonograph:showControls', function()
-	if IsPlayerAceAllowed(source, 'phonograph.controlPanel') then
-		TriggerClientEvent('phonograph:showControls', source)
-	else
-		ErrorMessage(source, 'You do not have permission to open the phonograph control panel')
-	end
+	TriggerClientEvent('phonograph:showControls', source)
 end)
 
 CreateThread(function()
 	while true do
 		Wait(500)
-		TriggerClientEvent('phonograph:sync', -1, Phonographs)
+
+		for _, playerId in ipairs(GetPlayers()) do
+			TriggerClientEvent('phonograph:sync', playerId, Phonographs, IsPlayerAceAllowed(playerId, 'phonograph.fullControls'), IsPlayerAceAllowed(playerId, 'phonograph.anyUrl'))
+		end
 	end
 end)

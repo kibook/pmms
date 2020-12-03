@@ -184,10 +184,38 @@ function ListPresets()
 	end
 end
 
-function UpdateUi()
-	local inactivePhonographs = {}
-
+function UpdateUi(fullControls, anyUrl)
 	local pos = GetEntityCoords(PlayerPedId())
+
+	local activePhonographs = {}
+
+	for handle, info in pairs(Phonographs) do
+		if NetworkDoesNetworkIdExist(handle) then
+			local object = NetToObj(handle)
+			local phonoPos = GetEntityCoords(object)
+			local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
+
+			if fullControls or distance <= Config.MaxDistance then
+				table.insert(activePhonographs, {
+					handle = handle,
+					info = info,
+					distance = distance
+				})
+			end
+		else
+			if fullControls or distance <= Config.MaxDistance then
+				table.insert(activePhonographs, {
+					handle = handle,
+					info = info,
+					distance = 0
+				})
+			end
+		end
+	end
+
+	table.sort(activePhonographs, SortByDistance)
+
+	local inactivePhonographs = {}
 
 	for object in EnumerateObjects() do
 		if NetworkGetEntityIsNetworked(object) then
@@ -197,10 +225,12 @@ function UpdateUi()
 				local phonoPos = GetEntityCoords(object)
 				local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
 
-				table.insert(inactivePhonographs, {
-					handle = handle,
-					distance = distance
-				})
+				if fullControls or distance <= Config.MaxDistance then
+					table.insert(inactivePhonographs, {
+						handle = handle,
+						distance = distance
+					})
+				end
 			end
 		end
 	end
@@ -209,8 +239,10 @@ function UpdateUi()
 
 	SendNUIMessage({
 		type = 'updateUi',
-		activePhonographs = json.encode(Phonographs),
-		inactivePhonographs = json.encode(inactivePhonographs)
+		activePhonographs = json.encode(activePhonographs),
+		inactivePhonographs = json.encode(inactivePhonographs),
+		presets = json.encode(Config.Presets),
+		anyUrl = anyUrl
 	})
 end
 
@@ -290,9 +322,9 @@ RegisterNUICallback('closeUi', function(data, cb)
 	cb({})
 end)
 
-AddEventHandler('phonograph:sync', function(phonographs)
+AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	Phonographs = phonographs
-	UpdateUi()
+	UpdateUi(fullControls, anyUrl)
 end)
 
 AddEventHandler('phonograph:start', function(handle, url, volume, offset)

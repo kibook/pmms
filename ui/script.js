@@ -34,6 +34,22 @@ function parseTimecode(timecode) {
 	}
 }
 
+function initPlayer(handle, url, title, volume, offset) {
+	var player = getPlayer(handle, true);
+
+	player.addEventListener('canplay', () => {
+		sendMessage('init', {
+			handle: handle,
+			url: url,
+			title: title,
+			volume: volume,
+			startTime: Math.floor(Date.now() / 1000 - offset)
+		});
+	}, {once: true});
+
+	player.src = url;
+}
+
 function init(handle, url, volume, offset) {
 	offset = parseTimecode(offset);
 
@@ -47,22 +63,10 @@ function init(handle, url, volume, offset) {
 				title = url;
 			}
 
-			sendMessage('init', {
-				handle: handle,
-				url: url,
-				title: title,
-				volume: volume,
-				startTime: Math.floor(Date.now() / 1000 - offset)
-			});
+			initPlayer(handle, url, title, volume, offset);
 		},
 		onError: function(error) {
-			sendMessage('init', {
-				handle: handle,
-				url: url,
-				title: url,
-				volume: volume,
-				startTime: Math.floor(Date.now() / 1000 - offset)
-			});
+			initPlayer(handle, url, url, volume, offset);
 		}
 	});
 }

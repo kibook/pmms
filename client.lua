@@ -78,7 +78,7 @@ function GetRandomPreset()
 	return presets[math.random(#presets)]
 end
 
-function StartPhonograph(handle, url, volume, offset)
+function StartPhonograph(handle, url, volume, offset, filter)
 	if url == 'random' then
 		url = GetRandomPreset()
 	end
@@ -95,11 +95,11 @@ function StartPhonograph(handle, url, volume, offset)
 		offset = '0'
 	end
 
-	TriggerServerEvent('phonograph:start', handle, url, volume, offset)
+	TriggerServerEvent('phonograph:start', handle, url, volume, offset, filter)
 end
 
-function StartClosestPhonograph(url, volume, offset)
-	StartPhonograph(GetClosestPhonograph(), url, volume, offset)
+function StartClosestPhonograph(url, volume, offset, filter)
+	StartPhonograph(GetClosestPhonograph(), url, volume, offset, filter)
 end
 
 function PausePhonograph(handle)
@@ -256,8 +256,9 @@ RegisterCommand('phono', function(source, args, raw)
 				local url = args[2]
 				local volume = tonumber(args[3])
 				local offset = args[4]
+				local filter = args[5] == '1'
 
-				StartClosestPhonograph(url, volume, offset)
+				StartClosestPhonograph(url, volume, offset, filter)
 			else
 				PauseClosestPhonograph()
 			end
@@ -288,7 +289,7 @@ RegisterNUICallback('initError', function(data, cb)
 end)
 
 RegisterNUICallback('play', function(data, cb)
-	StartPhonograph(data.handle, data.url, data.volume, data.offset)
+	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.filter)
 	cb({})
 end)
 
@@ -328,14 +329,15 @@ AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	UpdateUi(fullControls, anyUrl)
 end)
 
-AddEventHandler('phonograph:start', function(handle, url, title, volume, offset)
+AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, filter)
 	SendNUIMessage({
 		type = 'init',
 		handle = handle,
 		url = url,
 		title = title,
 		volume = volume,
-		offset = offset
+		offset = offset,
+		filter = filter
 	})
 end)
 

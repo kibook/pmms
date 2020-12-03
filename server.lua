@@ -36,12 +36,12 @@ function ErrorMessage(player, message)
 	})
 end
 
-AddEventHandler('phonograph:start', function(handle, url, volume, offset)
+AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter)
 	if IsPlayerAceAllowed(source, 'phonograph.interact') then
 		if Config.Presets[url] then
-			TriggerClientEvent('phonograph:start', source, handle, Config.Presets[url].url, Config.Presets[url].title, volume, offset)
+			TriggerClientEvent('phonograph:start', source, handle, Config.Presets[url].url, Config.Presets[url].title, volume, offset, filter)
 		elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then
-			TriggerClientEvent('phonograph:start', source, handle, url, nil, volume, offset)
+			TriggerClientEvent('phonograph:start', source, handle, url, nil, volume, offset, filter)
 		else
 			ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
 		end

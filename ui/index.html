@@ -8,6 +8,9 @@
 	</head>
 	<body>
 		<div id="ui">
+			<div id="loading">
+				<img src="loading.svg">
+			</div>
 			<div id="active-phonographs"></div>
 			<div id="start-phonograph">
 				<select id="inactive-phonographs"></select>
@@ -20,6 +23,10 @@
 				<span id="offset-container">
 					<i class="fa fa-clock-o"></i>
 					<input id="offset" type="text" size="8" value="00:00:00">
+				</span>
+				<span id="filter-container">
+					<i class="fa fa-filter"></i>
+					<input id="filter" type="checkbox">
 				</span>
 				<button id="play-button">
 					<i class="fa fa-play"></i>

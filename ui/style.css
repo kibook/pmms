@@ -54,6 +54,19 @@ input:disabled {
 	border: solid 1px #444;
 }
 
+input[type="checkbox"] {
+	-webkit-appearance: none;
+	background: rgba(0, 0, 0, 0.5);
+	height: 1vw;
+	width: 1vw;
+	border: 1px solid white;
+	vertical-align: middle;
+}
+
+input[type="checkbox"]:checked {
+	background: rgba(255, 0, 0, 0.75);
+}
+
 select {
 	background: rgba(0, 0, 0, 0.5);
 	color: white;
@@ -97,7 +110,7 @@ option {
 	flex-grow: 1;
 }
 
-#volume-container, #offset-container {
+#volume-container, #offset-container, #filter-container {
 	padding: 0 0.2vw;
 	white-space: nowrap;
 }
@@ -126,4 +139,9 @@ option {
 
 .active-phonograph-controls {
 	text-align: right;
+}
+
+#loading {
+	display: none;
+	text-align: center;
 }

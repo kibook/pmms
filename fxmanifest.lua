@@ -7,7 +7,8 @@ files {
 	'ui/style.css',
 	'ui/script.js',
 	'ui/jsmediatags.min.js',
-	'ui/chineserocks.ttf'
+	'ui/chineserocks.ttf',
+	'ui/loading.svg'
 }
 
 ui_page 'ui/index.html'

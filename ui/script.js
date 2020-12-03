@@ -25,6 +25,14 @@ function getPlayer(handle, create) {
 	return player;
 }
 
+function showLoadingIcon() {
+	document.getElementById('loading').style.display = 'block';
+}
+
+function hideLoadingIcon() {
+	document.getElementById('loading').style.display = 'none';
+}
+
 function parseTimecode(timecode) {
 	if (timecode.includes(':')) {
 		var a = timecode.split(':');
@@ -32,6 +40,10 @@ function parseTimecode(timecode) {
 	} else {
 		return parseInt(timecode);
 	}
+}
+
+function getFilterUrl(url) {
+	return 'https://redm.khzae.net/phonograph/filter?src=' + encodeURIComponent(url);
 }
 
 function getYoutubeUrl(id) {
@@ -51,18 +63,26 @@ function interpretUrl(url) {
 	}
 }
 
-function initPlayer(handle, url, title, volume, offset) {
+function initPlayer(handle, url, title, volume, offset, filter) {
 	var player = getPlayer(handle, true);
 
 	url = interpretUrl(url);
 
+	if (filter) {
+		url = getFilterUrl(url);
+	}
+
 	player.addEventListener('error', () => {
+		hideLoadingIcon();
+
 		sendMessage('initError', {
 			url: url
 		});
 	});
 
 	player.addEventListener('canplay', () => {
+		hideLoadingIcon();
+
 		sendMessage('init', {
 			handle: handle,
 			url: url,
@@ -75,7 +95,9 @@ function initPlayer(handle, url, title, volume, offset) {
 	player.src = url;
 }
 
-function init(handle, url, title, volume, offset) {
+function init(handle, url, title, volume, offset, filter) {
+	showLoadingIcon();
+
 	offset = parseTimecode(offset);
 
 	if (title) {
@@ -91,10 +113,10 @@ function init(handle, url, title, volume, offset) {
 					title = url;
 				}
 
-				initPlayer(handle, url, title, volume, offset);
+				initPlayer(handle, url, title, volume, offset, filter);
 			},
 			onError: function(error) {
-				initPlayer(handle, url, url, volume, offset);
+				initPlayer(handle, url, url, volume, offset, filter);
 			}
 		});
 	}
@@ -347,6 +369,7 @@ function startPhonograph() {
 	var urlInput = document.getElementById('url');
 	var volumeInput = document.getElementById('volume');
 	var offsetInput = document.getElementById('offset');
+	var filterCheckbox = document.getElementById('filter');
 
 	var handle = parseInt(handleInput.value);
 
@@ -359,20 +382,18 @@ function startPhonograph() {
 
 	var volume = parseInt(volumeInput.value);
 	var offset = offsetInput.value;
+	var filter = filterCheckbox.checked;
 
 	if (!volume) {
 		volume = 100;
-	}
-
-	if (!offset) {
-		offset = '0';
 	}
 
 	sendMessage('play', {
 		handle: handle,
 		url: url,
 		volume: volume,
-		offset: offset
+		offset: offset,
+		filter: filter
 	});
 
 	urlInput.value = '';
@@ -404,7 +425,7 @@ function showStatus(handle) {
 window.addEventListener('message', event => {
 	switch (event.data.type) {
 		case 'init':
-			init(event.data.handle, event.data.url, event.data.title, event.data.volume, event.data.offset);
+			init(event.data.handle, event.data.url, event.data.title, event.data.volume, event.data.offset, event.data.filter);
 			break;
 		case 'play':
 			play(event.data.handle);

@@ -84,6 +84,10 @@ function StartPhonograph(handle, url, volume, offset)
 
 	if not volume then
 		volume = 100
+	elseif volume > 100 then
+		volume = 100
+	elseif volume < 0 then
+		volume = 0
 	end
 
 	if not offset then

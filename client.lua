@@ -1,6 +1,7 @@
 local Phonographs = {}
 
 RegisterNetEvent('phonograph:sync')
+RegisterNetEvent('phonograph:start')
 RegisterNetEvent('phonograph:play')
 RegisterNetEvent('phonograph:stop')
 RegisterNetEvent('phonograph:showControls')
@@ -94,13 +95,7 @@ function StartPhonograph(handle, url, volume, offset)
 		offset = '0'
 	end
 
-	SendNUIMessage({
-		type = 'init',
-		handle = handle,
-		url = url,
-		volume = volume,
-		offset = offset
-	})
+	TriggerServerEvent('phonograph:start', handle, url, volume, offset)
 end
 
 function StartClosestPhonograph(url, volume, offset)
@@ -298,6 +293,16 @@ end)
 AddEventHandler('phonograph:sync', function(phonographs)
 	Phonographs = phonographs
 	UpdateUi()
+end)
+
+AddEventHandler('phonograph:start', function(handle, url, volume, offset)
+	SendNUIMessage({
+		type = 'init',
+		handle = handle,
+		url = url,
+		volume = volume,
+		offset = offset
+	})
 end)
 
 AddEventHandler('phonograph:play', function(handle)

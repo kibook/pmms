@@ -1,5 +1,6 @@
 local Phonographs = {}
 
+RegisterNetEvent('phonograph:start')
 RegisterNetEvent('phonograph:init')
 RegisterNetEvent('phonograph:pause')
 RegisterNetEvent('phonograph:stop')
@@ -35,18 +36,22 @@ function ErrorMessage(player, message)
 	})
 end
 
-AddEventHandler('phonograph:init', function(handle, url, title, volume, startTime)
+AddEventHandler('phonograph:start', function(handle, url, volume, offset)
 	if IsPlayerAceAllowed(source, 'phonograph.interact') then
 		url = Config.Presets[url] or (IsPlayerAceAllowed(source, 'phonograph.anyUrl') and url)
 
 		if url then
-			AddPhonograph(handle, url, title, volume, startTime)
+			TriggerClientEvent('phonograph:start', source, handle, url, volume, offset)
 		else
 			ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
 		end
 	else
 		ErrorMessage(source, 'You do not have permission to play a song on a phonograph')
 	end
+end)
+
+AddEventHandler('phonograph:init', function(handle, url, title, volume, startTime)
+	AddPhonograph(handle, url, title, volume, startTime)
 end)
 
 AddEventHandler('phonograph:pause', function(handle, paused)

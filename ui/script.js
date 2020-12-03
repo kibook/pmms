@@ -336,18 +336,24 @@ function startPhonograph() {
 	offsetInput.value = '00:00:00';
 }
 
-function showStatus(handle, startTime) {
-	var timecode;
+function showStatus(handle) {
+	var player = getPlayer(handle, false);
 
-	if (startTime) {
-		timecode = timeToString(Math.floor(Date.now() / 1000) - startTime);
+	var currentTime;
+	var duration;
+
+	if (player) {
+		currentTime = timeToString(player.currentTime);
+		duration = timeToString(player.duration);
 	} else {
-		timecode = '0'
+		currentTime = '00:00:00';
+		duration = '00:00:00';
 	}
 
 	sendMessage('status', {
 		handle: handle,
-		timecode: timecode
+		currentTime: currentTime,
+		duration: duration
 	});
 }
 

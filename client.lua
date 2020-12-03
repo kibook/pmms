@@ -274,7 +274,7 @@ RegisterNUICallback('status', function(data, cb)
 
 	if phonograph then
 		TriggerEvent('chat:addMessage', {
-			args = {string.format('[%x] %s 🔊%d 🕒%s %s', data.handle, phonograph.title, phonograph.volume, data.timecode, phonograph.paused and '⏸' or '▶️')}
+			args = {string.format('[%x] %s 🔊%d 🕒%s/%s %s', data.handle, phonograph.title, phonograph.volume, data.currentTime, data.duration, phonograph.paused and '⏸' or '▶️')}
 		})
 	else
 		TriggerEvent('chat:addMessage', {

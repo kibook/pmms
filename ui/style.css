@@ -84,6 +84,7 @@ option {
 	flex-flow: column;
 	min-width: 25vw;
 	max-height: 90vh;
+	max-width: 90vw;
 	overflow: hidden;
 }
 
@@ -110,12 +111,18 @@ option {
 	display: table-row;
 }
 
-.active-phonograph-handle, .active-phonograph-title, .active-phonograph-volume, .active-phonograph-time {
+.active-phonograph-handle, .active-phonograph-title, .active-phonograph-volume, .active-phonograph-time, .active-phonograph-controls {
 	display: table-cell;
+}
+
+.active-phonograph-handle, .active-phonograph-volume, .active-phonograph-time, .active-phonograph-controls {
+	white-space: nowrap;
+}
+
+.active-phonograph-handle, .active-phonograph-title, .active-phonograph-volume, .active-phonograph-time {
 	padding: 0.5vh 0.5vw 0.5vh 0;
 }
 
 .active-phonograph-controls {
-	display: table-cell;
 	text-align: right;
 }

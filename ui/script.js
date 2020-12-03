@@ -190,6 +190,9 @@ function updateUi(data) {
 				timeDiv.innerHTML = '<i class="fa fa-clock-o"></i> ' + timeToString(player.currentTime);
 			}
 
+			var controlsDiv = document.createElement('div');
+			controlsDiv.className = 'active-phonograph-controls';
+
 			var pauseResumeButton = document.createElement('button');
 			if (activePhonographs[handle].paused) {
 				pauseResumeButton.innerHTML = '<i class="fa fa-play"></i>';
@@ -208,12 +211,14 @@ function updateUi(data) {
 				});
 			});
 
+			controlsDiv.appendChild(pauseResumeButton);
+			controlsDiv.appendChild(stopButton);
+
 			div.appendChild(handleDiv);
 			div.appendChild(titleDiv);
 			div.appendChild(volumeDiv);
 			div.appendChild(timeDiv);
-			div.appendChild(pauseResumeButton);
-			div.appendChild(stopButton);
+			div.appendChild(controlsDiv);
 
 			activePhonographsDiv.appendChild(div);
 		}

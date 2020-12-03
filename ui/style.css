@@ -114,3 +114,8 @@ option {
 	display: table-cell;
 	padding: 0.5vh 0.5vw 0.5vh 0;
 }
+
+.active-phonograph-controls {
+	display: table-cell;
+	text-align: right;
+}

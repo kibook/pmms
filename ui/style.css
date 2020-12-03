@@ -110,7 +110,7 @@ option {
 	display: table-row;
 }
 
-.active-phonograph-handle, .active-phonograph-url, .active-phonograph-volume, .active-phonograph-time {
+.active-phonograph-handle, .active-phonograph-title, .active-phonograph-volume, .active-phonograph-time {
 	display: table-cell;
 	padding: 0.5vh 0.5vw 0.5vh 0;
 }

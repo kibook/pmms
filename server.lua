@@ -5,8 +5,8 @@ RegisterNetEvent('phonograph:pause')
 RegisterNetEvent('phonograph:stop')
 RegisterNetEvent('phonograph:showControls')
 
-function AddPhonograph(handle, url, volume, startTime)
-	Phonographs[handle] = {url = url, volume = volume, startTime = startTime, paused = nil}
+function AddPhonograph(handle, url, title, volume, startTime)
+	Phonographs[handle] = {url = url, title = title, volume = volume, startTime = startTime, paused = nil}
 	TriggerClientEvent('phonograph:play', -1, handle)
 end
 
@@ -35,12 +35,12 @@ function ErrorMessage(player, message)
 	})
 end
 
-AddEventHandler('phonograph:init', function(handle, url, volume, startTime)
+AddEventHandler('phonograph:init', function(handle, url, title, volume, startTime)
 	if IsPlayerAceAllowed(source, 'phonograph.interact') then
 		url = Config.Presets[url] or (IsPlayerAceAllowed(source, 'phonograph.anyUrl') and url)
 
 		if url then
-			AddPhonograph(handle, url, volume, startTime)
+			AddPhonograph(handle, url, title, volume, startTime)
 		else
 			ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
 		end

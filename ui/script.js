@@ -37,11 +37,33 @@ function parseTimecode(timecode) {
 function init(handle, url, volume, offset) {
 	offset = parseTimecode(offset);
 
-	sendMessage('init', {
-		handle: handle,
-		url: url,
-		volume: volume,
-		startTime: Math.floor(Date.now() / 1000 - offset)
+	jsmediatags.read(url, {
+		onSuccess: function(tag) {
+			var title;
+
+			if (tag.tags.title) {
+				title = tag.tags.title;
+			} else {
+				title = url;
+			}
+
+			sendMessage('init', {
+				handle: handle,
+				url: url,
+				title: title,
+				volume: volume,
+				startTime: Math.floor(Date.now() / 1000 - offset)
+			});
+		},
+		onError: function(error) {
+			sendMessage('init', {
+				handle: handle,
+				url: url,
+				title: url,
+				volume: volume,
+				startTime: Math.floor(Date.now() / 1000 - offset)
+			});
+		}
 	});
 }
 
@@ -152,9 +174,9 @@ function updateUi(data) {
 			handleDiv.className = 'active-phonograph-handle';
 			handleDiv.innerHTML = handle.toString(16);
 
-			var urlDiv = document.createElement('div');
-			urlDiv.className = 'active-phonograph-url';
-			urlDiv.innerHTML = activePhonographs[key].url;
+			var titleDiv = document.createElement('div');
+			titleDiv.className = 'active-phonograph-title';
+			titleDiv.innerHTML = activePhonographs[key].title;
 
 			var volumeDiv = document.createElement('div');
 			volumeDiv.className = 'active-phonograph-volume';
@@ -187,7 +209,7 @@ function updateUi(data) {
 			});
 
 			div.appendChild(handleDiv);
-			div.appendChild(urlDiv);
+			div.appendChild(titleDiv);
 			div.appendChild(volumeDiv);
 			div.appendChild(timeDiv);
 			div.appendChild(pauseResumeButton);

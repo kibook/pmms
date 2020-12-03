@@ -220,7 +220,7 @@ RegisterCommand('phonoctl', function(source, args, raw)
 end)
 
 RegisterNUICallback('init', function(data, cb)
-	TriggerServerEvent('phonograph:init', data.handle, data.url, data.volume, data.startTime)
+	TriggerServerEvent('phonograph:init', data.handle, data.url, data.title, data.volume, data.startTime)
 	cb({})
 end)
 

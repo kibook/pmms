@@ -6,6 +6,7 @@ files {
 	'ui/index.html',
 	'ui/style.css',
 	'ui/script.js',
+	'ui/jsmediatags.min.js',
 	'ui/chineserocks.ttf'
 }
 

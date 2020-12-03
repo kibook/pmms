@@ -71,7 +71,7 @@ end
 function GetRandomPreset()
 	local presets = {}
 
-	for preset, url in pairs(Config.Presets) do
+	for preset, info in pairs(Config.Presets) do
 		table.insert(presets, preset)
 	end
 
@@ -165,7 +165,7 @@ end
 function ListPresets()
 	local presets = {}
 
-	for preset, url in pairs(Config.Presets) do
+	for preset, info in pairs(Config.Presets) do
 		table.insert(presets, preset)
 	end
 

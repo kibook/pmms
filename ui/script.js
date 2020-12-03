@@ -298,7 +298,7 @@ function updateUi(data) {
 				var option = document.createElement('option');
 
 				option.value = key;
-				option.innerHTML = key;
+				option.innerHTML = presets[key].title;
 
 				if (key == presetValue) {
 					option.selected = true;

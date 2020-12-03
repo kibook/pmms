@@ -189,6 +189,36 @@ function ListPresets()
 	end
 end
 
+function UpdateUi()
+	local inactivePhonographs = {}
+
+	local pos = GetEntityCoords(PlayerPedId())
+
+	for object in EnumerateObjects() do
+		if NetworkGetEntityIsNetworked(object) then
+			local handle = ObjToNet(object)
+
+			if IsPhonograph(object) and not Phonographs[handle] then
+				local phonoPos = GetEntityCoords(object)
+				local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
+
+				table.insert(inactivePhonographs, {
+					handle = handle,
+					distance = distance
+				})
+			end
+		end
+	end
+
+	table.sort(inactivePhonographs, SortByDistance)
+
+	SendNUIMessage({
+		type = 'updateUi',
+		activePhonographs = json.encode(Phonographs),
+		inactivePhonographs = json.encode(inactivePhonographs)
+	})
+end
+
 RegisterCommand('phono', function(source, args, raw)
 	if #args > 0 then
 		local command = args[1]
@@ -262,6 +292,7 @@ end)
 
 AddEventHandler('phonograph:sync', function(phonographs)
 	Phonographs = phonographs
+	UpdateUi()
 end)
 
 AddEventHandler('phonograph:play', function(handle)
@@ -331,39 +362,5 @@ CreateThread(function()
 				})
 			end
 		end
-	end
-end)
-
-CreateThread(function()
-	while true do
-		Wait(500)
-
-		local inactivePhonographs = {}
-
-		local pos = GetEntityCoords(PlayerPedId())
-
-		for object in EnumerateObjects() do
-			if NetworkGetEntityIsNetworked(object) then
-				local handle = ObjToNet(object)
-
-				if IsPhonograph(object) and not Phonographs[handle] then
-					local phonoPos = GetEntityCoords(object)
-					local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
-
-					table.insert(inactivePhonographs, {
-						handle = handle,
-						distance = distance
-					})
-				end
-			end
-		end
-
-		table.sort(inactivePhonographs, SortByDistance)
-
-		SendNUIMessage({
-			type = 'updateUi',
-			activePhonographs = json.encode(Phonographs),
-			inactivePhonographs = json.encode(inactivePhonographs)
-		})
 	end
 end)

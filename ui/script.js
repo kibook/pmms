@@ -75,25 +75,29 @@ function initPlayer(handle, url, title, volume, offset) {
 	player.src = url;
 }
 
-function init(handle, url, volume, offset) {
+function init(handle, url, title, volume, offset) {
 	offset = parseTimecode(offset);
 
-	jsmediatags.read(url, {
-		onSuccess: function(tag) {
-			var title;
+	if (title) {
+		initPlayer(handle, url, title, volume, offset);
+	} else{
+		jsmediatags.read(url, {
+			onSuccess: function(tag) {
+				var title;
 
-			if (tag.tags.title) {
-				title = tag.tags.title;
-			} else {
-				title = url;
+				if (tag.tags.title) {
+					title = tag.tags.title;
+				} else {
+					title = url;
+				}
+
+				initPlayer(handle, url, title, volume, offset);
+			},
+			onError: function(error) {
+				initPlayer(handle, url, url, volume, offset);
 			}
-
-			initPlayer(handle, url, title, volume, offset);
-		},
-		onError: function(error) {
-			initPlayer(handle, url, url, volume, offset);
-		}
-	});
+		});
+	}
 }
 
 function play(handle) {
@@ -400,7 +404,7 @@ function showStatus(handle) {
 window.addEventListener('message', event => {
 	switch (event.data.type) {
 		case 'init':
-			init(event.data.handle, event.data.url, event.data.volume, event.data.offset);
+			init(event.data.handle, event.data.url, event.data.title, event.data.volume, event.data.offset);
 			break;
 		case 'play':
 			play(event.data.handle);

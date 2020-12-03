@@ -327,11 +327,12 @@ AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	UpdateUi(fullControls, anyUrl)
 end)
 
-AddEventHandler('phonograph:start', function(handle, url, volume, offset)
+AddEventHandler('phonograph:start', function(handle, url, title, volume, offset)
 	SendNUIMessage({
 		type = 'init',
 		handle = handle,
 		url = url,
+		title = title,
 		volume = volume,
 		offset = offset
 	})

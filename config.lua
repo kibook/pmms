@@ -5,5 +5,5 @@ Config.MaxDistance = 30
 
 -- Pre-defined music URLs
 Config.Presets = {
-	--['example'] = {title = 'Example Preset', url = 'https://example.com/example.ogg'}
+	--['1'] = {title = 'Example Preset', url = 'https://example.com/example.ogg'}
 }

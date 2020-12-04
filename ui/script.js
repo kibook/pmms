@@ -286,6 +286,7 @@ function updateUi(data) {
 	var urlInput = document.getElementById('url');
 	var volumeInput = document.getElementById('volume');
 	var offsetInput = document.getElementById('offset');
+	var filterCheckbox = document.getElementById('filter');
 	var playButton = document.getElementById('play-button');
 
 	var inactivePhonographsValue = inactivePhonographsSelect.value;
@@ -294,15 +295,36 @@ function updateUi(data) {
 	inactivePhonographsSelect.innerHTML = '';
 	presetSelect.innerHTML = '<option></option>';
 
+	var presetKeys = Object.keys(presets).sort();
+
+	if (presetKeys.length > 0) {
+		presetKeys.forEach(key => {
+			var option = document.createElement('option');
+
+			option.value = key;
+			option.innerHTML = presets[key].title;
+
+			if (key == presetValue) {
+				option.selected = true;
+			}
+
+			presetSelect.appendChild(option);
+		});
+
+		presetSelect.style.display = 'block';
+	} else {
+		presetSelect.style.display = 'none';
+	}
+
 	if (inactivePhonographs.length == 0) {
 		inactivePhonographsSelect.disabled = true;
 		presetSelect.disabled = true;
 		urlInput.disabled = true;
 		volumeInput.disabled = true;
 		offsetInput.disabled = true;
+		filterCheckbox.disabled = true;
 		playButton.disabled = true;
 		urlInput.value = '';
-		urlInput.placeholder = 'No inactive phonographs';
 	} else {
 		inactivePhonographs.forEach(phonograph => {
 			var option = document.createElement('option');
@@ -317,41 +339,21 @@ function updateUi(data) {
 			inactivePhonographsSelect.appendChild(option);
 		});
 
-		var presetKeys = Object.keys(presets).sort();
-
-		if (presetKeys.length > 0) {
-			presetKeys.forEach(key => {
-				var option = document.createElement('option');
-
-				option.value = key;
-				option.innerHTML = presets[key].title;
-
-				if (key == presetValue) {
-					option.selected = true;
-				}
-
-				presetSelect.appendChild(option);
-			});
-
-			presetSelect.style.display = 'block';
-		} else {
-			presetSelect.style.display = 'none';
-		}
-
 		inactivePhonographsSelect.disabled = false;
 		presetSelect.disabled = false;
 		urlInput.disabled = false;
 		volumeInput.disabled = false;
 		offsetInput.disabled = false;
+		filterCheckbox.disabled = false;
 		playButton.disabled = false;
-
-		urlInput.placeholder = 'Enter URL...';
 	}
 
 	if (data.anyUrl) {
-		urlInput.style.display = 'block';
+		urlInput.style.display = 'inline-block';
+		document.getElementById('filter-container').style.display = 'inline-block';
 	} else {
 		urlInput.style.display = 'none';
+		document.getElementById('filter-container').style.display = 'none';
 	}
 }
 

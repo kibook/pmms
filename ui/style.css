@@ -67,6 +67,10 @@ input[type="checkbox"]:checked {
 	background: rgba(255, 0, 0, 0.75);
 }
 
+input[type="checkbox"]:disabled {
+	border: 1px solid #444;
+}
+
 select {
 	background: rgba(0, 0, 0, 0.5);
 	color: white;

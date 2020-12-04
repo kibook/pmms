@@ -16,9 +16,11 @@ Allows players to play music from a phonograph object.
 
 - Optional "phonograph" filter can be applied to any audio
 
-# Example
+# Examples
 
-[![Attenuation Example](https://i.imgur.com/BTkglVYm.jpg)](https://imgur.com/BTkglVY)
+| | |
+|-|-|
+|[![Attenuation Example](https://i.imgur.com/BTkglVYm.jpg)](https://imgur.com/BTkglVY)| [![Phonograph Filter](https://i.imgur.com/L8sWpOCm.jpg)](https://imgur.com/L8sWpOC) |
 
 # Commands
 

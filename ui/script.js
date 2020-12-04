@@ -18,6 +18,7 @@ function getPlayer(handle, create) {
 
 	if (!player && create) {
 		player = document.createElement('audio');
+		player.crossOrigin = 'anonymous';
 		player.id = id;
 		document.body.appendChild(player);
 	}
@@ -42,10 +43,6 @@ function parseTimecode(timecode) {
 	}
 }
 
-function getFilterUrl(url) {
-	return 'https://redm.khzae.net/phonograph/filter?src=' + encodeURIComponent(url);
-}
-
 function getYoutubeUrl(id) {
 	return 'https://redm.khzae.net/phonograph/yt?v=' + id;
 }
@@ -63,13 +60,59 @@ function interpretUrl(url) {
 	}
 }
 
+function applyPhonographFilter(player) {
+	var context = new (window.AudioContext || window.webkitAudioContext)();
+	var source = context.createMediaElementSource(player);
+
+	var splitter = context.createChannelSplitter(2);
+	var merger = context.createChannelMerger(2);
+
+	var gainNode = context.createGain();
+	gainNode.gain.value = 0.5;
+
+	var lowpass = context.createBiquadFilter();
+	lowpass.type = 'lowpass';
+	lowpass.frequency.value = 3000;
+	lowpass.gain.value = -1;
+
+	var highpass = context.createBiquadFilter();
+	highpass.type = 'highpass';
+	highpass.frequency.value = 300;
+	highpass.gain.value = -1;
+
+	source.connect(splitter);
+	splitter.connect(merger, 0, 0);
+	splitter.connect(merger, 1, 0);
+	splitter.connect(merger, 0, 1);
+	splitter.connect(merger, 1, 1);
+	merger.connect(gainNode);
+	gainNode.connect(lowpass);
+	lowpass.connect(highpass);
+	highpass.connect(context.destination);
+
+	var noise = document.createElement('audio');
+	noise.src = 'https://redm.khzae.net/phonograph/noise.webm';
+	player.addEventListener('play', event => {
+		noise.play();
+	});
+	player.addEventListener('pause', event => {
+		noise.pause();
+	});
+	player.addEventListener('volumechange', event => {
+		noise.volume = player.volume;
+	});
+	player.addEventListener('seeked', event => {
+		noise.currentTime = player.currentTime;
+	});
+}
+
 function initPlayer(handle, url, title, volume, offset, filter) {
 	var player = getPlayer(handle, true);
 
 	url = interpretUrl(url);
 
 	if (filter) {
-		url = getFilterUrl(url);
+		applyPhonographFilter(player);
 	}
 
 	player.addEventListener('error', () => {

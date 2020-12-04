@@ -366,7 +366,8 @@ CreateThread(function()
 		{name = 'command', help = 'play|pause|stop|status|songs'},
 		{name = 'url', help = 'URL or preset name of music to play. Use "random" to play a random preset.'},
 		{name = 'volume', help = 'Volume to play the music at (0-100).'},
-		{name = 'time', help = 'Time in seconds to start playing at.'}
+		{name = 'time', help = 'Time in seconds to start playing at.'},
+		{name = 'filter', help = '0 = normal audio, 1 = add phonograph filter'}
 	})
 end)
 

@@ -40,10 +40,7 @@ function PausePhonograph(handle, paused)
 end
 
 function ErrorMessage(player, message)
-	TriggerClientEvent('chat:addMessage', player, {
-		color = {255, 0, 0},
-		args = {'Error', message}
-	})
+	TriggerClientEvent('phonograph:error', player, message)
 end
 
 AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter, coords)

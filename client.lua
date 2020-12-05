@@ -5,6 +5,7 @@ RegisterNetEvent('phonograph:start')
 RegisterNetEvent('phonograph:play')
 RegisterNetEvent('phonograph:stop')
 RegisterNetEvent('phonograph:showControls')
+RegisterNetEvent('phonograph:error')
 
 local entityEnumerator = {
 	__gc = function(enum)
@@ -330,7 +331,7 @@ RegisterNUICallback('init', function(data, cb)
 end)
 
 RegisterNUICallback('initError', function(data, cb)
-	print('Error loading ' .. data.url)
+	TriggerEvent('phonograph:error', 'Error loading ' .. data.url)
 	cb({})
 end)
 
@@ -407,6 +408,13 @@ AddEventHandler('phonograph:showControls', function()
 		type = 'showUi'
 	})
 	SetNuiFocus(true, true)
+end)
+
+AddEventHandler('phonograph:error', function(message)
+	TriggerEvent('chat:addMessage', {
+		color = {255, 0, 0},
+		args = {'Error', message}
+	})
 end)
 
 AddEventHandler('onResourceStop', function(resource)

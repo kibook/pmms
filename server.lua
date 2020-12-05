@@ -52,6 +52,11 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 		handle = GetHashKey(string.format('%f_%f_%f', coords.x, coords.y, coords.z))
 	end
 
+	if Phonographs[handle] then
+		ErrorMessage(source, 'This phonograph is already active, stop it first before playing a new song')
+		return
+	end
+
 	if IsPlayerAceAllowed(source, 'phonograph.interact') then
 		if Config.Presets[url] then
 			TriggerClientEvent('phonograph:start', source, handle, Config.Presets[url].url, Config.Presets[url].title, volume, offset, filter, coords)

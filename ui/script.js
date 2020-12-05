@@ -11,16 +11,58 @@ function sendMessage(name, params) {
 	});
 }
 
-function getPlayer(handle, create) {
+function initPlayer(id, handle, url, title, volume, offset, startTime, filter, coords) {
+	player = document.createElement('audio');
+	player.crossOrigin = 'anonymous';
+	player.id = id;
+	document.body.appendChild(player);
+
+	url = interpretUrl(url);
+
+	if (filter) {
+		applyPhonographFilter(player);
+	}
+
+	player.addEventListener('error', () => {
+		hideLoadingIcon();
+
+		sendMessage('initError', {
+			url: url
+		});
+
+		player.remove();
+	});
+
+	player.addEventListener('canplay', () => {
+		hideLoadingIcon();
+
+		if (!startTime) {
+			startTime = Math.floor(Date.now() / 1000 - offset);
+		}
+
+		sendMessage('init', {
+			handle: handle,
+			url: url,
+			title: title,
+			volume: volume,
+			offset: offset,
+			startTime: startTime,
+			filter: filter,
+			coords: coords
+		});
+	}, {once: true});
+
+	player.src = url;
+	player.volume = 0;
+}
+
+function getPlayer(handle, url, title, volume, offset, startTime, filter, coords) {
 	var id = 'player_' + handle.toString(16);
 
 	var player = document.getElementById(id);
 
-	if (!player && create) {
-		player = document.createElement('audio');
-		player.crossOrigin = 'anonymous';
-		player.id = id;
-		document.body.appendChild(player);
+	if (!player && url) {
+		player = initPlayer(id, handle, url, title, volume, offset, startTime, filter, coords);
 	}
 
 	return player;
@@ -106,39 +148,6 @@ function applyPhonographFilter(player) {
 	});
 }
 
-function initPlayer(handle, url, title, volume, offset, filter, coords) {
-	var player = getPlayer(handle, true);
-
-	url = interpretUrl(url);
-
-	if (filter) {
-		applyPhonographFilter(player);
-	}
-
-	player.addEventListener('error', () => {
-		hideLoadingIcon();
-
-		sendMessage('initError', {
-			url: url
-		});
-	});
-
-	player.addEventListener('canplay', () => {
-		hideLoadingIcon();
-
-		sendMessage('init', {
-			handle: handle,
-			url: url,
-			title: title,
-			volume: volume,
-			startTime: Math.floor(Date.now() / 1000 - offset),
-			coords: coords
-		});
-	}, {once: true});
-
-	player.src = url;
-}
-
 function init(handle, url, title, volume, offset, filter, coords) {
 	if (url == '') {
 		return;
@@ -149,7 +158,7 @@ function init(handle, url, title, volume, offset, filter, coords) {
 	offset = parseTimecode(offset);
 
 	if (title) {
-		initPlayer(handle, url, title, volume, offset, filter, coords);
+		getPlayer(handle, url, title, volume, offset, null, filter, coords);
 	} else{
 		jsmediatags.read(url, {
 			onSuccess: function(tag) {
@@ -161,17 +170,21 @@ function init(handle, url, title, volume, offset, filter, coords) {
 					title = url;
 				}
 
-				initPlayer(handle, url, title, volume, offset, filter, coords);
+				getPlayer(handle, url, title, volume, offset, null, filter, coords);
 			},
 			onError: function(error) {
-				initPlayer(handle, url, url, volume, offset, filter, coords);
+				getPlayer(handle, url, url, volume, offset, null, filter, coords);
 			}
 		});
 	}
 }
 
 function play(handle) {
-	getPlayer(handle, true).currentTime = 0;
+	var player = getPlayer(handle);
+
+	if (player) {
+		player.currentTime = 0;
+	}
 }
 
 function pause(handle) {
@@ -182,7 +195,7 @@ function pause(handle) {
 }
 
 function stop(handle) {
-	var player = getPlayer(handle, false);
+	var player = getPlayer(handle);
 
 	if (player) {
 		player.remove();
@@ -205,8 +218,8 @@ function setVolumeFactor(target) {
 	}
 }
 
-function update(handle, url, baseVolume, startTime, paused, distance, sameRoom) {
-	var player = getPlayer(handle, false);
+function update(handle, url, title, baseVolume, offset, startTime, filter, paused, coords, distance, sameRoom) {
+	var player = getPlayer(handle, url, title, baseVolume, offset, startTime, filter, coords);
 
 	if (player) {
 		if (paused) {
@@ -266,7 +279,7 @@ function updateUi(data) {
 	activePhonographsDiv.innerHTML = '';
 
 	activePhonographs.forEach(phonograph => {
-		var player = getPlayer(phonograph.handle, false);
+		var player = getPlayer(phonograph.handle);
 
 		if (player) {
 			var div = document.createElement('div');
@@ -458,7 +471,7 @@ function startPhonograph() {
 }
 
 function showStatus(handle) {
-	var player = getPlayer(handle, false);
+	var player = getPlayer(handle);
 
 	var currentTime;
 	var duration;
@@ -496,7 +509,7 @@ window.addEventListener('message', event => {
 			showStatus(event.data.handle, event.data.startTime);
 			break;
 		case 'update':
-			update(event.data.handle, event.data.url, event.data.volume, event.data.startTime, event.data.paused, event.data.distance, event.data.sameRoom);
+			update(event.data.handle, event.data.url, event.data.title, event.data.volume, event.data.offset, event.data.startTime, event.data.filter, event.data.paused, event.data.coords, event.data.distance, event.data.sameRoom);
 			break;
 		case 'showUi':
 			showUi();

@@ -1,4 +1,5 @@
 local Phonographs = {}
+local SyncQueue = {}
 
 RegisterNetEvent('phonograph:start')
 RegisterNetEvent('phonograph:init')
@@ -6,24 +7,43 @@ RegisterNetEvent('phonograph:pause')
 RegisterNetEvent('phonograph:stop')
 RegisterNetEvent('phonograph:showControls')
 
-function AddPhonograph(handle, url, title, volume, startTime, coords)
+function Enqueue(queue, cb)
+	table.insert(queue, 1, cb)
+end
+
+function Dequeue(queue)
+	local cb = table.remove(queue)
+
+	if cb then
+		cb()
+	end
+end
+
+function AddPhonograph(handle, url, title, volume, offset, startTime, filter, coords)
 	if not Phonographs[handle] then
 		Phonographs[handle] = {
 			url = url,
 			title = title,
 			volume = volume,
+			offset = offset,
 			startTime = startTime,
-			paused = nil,
-			coords = coords
+			filter = filter,
+			coords = coords,
+			paused = nil
 		}
 
-		TriggerClientEvent('phonograph:play', -1, handle)
+		Enqueue(SyncQueue, function()
+			TriggerClientEvent('phonograph:play', -1, handle)
+		end)
 	end
 end
 
 function RemovePhonograph(handle)
 	Phonographs[handle] = nil
-	TriggerClientEvent('phonograph:stop', -1, handle)
+
+	Enqueue(SyncQueue, function()
+		TriggerClientEvent('phonograph:stop', -1, handle)
+	end)
 end
 
 function PausePhonograph(handle, paused)
@@ -43,22 +63,85 @@ function ErrorMessage(player, message)
 	TriggerClientEvent('phonograph:error', player, message)
 end
 
+function StartDefaultPhonographs()
+	for _, phonograph in ipairs(Config.DefaultPhonographs) do
+		if phonograph.url then
+			local coords = vector3(phonograph.x, phonograph.y, phonograph.z)
+			local handle = GetHandleFromCoords(coords)
+			local url = phonograph.url
+			local title = phonograph.title or url
+			local volume = phonograph.volume or 100
+			local offset = phonograph.offset or 0
+			local filter = phonograph.filter
+
+			if url == 'random' then
+				url = GetRandomPreset()
+			end
+
+			local startTime = os.time() - phonograph.offset
+
+			if Config.Presets[url] then
+				AddPhonograph(handle,
+					Config.Presets[url].url,
+					Config.Presets[url].title,
+					volume,
+					offset,
+					startTime,
+					Config.Presets[url].filter,
+					coords)
+			else
+				AddPhonograph(handle,
+					url,
+					title,
+					volume,
+					offset,
+					startTime,
+					filter,
+					coords)
+			end
+		end
+	end
+end
+
+function SyncPhonographs()
+	for _, playerId in ipairs(GetPlayers()) do
+		TriggerClientEvent('phonograph:sync', playerId,
+			Phonographs,
+			IsPlayerAceAllowed(playerId, 'phonograph.fullControls'),
+			IsPlayerAceAllowed(playerId, 'phonograph.anyUrl'))
+	end
+
+	Dequeue(SyncQueue)
+end
+
 AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter, coords)
 	if coords then
-		print(coords)
-		handle = GetHashKey(string.format('%f_%f_%f', coords.x, coords.y, coords.z))
+		handle = GetHandleFromCoords(coords)
 	end
 
 	if Phonographs[handle] then
-		ErrorMessage(source, 'This phonograph is already active, stop it first before playing a new song')
 		return
 	end
 
 	if IsPlayerAceAllowed(source, 'phonograph.interact') then
 		if Config.Presets[url] then
-			TriggerClientEvent('phonograph:start', source, handle, Config.Presets[url].url, Config.Presets[url].title, volume, offset, Config.Presets[url].filter, coords)
+			TriggerClientEvent('phonograph:start', source,
+				handle,
+				Config.Presets[url].url,
+				Config.Presets[url].title,
+				volume,
+				offset,
+				Config.Presets[url].filter,
+				coords)
 		elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then
-			TriggerClientEvent('phonograph:start', source, handle, url, nil, volume, offset, filter, coords)
+			TriggerClientEvent('phonograph:start', source,
+				handle,
+				url,
+				nil,
+				volume,
+				offset,
+				filter,
+				coords)
 		else
 			ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
 		end
@@ -67,8 +150,8 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 	end
 end)
 
-AddEventHandler('phonograph:init', function(handle, url, title, volume, startTime, coords)
-	AddPhonograph(handle, url, title, volume, startTime, coords)
+AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, startTime, filter, coords)
+	AddPhonograph(handle, url, title, volume, offset, startTime, filter, coords)
 end)
 
 AddEventHandler('phonograph:pause', function(handle, paused)
@@ -92,11 +175,14 @@ AddEventHandler('phonograph:showControls', function()
 end)
 
 CreateThread(function()
+	StartDefaultPhonographs()
+
 	while true do
 		Wait(500)
-
-		for _, playerId in ipairs(GetPlayers()) do
-			TriggerClientEvent('phonograph:sync', playerId, Phonographs, IsPlayerAceAllowed(playerId, 'phonograph.fullControls'), IsPlayerAceAllowed(playerId, 'phonograph.anyUrl'))
-		end
+		SyncPhonographs()
 	end
 end)
+
+RegisterCommand('sv_dumpphonos', function(source, args, raw)
+	print(json.encode(Phonographs))
+end, true)

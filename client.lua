@@ -73,16 +73,6 @@ function GetClosestPhonograph()
 	return GetHandle(closestPhonograph)
 end
 
-function GetRandomPreset()
-	local presets = {}
-
-	for preset, info in pairs(Config.Presets) do
-		table.insert(presets, preset)
-	end
-
-	return presets[math.random(#presets)]
-end
-
 function StartPhonograph(handle, url, volume, offset, filter)
 	if url == 'random' then
 		url = GetRandomPreset()
@@ -169,16 +159,18 @@ function IsInSameRoom(entity1, entity2)
 	return true
 end
 
-function GetObjectClosestToCoords(coords)
+function GetPhonographClosestToCoords(coords)
 	local closestObject, closestDistance
 
 	for object in EnumerateObjects() do
-		local objectCoords = GetEntityCoords(object)
-		local distance = GetDistanceBetweenCoords(coords.x, coords.y, coords.z, objectCoords.x, objectCoords.y, objectCoords.z, true)
+		if IsPhonograph(object) then
+			local objectCoords = GetEntityCoords(object)
+			local distance = GetDistanceBetweenCoords(coords.x, coords.y, coords.z, objectCoords.x, objectCoords.y, objectCoords.z, true)
 
-		if distance < 1 and (not closestDistance or distance < closestDistance) then
-			closestObject = object
-			closestDistance = distance
+			if distance < 1.0 and (not closestDistance or distance < closestDistance) then
+				closestObject = object
+				closestDistance = distance
+			end
 		end
 	end
 
@@ -217,7 +209,7 @@ function UpdateUi(fullControls, anyUrl)
 		local object
 
 		if info.coords then
-			object = GetObjectClosestToCoords(info.coords)
+			object = GetPhonographClosestToCoords(info.coords)
 		elseif NetworkDoesNetworkIdExist(handle) then
 			object = NetToObj(handle)
 		end
@@ -234,7 +226,7 @@ function UpdateUi(fullControls, anyUrl)
 				})
 			end
 		else
-			if fullControls or distance <= Config.MaxDistance then
+			if fullControls then
 				table.insert(activePhonographs, {
 					handle = handle,
 					info = info,
@@ -253,7 +245,7 @@ function UpdateUi(fullControls, anyUrl)
 			local phonoPos = GetEntityCoords(object)
 			local handle = GetHandle(object)
 
-			if not Phonographs[handle] then
+			if not (Phonographs[handle] or Phonographs[GetHandleFromCoords(phonoPos)]) then
 				local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
 
 				if fullControls or distance <= Config.MaxDistance then
@@ -290,10 +282,6 @@ function CreatePhonograph(phonograph)
 	SetModelAsNoLongerNeeded(model)
 
 	SetEntityRotation(phonograph.handle, phonograph.pitch, phonograph.roll, phonograph.yaw, 2)
-
-	if phonograph.url then
-		StartPhonograph(phonograph.handle, phonograph.url, phonograph.volume, phonograph.offset, phonograph.filter)
-	end
 end
 
 RegisterCommand('phono', function(source, args, raw)
@@ -326,7 +314,17 @@ RegisterCommand('phono', function(source, args, raw)
 end)
 
 RegisterNUICallback('init', function(data, cb)
-	TriggerServerEvent('phonograph:init', data.handle, data.url, data.title, data.volume, data.startTime, json.decode(data.coords))
+	if NetworkDoesNetworkIdExist(data.handle) or data.coords then
+		TriggerServerEvent('phonograph:init',
+			data.handle,
+			data.url,
+			data.title,
+			data.volume,
+			data.offset,
+			data.startTime,
+			data.filter,
+			data.coords and json.decode(data.coords))
+	end
 	cb({})
 end)
 
@@ -355,7 +353,13 @@ RegisterNUICallback('status', function(data, cb)
 
 	if phonograph then
 		TriggerEvent('chat:addMessage', {
-			args = {string.format('[%x] %s 🔊%d 🕒%s/%s %s', data.handle, phonograph.title, phonograph.volume, data.currentTime, data.duration, phonograph.paused and '⏸' or '▶️')}
+			args = {string.format('[%x] %s 🔊%d 🕒%s/%s %s',
+				data.handle,
+				phonograph.title,
+				phonograph.volume,
+				data.currentTime,
+				data.duration,
+				phonograph.paused and '⏸' or '▶️')}
 		})
 	else
 		TriggerEvent('chat:addMessage', {
@@ -450,7 +454,7 @@ CreateThread(function()
 			local object
 
 			if info.coords then
-				object = GetObjectClosestToCoords(info.coords)
+				object = GetPhonographClosestToCoords(info.coords)
 			elseif NetworkDoesNetworkIdExist(handle) then
 				object = NetToObj(handle)
 			end
@@ -463,9 +467,13 @@ CreateThread(function()
 					type = 'update',
 					handle = handle,
 					url = info.url,
+					title = info.title,
 					volume = info.volume,
+					offset = info.offset,
 					startTime = info.startTime,
+					filter = info.filter,
 					paused = info.paused,
+					coords = json.encode(info.coords),
 					distance = distance,
 					sameRoom = IsInSameRoom(ped, object)
 				})
@@ -474,9 +482,13 @@ CreateThread(function()
 					type = 'update',
 					handle = handle,
 					url = info.url,
+					title = info.title,
 					volume = 0,
+					offset = info.offset,
 					startTime = info.startTime,
+					filter = info.filter,
 					paused = info.paused,
+					coords = json.encode(info.coords),
 					distance = 0,
 					sameRoom = false
 				})

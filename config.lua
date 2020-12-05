@@ -17,9 +17,10 @@ Config.DefaultPhonographs = {
 		pitch = 0.0,
 		roll = 0.0,
 		yaw = -76.858,
-		url = 'random',
+		url = 'https://example.com/example.ogg',
+		title = 'Example Song',
 		volume = 100,
-		offset = '00:00:00',
-		filter = false
+		offset = 0,
+		filter = true
 	}]]
 }

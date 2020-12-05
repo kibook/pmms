@@ -47,6 +47,10 @@ function IsPhonograph(object)
 	return GetEntityModel(object) == GetHashKey('p_phonograph01x')
 end
 
+function GetHandle(object)
+	return NetworkGetEntityIsNetworked(object) and ObjToNet(object) or object
+end
+
 function GetClosestPhonograph()
 	local pos = GetEntityCoords(PlayerPedId())
 
@@ -64,8 +68,8 @@ function GetClosestPhonograph()
 			end
 		end
 	end
-	
-	return ObjToNet(closestPhonograph)
+
+	return GetHandle(closestPhonograph)
 end
 
 function GetRandomPreset()
@@ -95,7 +99,9 @@ function StartPhonograph(handle, url, volume, offset, filter)
 		offset = '0'
 	end
 
-	TriggerServerEvent('phonograph:start', handle, url, volume, offset, filter)
+	local coords = not NetworkDoesNetworkIdExist(handle) and GetEntityCoords(handle)
+
+	TriggerServerEvent('phonograph:start', handle, url, volume, offset, filter, coords)
 end
 
 function StartClosestPhonograph(url, volume, offset, filter)
@@ -145,7 +151,7 @@ function SortByDistance(a, b)
 end
 
 function IsInSameRoom(entity1, entity2)
-	local interior1 = GetInteriorFromEntity(entity2)
+	local interior1 = GetInteriorFromEntity(entity1)
 	local interior2 = GetInteriorFromEntity(entity2)
 
 	if interior1 ~= interior2 then
@@ -160,6 +166,22 @@ function IsInSameRoom(entity1, entity2)
 	end
 
 	return true
+end
+
+function GetObjectClosestToCoords(coords)
+	local closestObject, closestDistance
+
+	for object in EnumerateObjects() do
+		local objectCoords = GetEntityCoords(object)
+		local distance = GetDistanceBetweenCoords(coords.x, coords.y, coords.z, objectCoords.x, objectCoords.y, objectCoords.z, true)
+
+		if distance < 1 and (not closestDistance or distance < closestDistance) then
+			closestObject = object
+			closestDistance = distance
+		end
+	end
+
+	return closestObject
 end
 
 function ListPresets()
@@ -191,8 +213,15 @@ function UpdateUi(fullControls, anyUrl)
 	local activePhonographs = {}
 
 	for handle, info in pairs(Phonographs) do
-		if NetworkDoesNetworkIdExist(handle) then
-			local object = NetToObj(handle)
+		local object
+
+		if info.coords then
+			object = GetObjectClosestToCoords(info.coords)
+		elseif NetworkDoesNetworkIdExist(handle) then
+			object = NetToObj(handle)
+		end
+
+		if object then
 			local phonoPos = GetEntityCoords(object)
 			local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
 
@@ -219,11 +248,11 @@ function UpdateUi(fullControls, anyUrl)
 	local inactivePhonographs = {}
 
 	for object in EnumerateObjects() do
-		if NetworkGetEntityIsNetworked(object) then
-			local handle = ObjToNet(object)
+		if IsPhonograph(object) then
+			local phonoPos = GetEntityCoords(object)
+			local handle = GetHandle(object)
 
-			if IsPhonograph(object) and not Phonographs[handle] then
-				local phonoPos = GetEntityCoords(object)
+			if not Phonographs[handle] then
 				local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
 
 				if fullControls or distance <= Config.MaxDistance then
@@ -245,6 +274,25 @@ function UpdateUi(fullControls, anyUrl)
 		presets = json.encode(Config.Presets),
 		anyUrl = anyUrl
 	})
+end
+
+function CreatePhonograph(phonograph)
+	local model = GetHashKey('p_phonograph01x')
+
+	RequestModel(model)
+	while not HasModelLoaded(model) do
+		Wait(0)
+	end
+
+	phonograph.handle = CreateObjectNoOffset(GetHashKey('p_phonograph01x'), phonograph.x, phonograph.y, phonograph.z, false, false, false, false)
+
+	SetModelAsNoLongerNeeded(model)
+
+	SetEntityRotation(phonograph.handle, phonograph.pitch, phonograph.roll, phonograph.yaw, 2)
+
+	if phonograph.url then
+		StartPhonograph(phonograph.handle, phonograph.url, phonograph.volume, phonograph.offset, phonograph.filter)
+	end
 end
 
 RegisterCommand('phono', function(source, args, raw)
@@ -274,11 +322,10 @@ RegisterCommand('phono', function(source, args, raw)
 	else
 		TriggerServerEvent('phonograph:showControls')
 	end
-
 end)
 
 RegisterNUICallback('init', function(data, cb)
-	TriggerServerEvent('phonograph:init', data.handle, data.url, data.title, data.volume, data.startTime)
+	TriggerServerEvent('phonograph:init', data.handle, data.url, data.title, data.volume, data.startTime, json.decode(data.coords))
 	cb({})
 end)
 
@@ -328,7 +375,7 @@ AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	UpdateUi(fullControls, anyUrl)
 end)
 
-AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, filter)
+AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, filter, coords)
 	SendNUIMessage({
 		type = 'init',
 		handle = handle,
@@ -336,7 +383,8 @@ AddEventHandler('phonograph:start', function(handle, url, title, volume, offset,
 		title = title,
 		volume = volume,
 		offset = offset,
-		filter = filter
+		filter = filter,
+		coords = json.encode(coords)
 	})
 end)
 
@@ -361,6 +409,18 @@ AddEventHandler('phonograph:showControls', function()
 	SetNuiFocus(true, true)
 end)
 
+AddEventHandler('onResourceStop', function(resource)
+	if GetCurrentResourceName() ~= resource then
+		return
+	end
+
+	for _, defaultPhonograph in ipairs(Config.DefaultPhonographs) do
+		if defaultPhonograph.handle then
+			DeleteEntity(defaultPhonograph.handle)
+		end
+	end
+end)
+
 CreateThread(function()
 	TriggerEvent('chat:addSuggestion', '/phono', 'Interact with phonographs. No arguments will open the phonograph control panel.', {
 		{name = 'command', help = 'play|pause|stop|status|songs'},
@@ -376,10 +436,18 @@ CreateThread(function()
 		Wait(0)
 
 		local pos = GetActiveCamCoord()
+		local ped = PlayerPedId()
 
 		for handle, info in pairs(Phonographs) do
-			if NetworkDoesNetworkIdExist(handle) then
-				local object = NetToObj(handle)
+			local object
+
+			if info.coords then
+				object = GetObjectClosestToCoords(info.coords)
+			elseif NetworkDoesNetworkIdExist(handle) then
+				object = NetToObj(handle)
+			end
+
+			if object then
 				local phonoPos = GetEntityCoords(object)
 				local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
 
@@ -391,7 +459,7 @@ CreateThread(function()
 					startTime = info.startTime,
 					paused = info.paused,
 					distance = distance,
-					sameRoom = IsInSameRoom(PlayerPedId(), object)
+					sameRoom = IsInSameRoom(ped, object)
 				})
 			else
 				SendNUIMessage({
@@ -404,6 +472,18 @@ CreateThread(function()
 					distance = 0,
 					sameRoom = false
 				})
+			end
+		end
+	end
+end)
+
+CreateThread(function()
+	while true do
+		Wait(0)
+
+		for _, defaultPhonograph in ipairs(Config.DefaultPhonographs) do
+			if not defaultPhonograph.handle or not DoesEntityExist(defaultPhonograph.handle) then
+				CreatePhonograph(defaultPhonograph)
 			end
 		end
 	end

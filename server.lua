@@ -6,9 +6,19 @@ RegisterNetEvent('phonograph:pause')
 RegisterNetEvent('phonograph:stop')
 RegisterNetEvent('phonograph:showControls')
 
-function AddPhonograph(handle, url, title, volume, startTime)
-	Phonographs[handle] = {url = url, title = title, volume = volume, startTime = startTime, paused = nil}
-	TriggerClientEvent('phonograph:play', -1, handle)
+function AddPhonograph(handle, url, title, volume, startTime, coords)
+	if not Phonographs[handle] then
+		Phonographs[handle] = {
+			url = url,
+			title = title,
+			volume = volume,
+			startTime = startTime,
+			paused = nil,
+			coords = coords
+		}
+
+		TriggerClientEvent('phonograph:play', -1, handle)
+	end
 end
 
 function RemovePhonograph(handle)
@@ -36,12 +46,17 @@ function ErrorMessage(player, message)
 	})
 end
 
-AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter)
+AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter, coords)
+	if coords then
+		print(coords)
+		handle = GetHashKey(string.format('%f_%f_%f', coords.x, coords.y, coords.z))
+	end
+
 	if IsPlayerAceAllowed(source, 'phonograph.interact') then
 		if Config.Presets[url] then
-			TriggerClientEvent('phonograph:start', source, handle, Config.Presets[url].url, Config.Presets[url].title, volume, offset, filter)
+			TriggerClientEvent('phonograph:start', source, handle, Config.Presets[url].url, Config.Presets[url].title, volume, offset, filter, coords)
 		elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then
-			TriggerClientEvent('phonograph:start', source, handle, url, nil, volume, offset, filter)
+			TriggerClientEvent('phonograph:start', source, handle, url, nil, volume, offset, filter, coords)
 		else
 			ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
 		end
@@ -50,8 +65,8 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 	end
 end)
 
-AddEventHandler('phonograph:init', function(handle, url, title, volume, startTime)
-	AddPhonograph(handle, url, title, volume, startTime)
+AddEventHandler('phonograph:init', function(handle, url, title, volume, startTime, coords)
+	AddPhonograph(handle, url, title, volume, startTime, coords)
 end)
 
 AddEventHandler('phonograph:pause', function(handle, paused)

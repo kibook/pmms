@@ -106,7 +106,7 @@ function applyPhonographFilter(player) {
 	});
 }
 
-function initPlayer(handle, url, title, volume, offset, filter) {
+function initPlayer(handle, url, title, volume, offset, filter, coords) {
 	var player = getPlayer(handle, true);
 
 	url = interpretUrl(url);
@@ -131,20 +131,25 @@ function initPlayer(handle, url, title, volume, offset, filter) {
 			url: url,
 			title: title,
 			volume: volume,
-			startTime: Math.floor(Date.now() / 1000 - offset)
+			startTime: Math.floor(Date.now() / 1000 - offset),
+			coords: coords
 		});
 	}, {once: true});
 
 	player.src = url;
 }
 
-function init(handle, url, title, volume, offset, filter) {
+function init(handle, url, title, volume, offset, filter, coords) {
+	if (url == '') {
+		return;
+	}
+
 	showLoadingIcon();
 
 	offset = parseTimecode(offset);
 
 	if (title) {
-		initPlayer(handle, url, title, volume, offset);
+		initPlayer(handle, url, title, volume, offset, filter, coords);
 	} else{
 		jsmediatags.read(url, {
 			onSuccess: function(tag) {
@@ -156,10 +161,10 @@ function init(handle, url, title, volume, offset, filter) {
 					title = url;
 				}
 
-				initPlayer(handle, url, title, volume, offset, filter);
+				initPlayer(handle, url, title, volume, offset, filter, coords);
 			},
 			onError: function(error) {
-				initPlayer(handle, url, url, volume, offset, filter);
+				initPlayer(handle, url, url, volume, offset, filter, coords);
 			}
 		});
 	}
@@ -271,6 +276,10 @@ function updateUi(data) {
 			handleDiv.className = 'active-phonograph-handle';
 			handleDiv.innerHTML = phonograph.handle.toString(16);
 
+			var distanceDiv = document.createElement('div');
+			distanceDiv.className = 'active-phonograph-distance';
+			distanceDiv.innerHTML = Math.floor(phonograph.distance) + 'm';
+
 			var titleDiv = document.createElement('div');
 			titleDiv.className = 'active-phonograph-title';
 			titleDiv.innerHTML = phonograph.info.title;
@@ -312,6 +321,7 @@ function updateUi(data) {
 			controlsDiv.appendChild(stopButton);
 
 			div.appendChild(handleDiv);
+			div.appendChild(distanceDiv);
 			div.appendChild(titleDiv);
 			div.appendChild(volumeDiv);
 			div.appendChild(timeDiv);
@@ -441,6 +451,7 @@ function startPhonograph() {
 		filter: filter
 	});
 
+	presetSelect.value = '';
 	urlInput.value = '';
 	volumeInput.value = 100;
 	offsetInput.value = '00:00:00';
@@ -470,7 +481,7 @@ function showStatus(handle) {
 window.addEventListener('message', event => {
 	switch (event.data.type) {
 		case 'init':
-			init(event.data.handle, event.data.url, event.data.title, event.data.volume, event.data.offset, event.data.filter);
+			init(event.data.handle, event.data.url, event.data.title, event.data.volume, event.data.offset, event.data.filter, event.data.coords);
 			break;
 		case 'play':
 			play(event.data.handle);

@@ -56,7 +56,7 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 
 	if IsPlayerAceAllowed(source, 'phonograph.interact') then
 		if Config.Presets[url] then
-			TriggerClientEvent('phonograph:start', source, handle, Config.Presets[url].url, Config.Presets[url].title, volume, offset, filter, coords)
+			TriggerClientEvent('phonograph:start', source, handle, Config.Presets[url].url, Config.Presets[url].title, volume, offset, Config.Presets[url].filter, coords)
 		elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then
 			TriggerClientEvent('phonograph:start', source, handle, url, nil, volume, offset, filter, coords)
 		else

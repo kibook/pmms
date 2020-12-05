@@ -5,7 +5,7 @@ Config.MaxDistance = 30
 
 -- Pre-defined music URLs
 Config.Presets = {
-	--['1'] = {title = 'Example Preset', url = 'https://example.com/example.ogg'}
+	--['1'] = {title = 'Example Preset', url = 'https://example.com/example.ogg', filter = true}
 }
 
 -- These phonographs will be automatically spawned and start playing when the resource starts

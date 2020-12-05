@@ -139,10 +139,6 @@ function initPlayer(handle, url, title, volume, offset, filter, coords) {
 	player.src = url;
 }
 
-function getUrlFileName(url) {
-	return url.match(/[^\/?#]+(?=$|[?#])/).toString();
-}
-
 function init(handle, url, title, volume, offset, filter, coords) {
 	if (url == '') {
 		return;
@@ -168,7 +164,7 @@ function init(handle, url, title, volume, offset, filter, coords) {
 				initPlayer(handle, url, title, volume, offset, filter, coords);
 			},
 			onError: function(error) {
-				initPlayer(handle, url, getUrlFileName(url), volume, offset, filter, coords);
+				initPlayer(handle, url, url, volume, offset, filter, coords);
 			}
 		});
 	}
@@ -286,7 +282,7 @@ function updateUi(data) {
 
 			var titleDiv = document.createElement('div');
 			titleDiv.className = 'active-phonograph-title';
-			titleDiv.innerHTML = phonograph.info.title.substring(0, 63);
+			titleDiv.innerHTML = phonograph.info.title.substring(0, 47);
 
 			var volumeDiv = document.createElement('div');
 			volumeDiv.className = 'active-phonograph-volume';

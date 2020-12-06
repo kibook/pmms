@@ -6,6 +6,7 @@ RegisterNetEvent('phonograph:init')
 RegisterNetEvent('phonograph:pause')
 RegisterNetEvent('phonograph:stop')
 RegisterNetEvent('phonograph:showControls')
+RegisterNetEvent('phonograph:toggleStatus')
 RegisterNetEvent('phonograph:setVolume')
 RegisterNetEvent('phonograph:setStartTime')
 
@@ -174,6 +175,10 @@ end)
 
 AddEventHandler('phonograph:showControls', function()
 	TriggerClientEvent('phonograph:showControls', source)
+end)
+
+AddEventHandler('phonograph:toggleStatus', function()
+	TriggerClientEvent('phonograph:toggleStatus', source)
 end)
 
 AddEventHandler('phonograph:setVolume', function(handle, volume)

@@ -161,3 +161,12 @@ option {
 .active-phonograph-time span {
 	padding: 0 0.25vw;
 }
+
+#status {
+	display: none;
+	background: none;
+	position: absolute;
+	bottom: 2%;
+	right: 1%;
+	color: #fff;
+}

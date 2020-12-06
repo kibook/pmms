@@ -1,3 +1,5 @@
+var statusMaxDistance = 30;
+
 var attenuationFactor = 4.0;
 var volumeFactor = 1.0;
 
@@ -271,128 +273,149 @@ function timeToString(time) {
 	return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
+function createActivePhonographDiv(phonograph) {
+	var player = getPlayer(phonograph.handle);
+
+	if (player) {
+		var div = document.createElement('div');
+		div.className = 'active-phonograph';
+
+		var handleDiv = document.createElement('div');
+		handleDiv.className = 'active-phonograph-handle';
+		handleDiv.innerHTML = phonograph.handle.toString(16);
+
+		var distanceDiv = document.createElement('div');
+		distanceDiv.className = 'active-phonograph-distance';
+		distanceDiv.innerHTML = Math.floor(phonograph.distance) + 'm';
+
+		var titleDiv = document.createElement('div');
+		titleDiv.className = 'active-phonograph-title';
+		titleDiv.innerHTML = phonograph.info.title.substring(0, 47);
+
+		var volumeDiv = document.createElement('div');
+		volumeDiv.className = 'active-phonograph-volume';
+
+		var volumeDownButton = document.createElement('button');
+		volumeDownButton.className = 'control-button';
+		volumeDownButton.innerHTML = '<i class="fa fa-volume-down"></i>';
+		volumeDownButton.addEventListener('click', event => {
+			sendMessage('volumeDown', {
+				handle: phonograph.handle
+			});
+		});
+
+		var volumeUpButton = document.createElement('button');
+		volumeUpButton.className = 'control-button';
+		volumeUpButton.innerHTML = '<i class="fa fa-volume-up"></i>';
+		volumeUpButton.addEventListener('click', event => {
+			sendMessage('volumeUp', {
+				handle: phonograph.handle
+			});
+		});
+
+		var volumeSpan = document.createElement('span');
+		volumeSpan.innerHTML = phonograph.info.volume;
+
+		volumeDiv.appendChild(volumeDownButton);
+		volumeDiv.appendChild(volumeSpan);
+		volumeDiv.appendChild(volumeUpButton);
+
+		var timeDiv = document.createElement('div');
+		timeDiv.className = 'active-phonograph-time';
+
+		var timeSpan = document.createElement('span');
+		if (player.duration && player.duration != Infinity) {
+			timeSpan.innerHTML = timeToString(player.currentTime) + '/' + timeToString(player.duration);
+		} else {
+			timeSpan.innerHTML = timeToString(player.currentTime);
+		}
+
+		var seekBackwardButton = document.createElement('button');
+		seekBackwardButton.className = 'control-button';
+		seekBackwardButton.innerHTML = '<i class="fa fa-backward"></i>';
+		seekBackwardButton.addEventListener('click', event => {
+			sendMessage('seekBackward', {
+				handle: phonograph.handle
+			});
+		});
+
+		var seekForwardButton = document.createElement('button');
+		seekForwardButton.className = 'control-button';
+		seekForwardButton.innerHTML = '<i class="fa fa-forward"></i>';
+		seekForwardButton.addEventListener('click', event => {
+			sendMessage('seekForward', {
+				handle: phonograph.handle
+			});
+		});
+
+		timeDiv.appendChild(seekBackwardButton);
+		timeDiv.appendChild(timeSpan);
+		timeDiv.appendChild(seekForwardButton);
+
+		var controlsDiv = document.createElement('div');
+		controlsDiv.className = 'active-phonograph-controls';
+
+		var pauseResumeButton = document.createElement('button');
+		pauseResumeButton.className = 'control-button';
+		if (phonograph.info.paused) {
+			pauseResumeButton.innerHTML = '<i class="fa fa-play"></i>';
+		} else {
+			pauseResumeButton.innerHTML = '<i class="fa fa-pause"></i>';
+		}
+		pauseResumeButton.addEventListener('click', event => {
+			pause(phonograph.handle);
+		});
+
+		var stopButton = document.createElement('button');
+		stopButton.className = 'control-button';
+		stopButton.innerHTML = '<i class="fa fa-stop"></i>';
+		stopButton.addEventListener('click', event => {
+			sendMessage('stop', {
+				handle: phonograph.handle
+			});
+		});
+
+		controlsDiv.appendChild(pauseResumeButton);
+		controlsDiv.appendChild(stopButton);
+
+		div.appendChild(handleDiv);
+		div.appendChild(distanceDiv);
+		div.appendChild(titleDiv);
+		div.appendChild(volumeDiv);
+		div.appendChild(timeDiv);
+		div.appendChild(controlsDiv);
+
+		return div;
+	} else {
+		return null;
+	}
+}
+
 function updateUi(data) {
 	var activePhonographs = JSON.parse(data.activePhonographs);
 
 	var activePhonographsDiv = document.getElementById('active-phonographs');
-
 	activePhonographsDiv.innerHTML = '';
-
 	activePhonographs.forEach(phonograph => {
-		var player = getPlayer(phonograph.handle);
+		var div = createActivePhonographDiv(phonograph);
 
-		if (player) {
-			var div = document.createElement('div');
-			div.className = 'active-phonograph';
-
-			var handleDiv = document.createElement('div');
-			handleDiv.className = 'active-phonograph-handle';
-			handleDiv.innerHTML = phonograph.handle.toString(16);
-
-			var distanceDiv = document.createElement('div');
-			distanceDiv.className = 'active-phonograph-distance';
-			distanceDiv.innerHTML = Math.floor(phonograph.distance) + 'm';
-
-			var titleDiv = document.createElement('div');
-			titleDiv.className = 'active-phonograph-title';
-			titleDiv.innerHTML = phonograph.info.title.substring(0, 47);
-
-			var volumeDiv = document.createElement('div');
-			volumeDiv.className = 'active-phonograph-volume';
-
-			var volumeDownButton = document.createElement('button');
-			volumeDownButton.className = 'control-button';
-			volumeDownButton.innerHTML = '<i class="fa fa-volume-down"></i>';
-			volumeDownButton.addEventListener('click', event => {
-				sendMessage('volumeDown', {
-					handle: phonograph.handle
-				});
-			});
-
-			var volumeUpButton = document.createElement('button');
-			volumeUpButton.className = 'control-button';
-			volumeUpButton.innerHTML = '<i class="fa fa-volume-up"></i>';
-			volumeUpButton.addEventListener('click', event => {
-				sendMessage('volumeUp', {
-					handle: phonograph.handle
-				});
-			});
-
-			var volumeSpan = document.createElement('span');
-			volumeSpan.innerHTML = phonograph.info.volume;
-
-			volumeDiv.appendChild(volumeDownButton);
-			volumeDiv.appendChild(volumeSpan);
-			volumeDiv.appendChild(volumeUpButton);
-
-			var timeDiv = document.createElement('div');
-			timeDiv.className = 'active-phonograph-time';
-
-			var timeSpan = document.createElement('span');
-			if (player.duration && player.duration != Infinity) {
-				timeSpan.innerHTML = timeToString(player.currentTime) + '/' + timeToString(player.duration);
-			} else {
-				timeSpan.innerHTML = timeToString(player.currentTime);
-			}
-
-			var seekBackwardButton = document.createElement('button');
-			seekBackwardButton.className = 'control-button';
-			seekBackwardButton.innerHTML = '<i class="fa fa-backward"></i>';
-			seekBackwardButton.addEventListener('click', event => {
-				sendMessage('seekBackward', {
-					handle: phonograph.handle
-				});
-			});
-
-			var seekForwardButton = document.createElement('button');
-			seekForwardButton.className = 'control-button';
-			seekForwardButton.innerHTML = '<i class="fa fa-forward"></i>';
-			seekForwardButton.addEventListener('click', event => {
-				sendMessage('seekForward', {
-					handle: phonograph.handle
-				});
-			});
-
-			timeDiv.appendChild(seekBackwardButton);
-			timeDiv.appendChild(timeSpan);
-			timeDiv.appendChild(seekForwardButton);
-
-			var controlsDiv = document.createElement('div');
-			controlsDiv.className = 'active-phonograph-controls';
-
-			var pauseResumeButton = document.createElement('button');
-			pauseResumeButton.className = 'control-button';
-			if (phonograph.info.paused) {
-				pauseResumeButton.innerHTML = '<i class="fa fa-play"></i>';
-			} else {
-				pauseResumeButton.innerHTML = '<i class="fa fa-pause"></i>';
-			}
-			pauseResumeButton.addEventListener('click', event => {
-				pause(phonograph.handle);
-			});
-
-			var stopButton = document.createElement('button');
-			stopButton.className = 'control-button';
-			stopButton.innerHTML = '<i class="fa fa-stop"></i>';
-			stopButton.addEventListener('click', event => {
-				sendMessage('stop', {
-					handle: phonograph.handle
-				});
-			});
-
-			controlsDiv.appendChild(pauseResumeButton);
-			controlsDiv.appendChild(stopButton);
-
-			div.appendChild(handleDiv);
-			div.appendChild(distanceDiv);
-			div.appendChild(titleDiv);
-			div.appendChild(volumeDiv);
-			div.appendChild(timeDiv);
-			div.appendChild(controlsDiv);
-
+		if (div) {
 			activePhonographsDiv.appendChild(div);
 		}
 	});
+
+	var statusDiv = document.getElementById('status');
+	statusDiv.innerHTML = '';
+	for (i = 0; i < activePhonographs.length; ++i) {
+		if (activePhonographs[i].distance <= data.maxDistance) {
+			var div = createActivePhonographDiv(activePhonographs[i]);
+
+			if (div) {
+				statusDiv.appendChild(div);
+				break;
+			}
+		}
+	}
 
 	var inactivePhonographs = JSON.parse(data.inactivePhonographs);
 	var presets = JSON.parse(data.presets);
@@ -493,6 +516,16 @@ function hideUi() {
 	document.getElementById('ui').style.display = 'none';
 }
 
+function toggleStatus() {
+	var statusDiv = document.getElementById('status');
+
+	if (statusDiv.style.display == 'flex') {
+		statusDiv.style.display = 'none';
+	} else {
+		statusDiv.style.display = 'flex';
+	}
+}
+
 function startPhonograph() {
 	var handleInput = document.getElementById('inactive-phonographs');
 	var presetSelect = document.getElementById('preset');
@@ -532,27 +565,6 @@ function startPhonograph() {
 	offsetInput.value = '00:00:00';
 }
 
-function showStatus(handle) {
-	var player = getPlayer(handle);
-
-	var currentTime;
-	var duration;
-
-	if (player) {
-		currentTime = timeToString(player.currentTime);
-		duration = timeToString(player.duration);
-	} else {
-		currentTime = '00:00:00';
-		duration = '00:00:00';
-	}
-
-	sendMessage('status', {
-		handle: handle,
-		currentTime: currentTime,
-		duration: duration
-	});
-}
-
 window.addEventListener('message', event => {
 	switch (event.data.type) {
 		case 'init':
@@ -567,9 +579,6 @@ window.addEventListener('message', event => {
 		case 'stop':
 			stop(event.data.handle);
 			break;
-		case 'status':
-			showStatus(event.data.handle, event.data.startTime);
-			break;
 		case 'update':
 			update(event.data.handle, event.data.url, event.data.title, event.data.volume, event.data.offset, event.data.startTime, event.data.filter, event.data.paused, event.data.coords, event.data.distance, event.data.sameRoom);
 			break;
@@ -578,6 +587,9 @@ window.addEventListener('message', event => {
 			break;
 		case 'hideUi':
 			hideUi();
+			break;
+		case 'toggleStatus':
+			toggleStatus();
 			break;
 		case 'updateUi':
 			updateUi(event.data);

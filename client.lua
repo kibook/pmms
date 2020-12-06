@@ -5,6 +5,7 @@ RegisterNetEvent('phonograph:start')
 RegisterNetEvent('phonograph:play')
 RegisterNetEvent('phonograph:stop')
 RegisterNetEvent('phonograph:showControls')
+RegisterNetEvent('phonograph:toggleStatus')
 RegisterNetEvent('phonograph:error')
 
 local entityEnumerator = {
@@ -116,20 +117,6 @@ end
 
 function StopClosestPhonograph()
 	StopPhonograph(GetClosestPhonograph())
-end
-
-function StatusPhonograph(handle)
-	local phonograph = Phonographs[handle]
-
-	SendNUIMessage({
-		type = 'status',
-		handle = handle,
-		startTime = phonograph and phonograph.startTime
-	})
-end
-
-function StatusClosestPhonograph()
-	StatusPhonograph(GetClosestPhonograph())
 end
 
 function GetListenerCoords(ped)
@@ -274,7 +261,8 @@ function UpdateUi(fullControls, anyUrl)
 		activePhonographs = json.encode(activePhonographs),
 		inactivePhonographs = json.encode(inactivePhonographs),
 		presets = json.encode(Config.Presets),
-		anyUrl = anyUrl
+		anyUrl = anyUrl,
+		maxDistance = Config.MaxDistance
 	})
 end
 
@@ -321,7 +309,7 @@ RegisterCommand('phono', function(source, args, raw)
 		elseif command == 'stop' then
 			StopClosestPhonograph()
 		elseif command == 'status' then
-			StatusClosestPhonograph()
+			TriggerServerEvent('phonograph:toggleStatus')
 		elseif command == 'songs' then
 			ListPresets()
 		end
@@ -362,28 +350,6 @@ end)
 
 RegisterNUICallback('stop', function(data, cb)
 	StopPhonograph(data.handle)
-	cb({})
-end)
-
-RegisterNUICallback('status', function(data, cb)
-	local phonograph = Phonographs[data.handle]
-
-	if phonograph then
-		TriggerEvent('chat:addMessage', {
-			args = {string.format('[%x] %s 🔊%d 🕒%s/%s %s',
-				data.handle,
-				phonograph.title,
-				phonograph.volume,
-				data.currentTime,
-				data.duration,
-				phonograph.paused and '⏸' or '▶️')}
-		})
-	else
-		TriggerEvent('chat:addMessage', {
-			args = {string.format('[%x] Not playing', data.handle)}
-		})
-	end
-
 	cb({})
 end)
 
@@ -449,6 +415,12 @@ AddEventHandler('phonograph:showControls', function()
 		type = 'showUi'
 	})
 	SetNuiFocus(true, true)
+end)
+
+AddEventHandler('phonograph:toggleStatus', function()
+	SendNUIMessage({
+		type = 'toggleStatus'
+	})
 end)
 
 AddEventHandler('phonograph:error', function(message)

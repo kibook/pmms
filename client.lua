@@ -284,6 +284,14 @@ function CreatePhonograph(phonograph)
 	SetEntityRotation(phonograph.handle, phonograph.pitch, phonograph.roll, phonograph.yaw, 2)
 end
 
+function SetPhonographVolume(handle, volume)
+	TriggerServerEvent('phonograph:setVolume', handle, volume)
+end
+
+function SetPhonographStartTime(handle, time)
+	TriggerServerEvent('phonograph:setStartTime', handle, time)
+end
+
 RegisterCommand('phono', function(source, args, raw)
 	if #args > 0 then
 		local command = args[1]
@@ -375,10 +383,6 @@ RegisterNUICallback('closeUi', function(data, cb)
 	cb({})
 end)
 
-function SetPhonographVolume(handle, volume)
-	TriggerServerEvent('phonograph:setVolume', handle, volume)
-end
-
 RegisterNUICallback('volumeDown', function(data, cb)
 	SetPhonographVolume(data.handle, Phonographs[data.handle].volume - 5)
 	cb({})
@@ -387,6 +391,14 @@ end)
 RegisterNUICallback('volumeUp', function(data, cb)
 	SetPhonographVolume(data.handle, Phonographs[data.handle].volume + 5)
 	cb({})
+end)
+
+RegisterNUICallback('seekBackward', function(data, cb)
+	SetPhonograpaStarthTime(data.handle, Phonographs[data.handle].startTime - 10)
+end)
+
+RegisterNUICallback('seekForward', function(data, cb)
+	SetPhonographStartTime(data.handle, Phonographs[data.handle].startTime - 10)
 end)
 
 AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)

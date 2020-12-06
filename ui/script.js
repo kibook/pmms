@@ -327,11 +327,35 @@ function updateUi(data) {
 
 			var timeDiv = document.createElement('div');
 			timeDiv.className = 'active-phonograph-time';
+
+			var timeSpan = document.createElement('span');
 			if (player.duration && player.duration != Infinity) {
-				timeDiv.innerHTML = '<i class="fa fa-clock-o"></i> ' + timeToString(player.currentTime) + '/' + timeToString(player.duration);
+				timeSpan.innerHTML = '<i class="fa fa-clock-o"></i> ' + timeToString(player.currentTime) + '/' + timeToString(player.duration);
 			} else {
-				timeDiv.innerHTML = '<i class="fa fa-clock-o"></i> ' + timeToString(player.currentTime);
+				timeSpan.innerHTML = '<i class="fa fa-clock-o"></i> ' + timeToString(player.currentTime);
 			}
+
+			var seekBackwardButton = document.createElement('button');
+			seekBackwardButton.className = 'seek-button';
+			seekBackwardButton.innerHTML = '<i class="fa fa-backward"></i>';
+			seekBackwardButton.addEventListener('click', event => {
+				sendMessage('seekBackward', {
+					handle: phonograph.handle
+				});
+			});
+
+			var seekForwardButton = document.createElement('button');
+			seekForwardButton.className = 'seek-button';
+			seekForwardButton.innerHTML = '<i class="fa fa-forward"></i>';
+			seekForwardButton.addEventListener('click', event => {
+				sendMessage('seekForward', {
+					handle: phonograph.handle
+				});
+			});
+
+			timeDiv.appendChild(timeSpan);
+			timeDiv.appendChild(seekBackwardButton);
+			timeDiv.appendChild(seekForwardButton);
 
 			var controlsDiv = document.createElement('div');
 			controlsDiv.className = 'active-phonograph-controls';

@@ -455,13 +455,25 @@ function updateUi(data) {
 			inactivePhonographsSelect.appendChild(option);
 		});
 
+
+		if (presetSelect.value == '') {
+			urlInput.disabled = false;
+			filterCheckbox.disabled = false;
+		} else {
+			urlInput.disabled = true;
+			filterCheckbox.disabled = true;
+		}
+
 		inactivePhonographsSelect.disabled = false;
 		presetSelect.disabled = false;
-		urlInput.disabled = false;
 		volumeInput.disabled = false;
 		offsetInput.disabled = false;
-		filterCheckbox.disabled = false;
-		playButton.disabled = false;
+
+		if (presetSelect.value == '' && urlInput.value == '') {
+			playButton.disabled = true;
+		} else {
+			playButton.disabled = false;
+		}
 	}
 
 	if (data.anyUrl) {

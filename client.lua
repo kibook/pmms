@@ -529,9 +529,9 @@ CreateThread(function()
 	while true do
 		Wait(0)
 
-		for _, defaultPhonograph in ipairs(Config.DefaultPhonographs) do
-			if not defaultPhonograph.handle or not DoesEntityExist(defaultPhonograph.handle) then
-				CreatePhonograph(defaultPhonograph)
+		for _, phonograph in ipairs(Config.DefaultPhonographs) do
+			if (not phonograph.handle or not DoesEntityExist(phonograph.handle)) and phonograph.spawn then
+				CreatePhonograph(phonograph)
 			end
 		end
 	end

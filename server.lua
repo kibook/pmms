@@ -80,7 +80,7 @@ function StartDefaultPhonographs()
 				url = GetRandomPreset()
 			end
 
-			local startTime = os.time() - phonograph.offset
+			local startTime = os.time() - offset
 
 			if Config.Presets[url] then
 				AddPhonograph(handle,

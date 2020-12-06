@@ -301,7 +301,7 @@ function updateUi(data) {
 			volumeDiv.className = 'active-phonograph-volume';
 
 			var volumeDownButton = document.createElement('button');
-			volumeDownButton.className = 'volume-button';
+			volumeDownButton.className = 'control-button';
 			volumeDownButton.innerHTML = '<i class="fa fa-volume-down"></i>';
 			volumeDownButton.addEventListener('click', event => {
 				sendMessage('volumeDown', {
@@ -310,7 +310,7 @@ function updateUi(data) {
 			});
 
 			var volumeUpButton = document.createElement('button');
-			volumeUpButton.className = 'volume-button';
+			volumeUpButton.className = 'control-button';
 			volumeUpButton.innerHTML = '<i class="fa fa-volume-up"></i>';
 			volumeUpButton.addEventListener('click', event => {
 				sendMessage('volumeUp', {
@@ -336,7 +336,7 @@ function updateUi(data) {
 			}
 
 			var seekBackwardButton = document.createElement('button');
-			seekBackwardButton.className = 'seek-button';
+			seekBackwardButton.className = 'control-button';
 			seekBackwardButton.innerHTML = '<i class="fa fa-backward"></i>';
 			seekBackwardButton.addEventListener('click', event => {
 				sendMessage('seekBackward', {
@@ -345,7 +345,7 @@ function updateUi(data) {
 			});
 
 			var seekForwardButton = document.createElement('button');
-			seekForwardButton.className = 'seek-button';
+			seekForwardButton.className = 'control-button';
 			seekForwardButton.innerHTML = '<i class="fa fa-forward"></i>';
 			seekForwardButton.addEventListener('click', event => {
 				sendMessage('seekForward', {
@@ -361,6 +361,7 @@ function updateUi(data) {
 			controlsDiv.className = 'active-phonograph-controls';
 
 			var pauseResumeButton = document.createElement('button');
+			pauseResumeButton.className = 'control-button';
 			if (phonograph.info.paused) {
 				pauseResumeButton.innerHTML = '<i class="fa fa-play"></i>';
 			} else {
@@ -371,6 +372,7 @@ function updateUi(data) {
 			});
 
 			var stopButton = document.createElement('button');
+			stopButton.className = 'control-button';
 			stopButton.innerHTML = '<i class="fa fa-stop"></i>';
 			stopButton.addEventListener('click', event => {
 				sendMessage('stop', {

@@ -150,9 +150,8 @@ option {
 	text-align: center;
 }
 
-.volume-button, .seek-button {
+.control-button {
 	width: 1.5vw;
-	height: 1.5vw;
 }
 
 .active-phonograph-volume span {

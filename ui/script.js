@@ -432,7 +432,12 @@ function updateUi(data) {
 	var presetValue = presetSelect.value;
 
 	inactivePhonographsSelect.innerHTML = '';
-	presetSelect.innerHTML = '<option></option>';
+
+	if (presetValue == 'random') {
+		presetSelect.innerHTML = '<option></option><option value="random" selected="true">Random</option>';
+	} else {
+		presetSelect.innerHTML = '<option></option><option value="random">Random</option>';
+	}
 
 	var presetKeys = Object.keys(presets).sort();
 

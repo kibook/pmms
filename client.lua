@@ -394,7 +394,7 @@ RegisterNUICallback('volumeUp', function(data, cb)
 end)
 
 RegisterNUICallback('seekBackward', function(data, cb)
-	SetPhonograpaStarthTime(data.handle, Phonographs[data.handle].startTime - 10)
+	SetPhonographStartTime(data.handle, Phonographs[data.handle].startTime + 10)
 	cb({})
 end)
 

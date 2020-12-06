@@ -395,10 +395,12 @@ end)
 
 RegisterNUICallback('seekBackward', function(data, cb)
 	SetPhonograpaStarthTime(data.handle, Phonographs[data.handle].startTime - 10)
+	cb({})
 end)
 
 RegisterNUICallback('seekForward', function(data, cb)
 	SetPhonographStartTime(data.handle, Phonographs[data.handle].startTime - 10)
+	cb({})
 end)
 
 AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)

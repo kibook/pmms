@@ -149,3 +149,12 @@ option {
 	display: none;
 	text-align: center;
 }
+
+.volume-button {
+	width: 1.5vw;
+	height: 1.5vw;
+}
+
+.active-phonograph-volume span {
+	padding: 0vh 0.25vw;
+}

@@ -299,7 +299,31 @@ function updateUi(data) {
 
 			var volumeDiv = document.createElement('div');
 			volumeDiv.className = 'active-phonograph-volume';
-			volumeDiv.innerHTML = '<i class="fa fa-volume-up"></i> ' + phonograph.info.volume;
+
+			var volumeDownButton = document.createElement('button');
+			volumeDownButton.className = 'volume-button';
+			volumeDownButton.innerHTML = '<i class="fa fa-volume-down"></i>';
+			volumeDownButton.addEventListener('click', event => {
+				sendMessage('volumeDown', {
+					handle: phonograph.handle
+				});
+			});
+
+			var volumeUpButton = document.createElement('button');
+			volumeUpButton.className = 'volume-button';
+			volumeUpButton.innerHTML = '<i class="fa fa-volume-up"></i>';
+			volumeUpButton.addEventListener('click', event => {
+				sendMessage('volumeUp', {
+					handle: phonograph.handle
+				});
+			});
+
+			var volumeSpan = document.createElement('span');
+			volumeSpan.innerHTML = phonograph.info.volume;
+
+			volumeDiv.appendChild(volumeDownButton);
+			volumeDiv.appendChild(volumeSpan);
+			volumeDiv.appendChild(volumeUpButton);
 
 			var timeDiv = document.createElement('div');
 			timeDiv.className = 'active-phonograph-time';

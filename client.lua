@@ -375,6 +375,20 @@ RegisterNUICallback('closeUi', function(data, cb)
 	cb({})
 end)
 
+function SetPhonographVolume(handle, volume)
+	TriggerServerEvent('phonograph:setVolume', handle, volume)
+end
+
+RegisterNUICallback('volumeDown', function(data, cb)
+	SetPhonographVolume(data.handle, Phonographs[data.handle].volume - 5)
+	cb({})
+end)
+
+RegisterNUICallback('volumeUp', function(data, cb)
+	SetPhonographVolume(data.handle, Phonographs[data.handle].volume + 5)
+	cb({})
+end)
+
 AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	Phonographs = phonographs
 	UpdateUi(fullControls, anyUrl)

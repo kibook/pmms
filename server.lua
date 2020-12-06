@@ -6,6 +6,7 @@ RegisterNetEvent('phonograph:init')
 RegisterNetEvent('phonograph:pause')
 RegisterNetEvent('phonograph:stop')
 RegisterNetEvent('phonograph:showControls')
+RegisterNetEvent('phonograph:setVolume')
 
 function Enqueue(queue, cb)
 	table.insert(queue, 1, cb)
@@ -172,6 +173,22 @@ end)
 
 AddEventHandler('phonograph:showControls', function()
 	TriggerClientEvent('phonograph:showControls', source)
+end)
+
+AddEventHandler('phonograph:setVolume', function(handle, volume)
+	if not Phonographs[handle] then
+		return
+	end
+
+	if not volume then
+		volume = 100
+	elseif volume < 0 then
+		volume = 0
+	elseif volume > 100 then
+		volume = 100
+	end
+
+	Phonographs[handle].volume = volume
 end)
 
 CreateThread(function()

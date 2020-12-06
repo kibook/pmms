@@ -134,7 +134,16 @@ end
 
 function GetListenerCoords(ped)
 	local cam = GetRenderingCam()
-	return cam == -1 and GetEntityCoords(ped) or GetCamCoord(cam)
+
+	if cam == -1 then
+		if IsPedDeadOrDying(ped) then
+			return GetGameplayCamCoord()
+		else
+			return GetEntityCoords(ped)
+		end
+	else
+		return GetCamCoord(cam)
+	end
 end
 
 function SortByDistance(a, b)

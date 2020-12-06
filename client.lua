@@ -132,9 +132,9 @@ function StatusClosestPhonograph()
 	StatusPhonograph(GetClosestPhonograph())
 end
 
-function GetActiveCamCoord()
+function GetListenerCoords(ped)
 	local cam = GetRenderingCam()
-	return cam == -1 and GetGameplayCamCoord() or GetCamCoord(cam)
+	return cam == -1 and GetEntityCoords(ped) or GetCamCoord(cam)
 end
 
 function SortByDistance(a, b)
@@ -475,8 +475,8 @@ CreateThread(function()
 	while true do
 		Wait(0)
 
-		local pos = GetActiveCamCoord()
 		local ped = PlayerPedId()
+		local pos = GetListenerCoords(ped)
 
 		for handle, info in pairs(Phonographs) do
 			local object

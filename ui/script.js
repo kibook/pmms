@@ -330,9 +330,9 @@ function updateUi(data) {
 
 			var timeSpan = document.createElement('span');
 			if (player.duration && player.duration != Infinity) {
-				timeSpan.innerHTML = '<i class="fa fa-clock-o"></i> ' + timeToString(player.currentTime) + '/' + timeToString(player.duration);
+				timeSpan.innerHTML = timeToString(player.currentTime) + '/' + timeToString(player.duration);
 			} else {
-				timeSpan.innerHTML = '<i class="fa fa-clock-o"></i> ' + timeToString(player.currentTime);
+				timeSpan.innerHTML = timeToString(player.currentTime);
 			}
 
 			var seekBackwardButton = document.createElement('button');
@@ -353,8 +353,8 @@ function updateUi(data) {
 				});
 			});
 
-			timeDiv.appendChild(timeSpan);
 			timeDiv.appendChild(seekBackwardButton);
+			timeDiv.appendChild(timeSpan);
 			timeDiv.appendChild(seekForwardButton);
 
 			var controlsDiv = document.createElement('div');

@@ -253,9 +253,16 @@ function update(handle, url, title, baseVolume, offset, startTime, filter, pause
 			}
 
 			if (player.readyState > 0) {
-				var attenuationFactor = parseFloat(player.getAttribute('data-attenuationFactor'));
-				var volumeFactor = parseFloat(player.getAttribute('data-volumeFactor'));
-				var volume = ((baseVolume - distance * attenuationFactor) / 100) / volumeFactor;
+				var volume;
+
+				if (distance < 0) {
+					volume = 0;
+				} else {
+					var attenuationFactor = parseFloat(player.getAttribute('data-attenuationFactor'));
+					var volumeFactor = parseFloat(player.getAttribute('data-volumeFactor'));
+					volume = ((baseVolume - distance * attenuationFactor) / 100) / volumeFactor;
+				}
+
 				var currentTime = (Math.floor(Date.now() / 1000) - startTime) % player.duration;
 
 				if (Math.abs(currentTime - player.currentTime) > 2) {

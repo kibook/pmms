@@ -502,7 +502,7 @@ CreateThread(function()
 					filter = info.filter,
 					paused = info.paused,
 					coords = json.encode(info.coords),
-					distance = 0,
+					distance = -1,
 					sameRoom = false
 				})
 			end

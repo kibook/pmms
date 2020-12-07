@@ -1,7 +1,8 @@
-var statusMaxDistance = 30;
+const minAttenuationFactor = 4.0;
+const maxAttenuationFactor = 6.0;
 
-var attenuationFactor = 4.0;
-var volumeFactor = 1.0;
+const minVolumeFactor = 1.0;
+const maxVolumeFactor = 4.0;
 
 function sendMessage(name, params) {
 	return fetch('https://' + GetParentResourceName() + '/' + name, {
@@ -17,6 +18,8 @@ function initPlayer(id, handle, url, title, volume, offset, startTime, filter, c
 	player = document.createElement('audio');
 	player.crossOrigin = 'anonymous';
 	player.id = id;
+	player.setAttribute('data-attenuationFactor', maxAttenuationFactor);
+	player.setAttribute('data-volumeFactor', maxVolumeFactor);
 	document.body.appendChild(player);
 
 	url = interpretUrl(url);
@@ -204,20 +207,28 @@ function stop(handle) {
 	}
 }
 
-function setAttenuationFactor(target) {
+function setAttenuationFactor(player, target) {
+	var attenuationFactor = parseFloat(player.getAttribute('data-attenuationFactor'));
+
 	if (attenuationFactor > target) {
 		attenuationFactor -= 0.1;
 	} else {
 		attenuationFactor += 0.1;
 	}
+
+	player.setAttribute('data-attenuationFactor', attenuationFactor);
 }
 
-function setVolumeFactor(target) {
+function setVolumeFactor(player, target) {
+	var volumeFactor = parseFloat(player.getAttribute('data-volumeFactor'));
+
 	if (volumeFactor > target) {
 		volumeFactor -= 0.1;
 	} else {
 		volumeFactor += 0.1;
 	}
+
+	player.setAttribute('data-volumeFactor', volumeFactor);
 }
 
 function update(handle, url, title, baseVolume, offset, startTime, filter, paused, coords, distance, sameRoom) {
@@ -230,11 +241,11 @@ function update(handle, url, title, baseVolume, offset, startTime, filter, pause
 			}
 		} else {
 			if (sameRoom) {
-				setAttenuationFactor(4.0);
-				setVolumeFactor(1.0);
+				setAttenuationFactor(player, minAttenuationFactor);
+				setVolumeFactor(player, minVolumeFactor);
 			} else {
-				setAttenuationFactor(6.0);
-				setVolumeFactor(4.0);
+				setAttenuationFactor(player, maxAttenuationFactor);
+				setVolumeFactor(player, maxVolumeFactor);
 			}
 
 			if (player.src != url) {
@@ -242,6 +253,8 @@ function update(handle, url, title, baseVolume, offset, startTime, filter, pause
 			}
 
 			if (player.readyState > 0) {
+				var attenuationFactor = parseFloat(player.getAttribute('data-attenuationFactor'));
+				var volumeFactor = parseFloat(player.getAttribute('data-volumeFactor'));
 				var volume = ((baseVolume - distance * attenuationFactor) / 100) / volumeFactor;
 				var currentTime = (Math.floor(Date.now() / 1000) - startTime) % player.duration;
 

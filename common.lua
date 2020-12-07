@@ -5,7 +5,7 @@ function GetRandomPreset()
 		table.insert(presets, preset)
 	end
 
-	return presets[math.random(#presets)]
+	return #presets > 0 and presets[math.random(#presets)] or ''
 end
 
 function GetHandleFromCoords(coords)

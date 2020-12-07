@@ -54,7 +54,13 @@ function GetHandle(object)
 end
 
 function GetServerHandle(handle)
-	return NetworkDoesNetworkIdExist(handle) and handle or GetHandleFromCoords(GetEntityCoords(handle))
+	if NetworkDoesNetworkIdExist(handle) then
+		return handle
+	elseif DoesEntityExist(handle) then
+		return GetHandleFromCoords(GetEntityCoords(handle))
+	else
+		return handle
+	end
 end
 
 function GetClosestPhonograph()

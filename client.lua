@@ -226,7 +226,7 @@ function UpdateUi(fullControls, anyUrl)
 				table.insert(activePhonographs, {
 					handle = handle,
 					info = info,
-					distance = 0
+					distance = -1
 				})
 			end
 		end

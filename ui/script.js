@@ -286,7 +286,12 @@ function createActivePhonographDiv(phonograph) {
 
 		var distanceDiv = document.createElement('div');
 		distanceDiv.className = 'active-phonograph-distance';
-		distanceDiv.innerHTML = Math.floor(phonograph.distance) + 'm';
+
+		if (phonograph.distance >= 0) {
+			distanceDiv.innerHTML = Math.floor(phonograph.distance) + 'm';
+		} else {
+			distanceDiv.innerHTML = '-';
+		}
 
 		var titleDiv = document.createElement('div');
 		titleDiv.className = 'active-phonograph-title';
@@ -407,7 +412,7 @@ function updateUi(data) {
 	var statusDiv = document.getElementById('status');
 	statusDiv.innerHTML = '';
 	for (i = 0; i < activePhonographs.length; ++i) {
-		if (activePhonographs[i].distance <= data.maxDistance) {
+		if (activePhonographs[i].distance >= 0 && activePhonographs[i].distance <= data.maxDistance) {
 			var div = createActivePhonographDiv(activePhonographs[i]);
 
 			if (div) {

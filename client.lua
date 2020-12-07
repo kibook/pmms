@@ -53,6 +53,10 @@ function GetHandle(object)
 	return NetworkGetEntityIsNetworked(object) and ObjToNet(object) or object
 end
 
+function GetServerHandle(handle)
+	return NetworkDoesNetworkIdExist(handle) and handle or GetHandleFromCoords(GetEntityCoords(handle))
+end
+
 function GetClosestPhonograph()
 	local pos = GetEntityCoords(PlayerPedId())
 
@@ -103,7 +107,7 @@ end
 function PausePhonograph(handle)
 	SendNUIMessage({
 		type = 'pause',
-		handle = handle
+		handle = GetServerHandle(handle)
 	})
 end
 
@@ -112,7 +116,7 @@ function PauseClosestPhonograph()
 end
 
 function StopPhonograph(handle)
-	TriggerServerEvent('phonograph:stop', handle)
+	TriggerServerEvent('phonograph:stop', GetServerHandle(handle))
 end
 
 function StopClosestPhonograph()

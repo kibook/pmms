@@ -142,7 +142,13 @@ function GetListenerCoords(ped)
 end
 
 function SortByDistance(a, b)
-	return a.distance < b.distance
+	if a.distance < 0 then
+		return false
+	elseif b.distance < 0 then
+		return true
+	else
+		return a.distance < b.distance
+	end
 end
 
 function IsInSameRoom(entity1, entity2)
@@ -204,7 +210,7 @@ function UpdateUi(fullControls, anyUrl)
 			object = NetToObj(handle)
 		end
 
-		if object then
+		if object and object > 0 then
 			local phonoPos = GetEntityCoords(object)
 			local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
 
@@ -528,7 +534,7 @@ CreateThread(function()
 				object = NetToObj(handle)
 			end
 
-			if object then
+			if object and object > 0 then
 				local phonoPos = GetEntityCoords(object)
 				local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
 

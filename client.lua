@@ -303,6 +303,8 @@ function SetBaseVolume(volume)
 	end
 
 	BaseVolume = volume
+
+	SetResourceKvp('baseVolume', tostring(BaseVolume))
 end
 
 RegisterCommand('phono', function(source, args, raw)
@@ -485,6 +487,14 @@ AddEventHandler('onResourceStop', function(resource)
 	end
 end)
 
+function RestoreBaseVolume()
+	local volume = GetResourceKvpString('baseVolume')
+
+	if volume then
+		BaseVolume = tonumber(volume)
+	end
+end
+
 CreateThread(function()
 	TriggerEvent('chat:addSuggestion', '/phono', 'Interact with phonographs. No arguments will open the phonograph control panel.', {
 		{name = 'command', help = 'play|pause|stop|status|songs'},
@@ -498,6 +508,8 @@ CreateThread(function()
 	TriggerEvent('chat:addSuggestion', '/phonovol', 'Adjust the base volume of all phonographs', {
 		{name = 'volume', help = '0-100'}
 	})
+
+	RestoreBaseVolume()
 end)
 
 CreateThread(function()

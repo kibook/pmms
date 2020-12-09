@@ -164,21 +164,7 @@ function IsInSameRoom(entity1, entity2)
 end
 
 function GetPhonographClosestToCoords(coords)
-	local closestObject, closestDistance
-
-	for object in EnumerateObjects() do
-		if IsPhonograph(object) then
-			local objectCoords = GetEntityCoords(object)
-			local distance = GetDistanceBetweenCoords(coords.x, coords.y, coords.z, objectCoords.x, objectCoords.y, objectCoords.z, true)
-
-			if distance < 1.0 and (not closestDistance or distance < closestDistance) then
-				closestObject = object
-				closestDistance = distance
-			end
-		end
-	end
-
-	return closestObject
+	return GetClosestObjectOfType(coords.x, coords.y, coords.z, 1.0, GetHashKey('p_phonograph01x'), true, false, false)
 end
 
 function ListPresets()

@@ -114,7 +114,7 @@ option {
 	flex-grow: 1;
 }
 
-#volume-container, #offset-container, #filter-container {
+#volume-container, #offset-container, #filter-container, #locked-container {
 	padding: 0 0.2vw;
 	white-space: nowrap;
 }

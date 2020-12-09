@@ -53,16 +53,6 @@ function GetHandle(object)
 	return NetworkGetEntityIsNetworked(object) and ObjToNet(object) or object
 end
 
-function GetServerHandle(handle)
-	if NetworkDoesNetworkIdExist(handle) then
-		return handle
-	elseif DoesEntityExist(handle) then
-		return GetHandleFromCoords(GetEntityCoords(handle))
-	else
-		return handle
-	end
-end
-
 function GetClosestPhonograph()
 	local pos = GetEntityCoords(PlayerPedId())
 
@@ -81,10 +71,14 @@ function GetClosestPhonograph()
 		end
 	end
 
-	return GetHandle(closestPhonograph)
+	if NetworkGetEntityIsNetworked(closestPhonograph) then
+		return ObjToNet(closestPhonograph), true
+	else
+		return closestPhonograph, false
+	end
 end
 
-function StartPhonograph(handle, url, volume, offset, filter)
+function StartPhonograph(handle, url, volume, offset, filter, locked)
 	if url == 'random' then
 		url = GetRandomPreset()
 	end
@@ -103,30 +97,33 @@ function StartPhonograph(handle, url, volume, offset, filter)
 
 	local coords = not NetworkDoesNetworkIdExist(handle) and GetEntityCoords(handle)
 
-	TriggerServerEvent('phonograph:start', handle, url, volume, offset, filter, coords)
+	TriggerServerEvent('phonograph:start', handle, url, volume, offset, filter, locked, coords)
 end
 
-function StartClosestPhonograph(url, volume, offset, filter)
-	StartPhonograph(GetClosestPhonograph(), url, volume, offset, filter)
+function StartClosestPhonograph(url, volume, offset, filter, locked)
+	local closestPhonograph, isNetId = GetClosestPhonograph()
+	StartPhonograph(closestPhonograph, url, volume, offset, filter, locked)
 end
 
-function PausePhonograph(handle)
+function PausePhonograph(handle, isNetId)
 	SendNUIMessage({
 		type = 'pause',
-		handle = GetServerHandle(handle)
+		handle = isNetId and handle or GetHandleFromCoords(GetEntityCoords(handle))
 	})
 end
 
 function PauseClosestPhonograph()
-	PausePhonograph(GetClosestPhonograph())
+	local closestPhonograph, isNetId = GetClosestPhonograph()
+	PausePhonograph(closestPhonograph, isNetId)
 end
 
-function StopPhonograph(handle)
-	TriggerServerEvent('phonograph:stop', GetServerHandle(handle))
+function StopPhonograph(handle, isNetId)
+	TriggerServerEvent('phonograph:stop', isNetId and handle or GetHandleFromCoords(GetEntityCoords(handle)))
 end
 
 function StopClosestPhonograph()
-	StopPhonograph(GetClosestPhonograph())
+	local closestPhonograph, isNetId = GetClosestPhonograph()
+	StopPhonograph(closestPhonograph, isNetId)
 end
 
 function GetListenerCoords(ped)
@@ -272,7 +269,8 @@ function UpdateUi(fullControls, anyUrl)
 		inactivePhonographs = json.encode(inactivePhonographs),
 		presets = json.encode(Config.Presets),
 		anyUrl = anyUrl,
-		maxDistance = Config.MaxDistance
+		maxDistance = Config.MaxDistance,
+		fullControls = fullControls
 	})
 end
 
@@ -299,6 +297,14 @@ function SetPhonographStartTime(handle, time)
 	TriggerServerEvent('phonograph:setStartTime', handle, time)
 end
 
+function LockPhonograph(handle)
+	TriggerServerEvent('phonograph:lock', handle)
+end
+
+function UnlockPhonograph(handle)
+	TriggerServerEvent('phonograph:unlock', handle)
+end
+
 RegisterCommand('phono', function(source, args, raw)
 	if #args > 0 then
 		local command = args[1]
@@ -309,8 +315,9 @@ RegisterCommand('phono', function(source, args, raw)
 				local volume = tonumber(args[3])
 				local offset = args[4]
 				local filter = args[5] == '1'
+				local locked = args[6] == '1'
 
-				StartClosestPhonograph(url, volume, offset, filter)
+				StartClosestPhonograph(url, volume, offset, filter, locked)
 			else
 				PauseClosestPhonograph()
 			end
@@ -338,6 +345,7 @@ RegisterNUICallback('init', function(data, cb)
 			data.offset,
 			data.startTime,
 			data.filter,
+			data.locked,
 			data.coords and json.decode(data.coords))
 	end
 	cb({})
@@ -349,7 +357,7 @@ RegisterNUICallback('initError', function(data, cb)
 end)
 
 RegisterNUICallback('play', function(data, cb)
-	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.filter)
+	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.filter, data.locked)
 	cb({})
 end)
 
@@ -359,7 +367,7 @@ RegisterNUICallback('pause', function(data, cb)
 end)
 
 RegisterNUICallback('stop', function(data, cb)
-	StopPhonograph(data.handle)
+	StopPhonograph(data.handle, true)
 	cb({})
 end)
 
@@ -388,12 +396,22 @@ RegisterNUICallback('seekForward', function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback('lock', function(data, cb)
+	LockPhonograph(data.handle)
+	cb({})
+end)
+
+RegisterNUICallback('unlock', function(data, cb)
+	UnlockPhonograph(data.handle)
+	cb({})
+end)
+
 AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	Phonographs = phonographs
 	UpdateUi(fullControls, anyUrl)
 end)
 
-AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, filter, coords)
+AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, filter, locked, coords)
 	SendNUIMessage({
 		type = 'init',
 		handle = handle,
@@ -402,6 +420,7 @@ AddEventHandler('phonograph:start', function(handle, url, title, volume, offset,
 		volume = volume,
 		offset = offset,
 		filter = filter,
+		locked = locked,
 		coords = json.encode(coords)
 	})
 end)
@@ -434,10 +453,7 @@ AddEventHandler('phonograph:toggleStatus', function()
 end)
 
 AddEventHandler('phonograph:error', function(message)
-	TriggerEvent('chat:addMessage', {
-		color = {255, 0, 0},
-		args = {'Error', message}
-	})
+	print(message)
 end)
 
 AddEventHandler('onResourceStop', function(resource)
@@ -458,7 +474,8 @@ CreateThread(function()
 		{name = 'url', help = 'URL or preset name of music to play. Use "random" to play a random preset.'},
 		{name = 'volume', help = 'Volume to play the music at (0-100).'},
 		{name = 'time', help = 'Time in seconds to start playing at.'},
-		{name = 'filter', help = '0 = normal audio, 1 = add phonograph filter'}
+		{name = 'filter', help = '0 = normal audio, 1 = add phonograph filter'},
+		{name = 'lock', help = '0 = unlocked, 1 = locked'}
 	})
 end)
 
@@ -491,6 +508,7 @@ CreateThread(function()
 					offset = info.offset,
 					startTime = info.startTime,
 					filter = info.filter,
+					locked = info.locked,
 					paused = info.paused,
 					coords = json.encode(info.coords),
 					distance = distance,
@@ -506,6 +524,7 @@ CreateThread(function()
 					offset = info.offset,
 					startTime = info.startTime,
 					filter = info.filter,
+					locked = info.locked,
 					paused = info.paused,
 					coords = json.encode(info.coords),
 					distance = -1,

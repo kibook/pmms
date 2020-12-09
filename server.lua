@@ -9,6 +9,8 @@ RegisterNetEvent('phonograph:showControls')
 RegisterNetEvent('phonograph:toggleStatus')
 RegisterNetEvent('phonograph:setVolume')
 RegisterNetEvent('phonograph:setStartTime')
+RegisterNetEvent('phonograph:lock')
+RegisterNetEvent('phonograph:unlock')
 
 function Enqueue(queue, cb)
 	table.insert(queue, 1, cb)
@@ -22,7 +24,7 @@ function Dequeue(queue)
 	end
 end
 
-function AddPhonograph(handle, url, title, volume, offset, startTime, filter, coords)
+function AddPhonograph(handle, url, title, volume, offset, startTime, filter, locked, coords)
 	if not Phonographs[handle] then
 		Phonographs[handle] = {
 			url = url,
@@ -31,6 +33,7 @@ function AddPhonograph(handle, url, title, volume, offset, startTime, filter, co
 			offset = offset,
 			startTime = startTime,
 			filter = filter,
+			locked = locked,
 			coords = coords,
 			paused = nil
 		}
@@ -76,6 +79,7 @@ function StartDefaultPhonographs()
 			local volume = phonograph.volume or 100
 			local offset = phonograph.offset or 0
 			local filter = phonograph.filter
+			local locked = phonograph.locked
 
 			if url == 'random' then
 				url = GetRandomPreset()
@@ -91,6 +95,7 @@ function StartDefaultPhonographs()
 					offset,
 					startTime,
 					Config.Presets[url].filter,
+					locked,
 					coords)
 			else
 				AddPhonograph(handle,
@@ -100,6 +105,7 @@ function StartDefaultPhonographs()
 					offset,
 					startTime,
 					filter,
+					locked,
 					coords)
 			end
 		end
@@ -110,14 +116,28 @@ function SyncPhonographs()
 	for _, playerId in ipairs(GetPlayers()) do
 		TriggerClientEvent('phonograph:sync', playerId,
 			Phonographs,
-			IsPlayerAceAllowed(playerId, 'phonograph.fullControls'),
+			IsPlayerAceAllowed(playerId, 'phonograph.manage'),
 			IsPlayerAceAllowed(playerId, 'phonograph.anyUrl'))
 	end
 
 	Dequeue(SyncQueue)
 end
 
-AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter, coords)
+function IsLockedDefaultPhonograph(handle)
+	for _, phonograph in ipairs(Config.DefaultPhonographs) do
+		local coords = vector3(phonograph.x, phonograph.y, phonograph.z)
+
+		print(handle, GetHandleFromCoords(coords))
+
+		if handle == GetHandleFromCoords(coords) then
+			return true
+		end
+	end
+
+	return false
+end
+
+AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter, locked, coords)
 	if coords then
 		handle = GetHandleFromCoords(coords)
 	end
@@ -126,51 +146,93 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 		return
 	end
 
-	if IsPlayerAceAllowed(source, 'phonograph.interact') then
-		if Config.Presets[url] then
-			TriggerClientEvent('phonograph:start', source,
-				handle,
-				Config.Presets[url].url,
-				Config.Presets[url].title,
-				volume,
-				offset,
-				Config.Presets[url].filter,
-				coords)
-		elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then
-			TriggerClientEvent('phonograph:start', source,
-				handle,
-				url,
-				nil,
-				volume,
-				offset,
-				filter,
-				coords)
-		else
-			ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
-		end
-	else
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
 		ErrorMessage(source, 'You do not have permission to play a song on a phonograph')
+		return
+	end
+
+	if (locked or IsLockedDefaultPhonograph(handle)) and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to play a song on a locked phonograph')
+		return
+	end
+
+	if Config.Presets[url] then
+		TriggerClientEvent('phonograph:start', source,
+			handle,
+			Config.Presets[url].url,
+			Config.Presets[url].title,
+			volume,
+			offset,
+			Config.Presets[url].filter,
+			locked,
+			coords)
+	elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then
+		TriggerClientEvent('phonograph:start', source,
+			handle,
+			url,
+			nil,
+			volume,
+			offset,
+			filter,
+			locked,
+			coords)
+	else
+		ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
 	end
 end)
 
-AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, startTime, filter, coords)
-	AddPhonograph(handle, url, title, volume, offset, startTime, filter, coords)
+AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, startTime, filter, locked, coords)
+	if Phonographs[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to play a song on a phonograph')
+		return
+	end
+
+	if (locked or IsLockedDefaultPhonograph(handle)) and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to play a song on a locked phonographs')
+		return
+	end
+
+	AddPhonograph(handle, url, title, volume, offset, startTime, filter, locked, coords)
 end)
 
 AddEventHandler('phonograph:pause', function(handle, paused)
-	if IsPlayerAceAllowed(source, 'phonograph.interact') then
-		PausePhonograph(handle, paused)
-	else
-		ErrorMessage(source, 'You do not have permission to pause/resume phonographs')
+	if not Phonographs[handle] then
+		return
 	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to pause or resume phonographs')
+		return
+	end
+
+	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to pause or resume locked phonographs')
+		return
+	end
+
+	PausePhonograph(handle, paused)
 end)
 
 AddEventHandler('phonograph:stop', function(handle)
-	if IsPlayerAceAllowed(source, 'phonograph.interact') then
-		RemovePhonograph(handle)
-	else
-		ErrorMessage(source, 'You do not have permission to stop phonographs')
+	if not Phonographs[handle] then
+		return
 	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to stop phonographs')
+		return
+	end
+
+	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to stop locked phonographs')
+		return
+	end
+
+	RemovePhonograph(handle)
 end)
 
 AddEventHandler('phonograph:showControls', function()
@@ -183,6 +245,16 @@ end)
 
 AddEventHandler('phonograph:setVolume', function(handle, volume)
 	if not Phonographs[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to change the volume of phonographs')
+		return
+	end
+
+	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to change the volume of locked phonographs')
 		return
 	end
 
@@ -202,7 +274,43 @@ AddEventHandler('phonograph:setStartTime', function(handle, time)
 		return
 	end
 
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to seek on phonographs')
+		return
+	end
+
+	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to seek on locked phonographs')
+		return
+	end
+
 	Phonographs[handle].startTime = time
+end)
+
+AddEventHandler('phonograph:lock', function(handle)
+	if not Phonographs[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to lock a phonograph')
+		return
+	end
+
+	Phonographs[handle].locked = true
+end)
+
+AddEventHandler('phonograph:unlock', function(handle)
+	if not Phonographs[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to unlock a phonograph')
+		return
+	end
+
+	Phonographs[handle].locked = false
 end)
 
 CreateThread(function()
@@ -213,7 +321,3 @@ CreateThread(function()
 		SyncPhonographs()
 	end
 end)
-
-RegisterCommand('sv_dumpphonos', function(source, args, raw)
-	print(json.encode(Phonographs))
-end, true)

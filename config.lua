@@ -49,6 +49,10 @@ Config.Presets = {
 -- 	If a preset is specified, the filter setting of the preset will be used
 -- 	instead.
 --
+-- locked
+-- 	If true, the phonograph can only be controlled by players with the
+-- 	phonograph.manage ace.
+--
 Config.DefaultPhonographs = {
 	--[[{
 		x = 2071.527,
@@ -62,6 +66,7 @@ Config.DefaultPhonographs = {
 		title = 'Example Song',
 		volume = 100,
 		offset = 0,
-		filter = true
+		filter = true,
+		locked = false
 	}]]
 }

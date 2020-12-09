@@ -594,6 +594,9 @@ function updateUi(data) {
 		urlInput.style.display = 'none';
 		document.getElementById('filter-container').style.display = 'none';
 	}
+
+	document.getElementById('base-volume').innerHTML = data.baseVolume;
+	document.getElementById('set-base-volume').value = data.baseVolume;
 }
 
 function showUi() {
@@ -703,5 +706,11 @@ window.addEventListener('load', () => {
 			event.preventDefault();
 			startPhonograph();
 		}
+	});
+
+	document.getElementById('set-base-volume').addEventListener('input', function(event) {
+		sendMessage('setBaseVolume', {
+			volume: parseInt(this.value)
+		});
 	});
 });

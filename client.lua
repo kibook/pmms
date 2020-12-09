@@ -1,4 +1,5 @@
 local Phonographs = {}
+local BaseVolume = 100
 
 RegisterNetEvent('phonograph:sync')
 RegisterNetEvent('phonograph:start')
@@ -270,7 +271,8 @@ function UpdateUi(fullControls, anyUrl)
 		presets = json.encode(Config.Presets),
 		anyUrl = anyUrl,
 		maxDistance = Config.MaxDistance,
-		fullControls = fullControls
+		fullControls = fullControls,
+		baseVolume = BaseVolume
 	})
 end
 
@@ -305,6 +307,18 @@ function UnlockPhonograph(handle)
 	TriggerServerEvent('phonograph:unlock', handle)
 end
 
+function SetBaseVolume(volume)
+	if not volume then
+		return
+	elseif volume < 0 then
+		volume = 0
+	elseif volume > 100 then
+		volume = 100
+	end
+
+	BaseVolume = volume
+end
+
 RegisterCommand('phono', function(source, args, raw)
 	if #args > 0 then
 		local command = args[1]
@@ -332,6 +346,18 @@ RegisterCommand('phono', function(source, args, raw)
 		end
 	else
 		TriggerServerEvent('phonograph:showControls')
+	end
+end)
+
+RegisterCommand('phonovol', function(source, args, raw)
+	if #args < 1 then
+		TriggerEvent('chat:addMessage', {
+			color = {255, 255, 128},
+			args = {'Volume', BaseVolume}
+		})
+	else
+		local volume = tonumber(args[1])
+		SetBaseVolume(volume)
 	end
 end)
 
@@ -406,6 +432,11 @@ RegisterNUICallback('unlock', function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback('setBaseVolume', function(data, cb)
+	SetBaseVolume(data.volume)
+	cb({})
+end)
+
 AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	Phonographs = phonographs
 	UpdateUi(fullControls, anyUrl)
@@ -477,6 +508,10 @@ CreateThread(function()
 		{name = 'filter', help = '0 = normal audio, 1 = add phonograph filter'},
 		{name = 'lock', help = '0 = unlocked, 1 = locked'}
 	})
+
+	TriggerEvent('chat:addSuggestion', '/phonovol', 'Adjust the base volume of all phonographs', {
+		{name = 'volume', help = '0-100'}
+	})
 end)
 
 CreateThread(function()
@@ -504,7 +539,7 @@ CreateThread(function()
 					handle = handle,
 					url = info.url,
 					title = info.title,
-					volume = info.volume,
+					volume = math.floor(info.volume * (BaseVolume / 100)),
 					offset = info.offset,
 					startTime = info.startTime,
 					filter = info.filter,

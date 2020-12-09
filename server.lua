@@ -65,6 +65,81 @@ function PausePhonograph(handle, paused)
 	end
 end
 
+function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, locked)
+	title = title or url
+	volume = volume or 100
+	offset = offset or 0
+
+	if url == 'random' then
+		url = GetRandomPreset()
+	end
+
+	local startTime = os.time() - offset
+
+	if Config.Presets[url] then
+		AddPhonograph(netId,
+			Config.Presets[url].url,
+			Config.Presets[url].title,
+			volume,
+			offset,
+			startTime,
+			Config.Presets[url].filter,
+			locked,
+			nil)
+	else
+		AddPhonograph(netId,
+			url,
+			title,
+			volume,
+			offset,
+			startTime,
+			filter,
+			locked,
+			nil)
+	end
+
+	return netId
+end
+
+function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, locked)
+	local coords = vector3(x, y, z)
+	local handle = GetHandleFromCoords(coords)
+
+	title = title or url
+	volume = volume or 100
+	offset = offset or 0
+
+	if url == 'random' then
+		url = GetRandomPreset()
+	end
+
+	local startTime = os.time() - offset
+
+	if Config.Presets[url] then
+		AddPhonograph(handle,
+			Config.Presets[url].url,
+			Config.Presets[url].title,
+			volume,
+			offset,
+			startTime,
+			Config.Presets[url].filter,
+			locked,
+			coords)
+	else
+		AddPhonograph(handle,
+			url,
+			title,
+			volume,
+			offset,
+			startTime,
+			filter,
+			locked,
+			coords)
+	end
+
+	return handle
+end
+
 function ErrorMessage(player, message)
 	TriggerClientEvent('phonograph:error', player, message)
 end
@@ -72,42 +147,7 @@ end
 function StartDefaultPhonographs()
 	for _, phonograph in ipairs(Config.DefaultPhonographs) do
 		if phonograph.url then
-			local coords = vector3(phonograph.x, phonograph.y, phonograph.z)
-			local handle = GetHandleFromCoords(coords)
-			local url = phonograph.url
-			local title = phonograph.title or url
-			local volume = phonograph.volume or 100
-			local offset = phonograph.offset or 0
-			local filter = phonograph.filter
-			local locked = phonograph.locked
-
-			if url == 'random' then
-				url = GetRandomPreset()
-			end
-
-			local startTime = os.time() - offset
-
-			if Config.Presets[url] then
-				AddPhonograph(handle,
-					Config.Presets[url].url,
-					Config.Presets[url].title,
-					volume,
-					offset,
-					startTime,
-					Config.Presets[url].filter,
-					locked,
-					coords)
-			else
-				AddPhonograph(handle,
-					url,
-					title,
-					volume,
-					offset,
-					startTime,
-					filter,
-					locked,
-					coords)
-			end
+			StartPhonographByCoords(phonograph.x, phonograph.y, phonograph.z, phonograph.url, phonograph.title, phonograph.volume, phonograph.offset, phonograph.filter, phonograph.locked)
 		end
 	end
 end
@@ -136,6 +176,10 @@ function IsLockedDefaultPhonograph(handle)
 
 	return false
 end
+
+exports('startByNetworkId', StartPhonographByNetworkId)
+exports('startByCoords', StartPhonographByCoords)
+exports('stop', RemovePhonograph)
 
 AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter, locked, coords)
 	if coords then

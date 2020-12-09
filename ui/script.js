@@ -261,7 +261,8 @@ function update(handle, url, title, baseVolume, offset, startTime, filter, locke
 				} else {
 					var attenuationFactor = parseFloat(player.getAttribute('data-attenuationFactor'));
 					var volumeFactor = parseFloat(player.getAttribute('data-volumeFactor'));
-					volume = ((baseVolume - distance * attenuationFactor) / 100) / volumeFactor;
+
+					volume = (((100 - distance * attenuationFactor) / 100) / volumeFactor) * (baseVolume / 100);
 				}
 
 				var currentTime = (Math.floor(Date.now() / 1000) - startTime) % player.duration;

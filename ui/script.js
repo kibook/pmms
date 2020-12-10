@@ -14,52 +14,99 @@ function sendMessage(name, params) {
 	});
 }
 
-function initPlayer(id, handle, url, title, volume, offset, startTime, filter, locked, coords) {
-	player = document.createElement('audio');
-	player.crossOrigin = 'anonymous';
-	player.id = id;
-	player.setAttribute('data-attenuationFactor', maxAttenuationFactor);
-	player.setAttribute('data-volumeFactor', maxVolumeFactor);
-	document.body.appendChild(player);
+function getYoutubeData(id) {
+	return new Promise(function(resolve, reject) {
+		fetch('https://redm.khzae.net/phonograph/yt?v=' + id + '&metadata=1').then(resp => {
+			return resp.json();
+		}).then(resp => {
+			return resolve(resp);
+		}).catch(err => {
+			return reject(err);
+		});
+	});
+}
 
-	url = interpretUrl(url);
+function interpretUrl(url, title) {
+	var isYoutube = url.match(/(?:youtu|youtube)(?:\.com|\.be)\/([\w\W]+)/i);
 
-	if (filter) {
-		applyPhonographFilter(player);
+	if (isYoutube) {
+		var id = isYoutube[1].match(/watch\?v=|[\w\W]+/gi);
+		id = (id.length > 1) ? id.splice(1) : id;
+		id = id.toString();
+
+		return getYoutubeData(id);
+	} else {
+		return new Promise(function(resolve, reject) {
+			resolve({url: url, title: title});
+		});
 	}
+}
 
-	player.addEventListener('error', () => {
-		hideLoadingIcon();
+function showLoadingIcon() {
+	document.getElementById('loading').style.display = 'block';
+}
+
+function hideLoadingIcon() {
+	document.getElementById('loading').style.display = 'none';
+}
+
+function initPlayer(id, handle, url, title, volume, offset, startTime, filter, locked, coords) {
+	interpretUrl(url, title).then(data => {
+		url = data.url;
+		title = data.title;
+
+		player = document.createElement('audio');
+		player.crossOrigin = 'anonymous';
+		player.id = id;
+		player.setAttribute('data-attenuationFactor', maxAttenuationFactor);
+		player.setAttribute('data-volumeFactor', maxVolumeFactor);
+		document.body.appendChild(player);
+
+		if (filter) {
+			applyPhonographFilter(player);
+		}
+
+		player.addEventListener('error', () => {
+			hideLoadingIcon();
+
+			sendMessage('initError', {
+				url: url
+			});
+
+			player.remove();
+		});
+
+		player.addEventListener('canplay', () => {
+			hideLoadingIcon();
+
+			if (!startTime) {
+				startTime = Math.floor(Date.now() / 1000 - offset);
+			}
+
+			sendMessage('init', {
+				handle: handle,
+				url: url,
+				title: title,
+				volume: volume,
+				offset: offset,
+				startTime: startTime,
+				filter: filter,
+				locked: locked,
+				coords: coords
+			});
+		}, {once: true});
+
+		player.src = url;
+		player.volume = 0;
+	}).catch(err => {
+		console.log(err);
 
 		sendMessage('initError', {
 			url: url
 		});
 
-		player.remove();
-	});
-
-	player.addEventListener('canplay', () => {
 		hideLoadingIcon();
-
-		if (!startTime) {
-			startTime = Math.floor(Date.now() / 1000 - offset);
-		}
-
-		sendMessage('init', {
-			handle: handle,
-			url: url,
-			title: title,
-			volume: volume,
-			offset: offset,
-			startTime: startTime,
-			filter: filter,
-			locked: locked,
-			coords: coords
-		});
-	}, {once: true});
-
-	player.src = url;
-	player.volume = 0;
+	});
 }
 
 function getPlayer(handle, url, title, volume, offset, startTime, filter, locked, coords) {
@@ -74,37 +121,12 @@ function getPlayer(handle, url, title, volume, offset, startTime, filter, locked
 	return player;
 }
 
-function showLoadingIcon() {
-	document.getElementById('loading').style.display = 'block';
-}
-
-function hideLoadingIcon() {
-	document.getElementById('loading').style.display = 'none';
-}
-
 function parseTimecode(timecode) {
 	if (timecode.includes(':')) {
 		var a = timecode.split(':');
 		return parseInt(a[0]) * 3600 + parseInt(a[1]) * 60 + parseInt(a[2]);
 	} else {
 		return parseInt(timecode);
-	}
-}
-
-function getYoutubeUrl(id) {
-	return 'https://redm.khzae.net/phonograph/yt?v=' + id;
-}
-
-function interpretUrl(url) {
-	var isYoutube = url.match(/(?:youtu|youtube)(?:\.com|\.be)\/([\w\W]+)/i);
-
-	if (isYoutube) {
-		var id = isYoutube[1].match(/watch\?v=|[\w\W]+/gi);
-		id = (id.length > 1) ? id.splice(1) : id;
-		id = id.toString();
-		return getYoutubeUrl(id);
-	} else {
-		return url;
 	}
 }
 
@@ -166,22 +188,32 @@ function init(handle, url, title, volume, offset, filter, locked, coords) {
 	if (title) {
 		getPlayer(handle, url, title, volume, offset, null, filter, locked, coords);
 	} else{
-		jsmediatags.read(url, {
-			onSuccess: function(tag) {
-				var title;
+		try {
+			jsmediatags.read(url, {
+				onSuccess: function(tag) {
+					var title;
 
-				if (tag.tags.title) {
-					title = tag.tags.title;
-				} else {
-					title = url;
+					if (tag.tags.title) {
+						title = tag.tags.title;
+					} else {
+						title = url;
+					}
+
+					getPlayer(handle, url, title, volume, offset, null, filter, locked, coords);
+				},
+				onError: function(error) {
+					getPlayer(handle, url, url, volume, offset, null, filter, locked, coords);
 				}
+			});
+		} catch (err) {
+			console.log(err);
 
-				getPlayer(handle, url, title, volume, offset, null, filter, locked, coords);
-			},
-			onError: function(error) {
-				getPlayer(handle, url, url, volume, offset, null, filter, locked, coords);
-			}
-		});
+			sendMessage('initError', {
+				url: url
+			});
+
+			hideLoadingIcon();
+		}
 	}
 }
 

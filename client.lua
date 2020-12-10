@@ -1,5 +1,7 @@
 local Phonographs = {}
+
 local BaseVolume = 100
+local StatusIsShown = false
 
 RegisterNetEvent('phonograph:sync')
 RegisterNetEvent('phonograph:start')
@@ -309,8 +311,25 @@ function SetBaseVolume(volume)
 	end
 
 	BaseVolume = volume
+end
 
+function SaveSettings()
 	SetResourceKvp('baseVolume', tostring(BaseVolume))
+	SetResourceKvpInt('showStatus', StatusIsShown and 1 or 0)
+end
+
+function LoadSettings()
+	local volume = GetResourceKvpString('baseVolume')
+
+	if volume then
+		BaseVolume = tonumber(volume)
+	end
+
+	local showStatus = GetResourceKvpInt('showStatus')
+
+	if showStatus == 1 then
+		TriggerEvent('phonograph:toggleStatus')
+	end
 end
 
 RegisterCommand('phono', function(source, args, raw)
@@ -353,6 +372,11 @@ RegisterCommand('phonovol', function(source, args, raw)
 		local volume = tonumber(args[1])
 		SetBaseVolume(volume)
 	end
+end)
+
+RegisterNUICallback('startup', function(data, cb)
+	LoadSettings()
+	cb({})
 end)
 
 RegisterNUICallback('init', function(data, cb)
@@ -475,6 +499,7 @@ AddEventHandler('phonograph:toggleStatus', function()
 	SendNUIMessage({
 		type = 'toggleStatus'
 	})
+	StatusIsShown = not StatusIsShown
 end)
 
 AddEventHandler('phonograph:error', function(message)
@@ -491,15 +516,9 @@ AddEventHandler('onResourceStop', function(resource)
 			DeleteEntity(defaultPhonograph.handle)
 		end
 	end
+
+	SaveSettings()
 end)
-
-function RestoreBaseVolume()
-	local volume = GetResourceKvpString('baseVolume')
-
-	if volume then
-		BaseVolume = tonumber(volume)
-	end
-end
 
 CreateThread(function()
 	TriggerEvent('chat:addSuggestion', '/phono', 'Interact with phonographs. No arguments will open the phonograph control panel.', {
@@ -514,8 +533,6 @@ CreateThread(function()
 	TriggerEvent('chat:addSuggestion', '/phonovol', 'Adjust the base volume of all phonographs', {
 		{name = 'volume', help = '0-100'}
 	})
-
-	RestoreBaseVolume()
 end)
 
 CreateThread(function()

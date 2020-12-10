@@ -693,6 +693,8 @@ window.addEventListener('message', event => {
 });
 
 window.addEventListener('load', () => {
+	sendMessage('startup', {});
+
 	document.getElementById('close-ui').addEventListener('click', function(event) {
 		hideUi();
 		sendMessage('closeUi', {});

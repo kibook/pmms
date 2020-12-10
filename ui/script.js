@@ -14,7 +14,7 @@ function sendMessage(name, params) {
 	});
 }
 
-function getYoutubeData(id) {
+function getYoutubeInfo(id) {
 	return new Promise(function(resolve, reject) {
 		fetch('https://redm.khzae.net/phonograph/yt?v=' + id + '&metadata=1').then(resp => {
 			return resp.json();
@@ -26,7 +26,7 @@ function getYoutubeData(id) {
 	});
 }
 
-function interpretUrl(url, title) {
+function interpretUrl(url) {
 	var isYoutube = url.match(/(?:youtu|youtube)(?:\.com|\.be)\/([\w\W]+)/i);
 
 	if (isYoutube) {
@@ -34,10 +34,10 @@ function interpretUrl(url, title) {
 		id = (id.length > 1) ? id.splice(1) : id;
 		id = id.toString();
 
-		return getYoutubeData(id);
+		return getYoutubeInfo(id);
 	} else {
 		return new Promise(function(resolve, reject) {
-			resolve({url: url, title: title});
+			resolve({url: url});
 		});
 	}
 }
@@ -51,9 +51,11 @@ function hideLoadingIcon() {
 }
 
 function initPlayer(id, handle, url, title, volume, offset, startTime, filter, locked, coords) {
-	interpretUrl(url, title).then(data => {
-		url = data.url;
-		title = data.title;
+	interpretUrl(url).then(info => {
+		url = info.url;
+		if (info.title) {
+			title = info.title;
+		}
 
 		player = document.createElement('audio');
 		player.crossOrigin = 'anonymous';

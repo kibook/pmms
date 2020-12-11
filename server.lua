@@ -24,14 +24,18 @@ function Dequeue(queue)
 	end
 end
 
-function AddPhonograph(handle, url, title, volume, offset, startTime, filter, locked, coords)
+function AddPhonograph(handle, url, title, volume, offset, filter, locked, coords)
 	if not Phonographs[handle] then
+		title = title or url
+		volume = Clamp(volume, 0, 100)
+		offset = offset or 0
+
 		Phonographs[handle] = {
 			url = url,
 			title = title,
 			volume = volume,
-			offset = offset,
-			startTime = startTime,
+			startTime = os.time() - offset,
+			offset = 0,
 			filter = filter,
 			locked = locked,
 			coords = coords,
@@ -52,29 +56,23 @@ function RemovePhonograph(handle)
 	end)
 end
 
-function PausePhonograph(handle, paused)
+function PausePhonograph(handle)
 	if not Phonographs[handle] then
 		return
 	end
 
 	if Phonographs[handle].paused then
-		Phonographs[handle].startTime = Phonographs[handle].startTime + (paused - Phonographs[handle].paused)
+		Phonographs[handle].startTime = Phonographs[handle].startTime + (os.time() - Phonographs[handle].paused)
 		Phonographs[handle].paused = nil
 	else
-		Phonographs[handle].paused = paused
+		Phonographs[handle].paused = os.time()
 	end
 end
 
 function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, locked)
-	title = title or url
-	volume = volume or 100
-	offset = offset or 0
-
 	if url == 'random' then
 		url = GetRandomPreset()
 	end
-
-	local startTime = os.time() - offset
 
 	if Config.Presets[url] then
 		AddPhonograph(netId,
@@ -82,7 +80,6 @@ function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, l
 			Config.Presets[url].title,
 			volume,
 			offset,
-			startTime,
 			Config.Presets[url].filter,
 			locked,
 			nil)
@@ -92,7 +89,6 @@ function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, l
 			title,
 			volume,
 			offset,
-			startTime,
 			filter,
 			locked,
 			nil)
@@ -105,15 +101,9 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, lo
 	local coords = vector3(x, y, z)
 	local handle = GetHandleFromCoords(coords)
 
-	title = title or url
-	volume = volume or 100
-	offset = offset or 0
-
 	if url == 'random' then
 		url = GetRandomPreset()
 	end
-
-	local startTime = os.time() - offset
 
 	if Config.Presets[url] then
 		AddPhonograph(handle,
@@ -121,7 +111,6 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, lo
 			Config.Presets[url].title,
 			volume,
 			offset,
-			startTime,
 			Config.Presets[url].filter,
 			locked,
 			coords)
@@ -131,7 +120,6 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, lo
 			title,
 			volume,
 			offset,
-			startTime,
 			filter,
 			locked,
 			coords)
@@ -153,6 +141,12 @@ function StartDefaultPhonographs()
 end
 
 function SyncPhonographs()
+	for handle, _ in pairs(Phonographs) do
+		if not Phonographs[handle].paused then
+			Phonographs[handle].offset = os.time() - Phonographs[handle].startTime
+		end
+	end
+
 	for _, playerId in ipairs(GetPlayers()) do
 		TriggerClientEvent('phonograph:sync', playerId,
 			Phonographs,
@@ -166,8 +160,6 @@ end
 function IsLockedDefaultPhonograph(handle)
 	for _, phonograph in ipairs(Config.DefaultPhonographs) do
 		local coords = vector3(phonograph.x, phonograph.y, phonograph.z)
-
-		print(handle, GetHandleFromCoords(coords))
 
 		if handle == GetHandleFromCoords(coords) then
 			return true
@@ -225,7 +217,7 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 	end
 end)
 
-AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, startTime, filter, locked, coords)
+AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, filter, locked, coords)
 	if Phonographs[handle] then
 		return
 	end
@@ -240,10 +232,10 @@ AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, 
 		return
 	end
 
-	AddPhonograph(handle, url, title, volume, offset, startTime, filter, locked, coords)
+	AddPhonograph(handle, url, title, volume, offset, filter, locked, coords)
 end)
 
-AddEventHandler('phonograph:pause', function(handle, paused)
+AddEventHandler('phonograph:pause', function(handle)
 	if not Phonographs[handle] then
 		return
 	end
@@ -258,7 +250,7 @@ AddEventHandler('phonograph:pause', function(handle, paused)
 		return
 	end
 
-	PausePhonograph(handle, paused)
+	PausePhonograph(handle)
 end)
 
 AddEventHandler('phonograph:stop', function(handle)
@@ -302,15 +294,7 @@ AddEventHandler('phonograph:setVolume', function(handle, volume)
 		return
 	end
 
-	if not volume then
-		volume = 100
-	elseif volume < 0 then
-		volume = 0
-	elseif volume > 100 then
-		volume = 100
-	end
-
-	Phonographs[handle].volume = volume
+	Phonographs[handle].volume = Clamp(volume, 0, 100)
 end)
 
 AddEventHandler('phonograph:setStartTime', function(handle, time)

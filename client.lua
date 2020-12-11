@@ -387,7 +387,6 @@ RegisterNUICallback('init', function(data, cb)
 			data.title,
 			data.volume,
 			data.offset,
-			data.startTime,
 			data.filter,
 			data.locked,
 			data.coords and json.decode(data.coords))
@@ -406,7 +405,7 @@ RegisterNUICallback('play', function(data, cb)
 end)
 
 RegisterNUICallback('pause', function(data, cb)
-	TriggerServerEvent('phonograph:pause', data.handle, data.paused)
+	TriggerServerEvent('phonograph:pause', data.handle)
 	cb({})
 end)
 
@@ -562,7 +561,6 @@ CreateThread(function()
 					title = info.title,
 					volume = math.floor(info.volume * (BaseVolume / 100)),
 					offset = info.offset,
-					startTime = info.startTime,
 					filter = info.filter,
 					locked = info.locked,
 					paused = info.paused,
@@ -578,7 +576,6 @@ CreateThread(function()
 					title = info.title,
 					volume = 0,
 					offset = info.offset,
-					startTime = info.startTime,
 					filter = info.filter,
 					locked = info.locked,
 					paused = info.paused,

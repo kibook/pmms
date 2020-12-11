@@ -4,6 +4,8 @@ const maxAttenuationFactor = 6.0;
 const minVolumeFactor = 1.0;
 const maxVolumeFactor = 4.0;
 
+const maxTimeDifference = 2;
+
 function sendMessage(name, params) {
 	return fetch('https://' + GetParentResourceName() + '/' + name, {
 		method: 'POST',
@@ -50,9 +52,10 @@ function hideLoadingIcon() {
 	document.getElementById('loading').style.display = 'none';
 }
 
-function initPlayer(id, handle, url, title, volume, offset, startTime, filter, locked, coords) {
+function initPlayer(id, handle, url, title, volume, offset, filter, locked, coords) {
 	interpretUrl(url).then(info => {
 		url = info.url;
+
 		if (info.title) {
 			title = info.title;
 		}
@@ -81,17 +84,12 @@ function initPlayer(id, handle, url, title, volume, offset, startTime, filter, l
 		player.addEventListener('canplay', () => {
 			hideLoadingIcon();
 
-			if (!startTime) {
-				startTime = Math.floor(Date.now() / 1000 - offset);
-			}
-
 			sendMessage('init', {
 				handle: handle,
 				url: url,
 				title: title,
 				volume: volume,
 				offset: offset,
-				startTime: startTime,
 				filter: filter,
 				locked: locked,
 				coords: coords
@@ -111,13 +109,13 @@ function initPlayer(id, handle, url, title, volume, offset, startTime, filter, l
 	});
 }
 
-function getPlayer(handle, url, title, volume, offset, startTime, filter, locked, coords) {
+function getPlayer(handle, url, title, volume, offset, filter, locked, coords) {
 	var id = 'player_' + handle.toString(16);
 
 	var player = document.getElementById(id);
 
 	if (!player && url) {
-		player = initPlayer(id, handle, url, title, volume, offset, startTime, filter, locked, coords);
+		player = initPlayer(id, handle, url, title, volume, offset, filter, locked, coords);
 	}
 
 	return player;
@@ -188,7 +186,7 @@ function init(handle, url, title, volume, offset, filter, locked, coords) {
 	offset = parseTimecode(offset);
 
 	if (title) {
-		getPlayer(handle, url, title, volume, offset, null, filter, locked, coords);
+		getPlayer(handle, url, title, volume, offset, filter, locked, coords);
 	} else{
 		try {
 			jsmediatags.read(url, {
@@ -201,10 +199,10 @@ function init(handle, url, title, volume, offset, filter, locked, coords) {
 						title = url;
 					}
 
-					getPlayer(handle, url, title, volume, offset, null, filter, locked, coords);
+					getPlayer(handle, url, title, volume, offset, filter, locked, coords);
 				},
 				onError: function(error) {
-					getPlayer(handle, url, url, volume, offset, null, filter, locked, coords);
+					getPlayer(handle, url, url, volume, offset, filter, locked, coords);
 				}
 			});
 		} catch (err) {
@@ -266,8 +264,8 @@ function setVolumeFactor(player, target) {
 	player.setAttribute('data-volumeFactor', volumeFactor);
 }
 
-function update(handle, url, title, baseVolume, offset, startTime, filter, locked, paused, coords, distance, sameRoom) {
-	var player = getPlayer(handle, url, title, baseVolume, offset, startTime, filter, locked, coords);
+function update(handle, url, title, baseVolume, offset, filter, locked, paused, coords, distance, sameRoom) {
+	var player = getPlayer(handle, url, title, baseVolume, offset, filter, locked, coords);
 
 	if (player) {
 		if (paused) {
@@ -299,9 +297,9 @@ function update(handle, url, title, baseVolume, offset, startTime, filter, locke
 					volume = (((100 - distance * attenuationFactor) / 100) / volumeFactor) * (baseVolume / 100);
 				}
 
-				var currentTime = (Math.floor(Date.now() / 1000) - startTime) % player.duration;
+				var currentTime = offset % player.duration;
 
-				if (Math.abs(currentTime - player.currentTime) > 2) {
+				if (Math.abs(currentTime - player.currentTime) > maxTimeDifference) {
 					player.currentTime = currentTime;
 				}
 
@@ -709,7 +707,7 @@ window.addEventListener('message', event => {
 			stop(event.data.handle);
 			break;
 		case 'update':
-			update(event.data.handle, event.data.url, event.data.title, event.data.volume, event.data.offset, event.data.startTime, event.data.filter, event.data.locked, event.data.paused, event.data.coords, event.data.distance, event.data.sameRoom);
+			update(event.data.handle, event.data.url, event.data.title, event.data.volume, event.data.offset, event.data.filter, event.data.locked, event.data.paused, event.data.coords, event.data.distance, event.data.sameRoom);
 			break;
 		case 'showUi':
 			showUi();

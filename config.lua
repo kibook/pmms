@@ -5,7 +5,7 @@ Config.MaxDistance = 30
 
 -- Pre-defined music URLs
 Config.Presets = {
-	--['1'] = {title = 'Example Preset', url = 'https://example.com/example.ogg', filter = true}
+	--['1'] = {title = 'Example Preset', url = 'https://example.com/example.ogg', filter = true, video = false}
 }
 
 -- These phonographs will be automatically spawned and start playing when the
@@ -67,6 +67,8 @@ Config.DefaultPhonographs = {
 		volume = 100,
 		offset = 0,
 		filter = true,
-		locked = false
+		locked = false,
+		video = false,
+		videoSize = 50
 	}]]
 }

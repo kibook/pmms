@@ -16,6 +16,8 @@ Allows players to play music from a phonograph object.
 
 - Optional "phonograph" filter can be applied to any audio
 
+- Show video on a screen displayed above the phonograph
+
 # Examples
 
 | | |

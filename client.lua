@@ -81,18 +81,12 @@ function GetClosestPhonograph()
 	end
 end
 
-function StartPhonograph(handle, url, volume, offset, filter, locked)
+function StartPhonograph(handle, url, volume, offset, filter, locked, video, videoSize)
 	if url == 'random' then
 		url = GetRandomPreset()
 	end
 
-	if not volume then
-		volume = 100
-	elseif volume > 100 then
-		volume = 100
-	elseif volume < 0 then
-		volume = 0
-	end
+	volume = Clamp(volume, 0, 100)
 
 	if not offset then
 		offset = '0'
@@ -100,12 +94,12 @@ function StartPhonograph(handle, url, volume, offset, filter, locked)
 
 	local coords = not NetworkDoesNetworkIdExist(handle) and GetEntityCoords(handle)
 
-	TriggerServerEvent('phonograph:start', handle, url, volume, offset, filter, locked, coords)
+	TriggerServerEvent('phonograph:start', handle, url, volume, offset, filter, locked, video, videoSize, coords)
 end
 
-function StartClosestPhonograph(url, volume, offset, filter, locked)
+function StartClosestPhonograph(url, volume, offset, filter, locked, video, videoSize)
 	local closestPhonograph, isNetId = GetClosestPhonograph()
-	StartPhonograph(closestPhonograph, url, volume, offset, filter, locked)
+	StartPhonograph(closestPhonograph, url, volume, offset, filter, locked, video, videoSize)
 end
 
 function PausePhonograph(handle, isNetId)
@@ -129,15 +123,27 @@ function StopClosestPhonograph()
 	StopPhonograph(closestPhonograph, isNetId)
 end
 
-function GetListenerCoords(ped)
+function GetListenerCoords()
 	local cam = GetRenderingCam()
 
 	if cam == -1 then
+		local ped = PlayerPedId()
+
 		if IsPedDeadOrDying(ped) then
 			return GetGameplayCamCoord()
 		else
 			return GetEntityCoords(ped)
 		end
+	else
+		return GetCamCoord(cam)
+	end
+end
+
+function GetViewerCoords()
+	local cam = GetRenderingCam()
+
+	if cam == -1 then
+		return GetGameplayCamCoord()
 	else
 		return GetCamCoord(cam)
 	end
@@ -302,15 +308,7 @@ function UnlockPhonograph(handle)
 end
 
 function SetBaseVolume(volume)
-	if not volume then
-		return
-	elseif volume < 0 then
-		volume = 0
-	elseif volume > 100 then
-		volume = 100
-	end
-
-	BaseVolume = volume
+	BaseVolume = Clamp(volume, 0, 100)
 end
 
 function SaveSettings()
@@ -332,6 +330,14 @@ function LoadSettings()
 	end
 end
 
+function EnableVideo(handle)
+	TriggerServerEvent('phonograph:enableVideo', handle)
+end
+
+function DisableVideo(handle)
+	TriggerServerEvent('phonograph:disableVideo', handle)
+end
+
 RegisterCommand('phono', function(source, args, raw)
 	if #args > 0 then
 		local command = args[1]
@@ -343,8 +349,10 @@ RegisterCommand('phono', function(source, args, raw)
 				local offset = args[4]
 				local filter = args[5] == '1'
 				local locked = args[6] == '1'
+				local video = args[7] == '1'
+				local videoSize = tonumber(args[8]) or 50
 
-				StartClosestPhonograph(url, volume, offset, filter, locked)
+				StartClosestPhonograph(url, volume, offset, filter, locked, video, videoSize)
 			else
 				PauseClosestPhonograph()
 			end
@@ -389,6 +397,8 @@ RegisterNUICallback('init', function(data, cb)
 			data.offset,
 			data.filter,
 			data.locked,
+			data.video,
+			data.videoSize,
 			data.coords and json.decode(data.coords))
 	end
 	cb({})
@@ -400,7 +410,7 @@ RegisterNUICallback('initError', function(data, cb)
 end)
 
 RegisterNUICallback('play', function(data, cb)
-	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.filter, data.locked)
+	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.filter, data.locked, data.video, data.videoSize)
 	cb({})
 end)
 
@@ -454,12 +464,32 @@ RegisterNUICallback('setBaseVolume', function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback('enableVideo', function(data, cb)
+	EnableVideo(data.handle)
+	cb({})
+end)
+
+RegisterNUICallback('disableVideo', function(data, cb)
+	DisableVideo(data.handle)
+	cb({})
+end)
+
+RegisterNUICallback('decreaseVideoSize', function(data, cb)
+	TriggerServerEvent('phonograph:setVideoSize', data.handle, Phonographs[data.handle].videoSize - 10)
+	cb({})
+end)
+
+RegisterNUICallback('increaseVideoSize', function(data, cb)
+	TriggerServerEvent('phonograph:setVideoSize', data.handle, Phonographs[data.handle].videoSize + 10)
+	cb({})
+end)
+
 AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	Phonographs = phonographs
 	UpdateUi(fullControls, anyUrl)
 end)
 
-AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, filter, locked, coords)
+AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, filter, locked, video, videoSize, coords)
 	SendNUIMessage({
 		type = 'init',
 		handle = handle,
@@ -469,6 +499,8 @@ AddEventHandler('phonograph:start', function(handle, url, title, volume, offset,
 		offset = offset,
 		filter = filter,
 		locked = locked,
+		video = video,
+		videoSize = videoSize,
 		coords = json.encode(coords)
 	})
 end)
@@ -526,7 +558,9 @@ CreateThread(function()
 		{name = 'volume', help = 'Volume to play the music at (0-100).'},
 		{name = 'time', help = 'Time in seconds to start playing at.'},
 		{name = 'filter', help = '0 = normal audio, 1 = add phonograph filter'},
-		{name = 'lock', help = '0 = unlocked, 1 = locked'}
+		{name = 'lock', help = '0 = unlocked, 1 = locked'},
+		{name = 'video', help = '0 = hide video, 1 = show video'},
+		{name = 'size', help = 'Video size'}
 	})
 
 	TriggerEvent('chat:addSuggestion', '/phonovol', 'Adjust the base volume of all phonographs', {
@@ -538,8 +572,9 @@ CreateThread(function()
 	while true do
 		Wait(0)
 
+		local listenPos = GetListenerCoords()
+		local viewerPos = GetViewerCoords()
 		local ped = PlayerPedId()
-		local pos = GetListenerCoords(ped)
 
 		for handle, info in pairs(Phonographs) do
 			local object
@@ -552,7 +587,17 @@ CreateThread(function()
 
 			if object and object > 0 then
 				local phonoPos = GetEntityCoords(object)
-				local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
+
+				local distance = GetDistanceBetweenCoords(listenPos.x, listenPos.y, listenPos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
+
+				local camDistance
+				local onScreen, screenX, screenY = GetScreenCoordFromWorldCoord(phonoPos.x, phonoPos.y, phonoPos.z + 0.8)
+
+				if onScreen then
+					camDistance = GetDistanceBetweenCoords(viewerPos.x, viewerPos.y, viewerPos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
+				else
+					camDistance = -1
+				end
 
 				SendNUIMessage({
 					type = 'update',
@@ -563,10 +608,16 @@ CreateThread(function()
 					offset = info.offset,
 					filter = info.filter,
 					locked = info.locked,
+					video = info.video,
+					videoSize = info.videoSize,
 					paused = info.paused,
 					coords = json.encode(info.coords),
 					distance = distance,
-					sameRoom = IsInSameRoom(ped, object)
+					sameRoom = IsInSameRoom(ped, object),
+					camDistance = camDistance,
+					screenX = screenX,
+					screenY = screenY,
+					maxDistance = Config.MaxDistance
 				})
 			else
 				SendNUIMessage({
@@ -578,10 +629,16 @@ CreateThread(function()
 					offset = info.offset,
 					filter = info.filter,
 					locked = info.locked,
+					video = info.video,
+					videoSize = info.videoSize,
 					paused = info.paused,
 					coords = json.encode(info.coords),
 					distance = -1,
-					sameRoom = false
+					sameRoom = false,
+					camDistance = -1,
+					screenX = 0,
+					screenY = 0,
+					maxDistance = Config.MaxDistance
 				})
 			end
 		end

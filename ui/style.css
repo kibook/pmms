@@ -135,7 +135,7 @@ option {
 	flex-grow: 1;
 }
 
-#volume-container, #offset-container, #filter-container, #locked-container {
+#volume-container, #offset-container, #filter-container, #locked-container, #video-container {
 	padding: 0 0.2vw;
 	white-space: nowrap;
 }
@@ -150,15 +150,15 @@ option {
 	display: table-row;
 }
 
-.active-phonograph-handle, .active-phonograph-distance, .active-phonograph-title, .active-phonograph-volume, .active-phonograph-time, .active-phonograph-controls {
+.active-phonograph-handle, .active-phonograph-distance, .active-phonograph-title, .active-phonograph-volume, .active-phonograph-time, .active-phonograph-video-size, .active-phonograph-controls {
 	display: table-cell;
 }
 
-.active-phonograph-handle, .active-phonograph-distance, .active-phonograph-volume, .active-phonograph-time, .active-phonograph-controls {
+.active-phonograph-handle, .active-phonograph-distance, .active-phonograph-volume, .active-phonograph-time, .active-phonograph-video-size, .active-phonograph-controls {
 	white-space: nowrap;
 }
 
-.active-phonograph-handle, .active-phonograph-distance, .active-phonograph-title, .active-phonograph-volume, .active-phonograph-time {
+.active-phonograph-handle, .active-phonograph-distance, .active-phonograph-title, .active-phonograph-volume, .active-phonograph-time, .active-phonograph-video-size {
 	padding: 0.5vh 0.5vw 0.5vh 0;
 }
 
@@ -172,7 +172,8 @@ option {
 }
 
 .control-button {
-	width: 1.5vw;
+	text-align: center;
+	width: 1.7vw;
 }
 
 .active-phonograph-volume span {
@@ -203,4 +204,10 @@ option {
 
 #set-base-volume {
 	flex-grow: 1;
+}
+
+.player {
+	position: absolute;
+	transform: translate(-50%, -100%);
+	opacity: 0.9;
 }

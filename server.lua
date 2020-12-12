@@ -11,6 +11,9 @@ RegisterNetEvent('phonograph:setVolume')
 RegisterNetEvent('phonograph:setStartTime')
 RegisterNetEvent('phonograph:lock')
 RegisterNetEvent('phonograph:unlock')
+RegisterNetEvent('phonograph:enableVideo')
+RegisterNetEvent('phonograph:disableVideo')
+RegisterNetEvent('phonograph:setVideoSize')
 
 function Enqueue(queue, cb)
 	table.insert(queue, 1, cb)
@@ -24,7 +27,7 @@ function Dequeue(queue)
 	end
 end
 
-function AddPhonograph(handle, url, title, volume, offset, filter, locked, coords)
+function AddPhonograph(handle, url, title, volume, offset, filter, locked, video, videoSize, coords)
 	if not Phonographs[handle] then
 		title = title or url
 		volume = Clamp(volume, 0, 100)
@@ -38,6 +41,8 @@ function AddPhonograph(handle, url, title, volume, offset, filter, locked, coord
 			offset = 0,
 			filter = filter,
 			locked = locked,
+			video = video,
+			videoSize = videoSize,
 			coords = coords,
 			paused = nil
 		}
@@ -69,7 +74,7 @@ function PausePhonograph(handle)
 	end
 end
 
-function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, locked)
+function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, locked, video, videoSize)
 	if url == 'random' then
 		url = GetRandomPreset()
 	end
@@ -82,6 +87,8 @@ function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, l
 			offset,
 			Config.Presets[url].filter,
 			locked,
+			Config.Presets[url].video,
+			videoSize,
 			nil)
 	else
 		AddPhonograph(netId,
@@ -91,13 +98,15 @@ function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, l
 			offset,
 			filter,
 			locked,
+			video,
+			videoSize,
 			nil)
 	end
 
 	return netId
 end
 
-function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, locked)
+function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, locked, video, videoSize)
 	local coords = vector3(x, y, z)
 	local handle = GetHandleFromCoords(coords)
 
@@ -113,6 +122,8 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, lo
 			offset,
 			Config.Presets[url].filter,
 			locked,
+			Config.Presets[url].video,
+			videoSize,
 			coords)
 	else
 		AddPhonograph(handle,
@@ -122,6 +133,8 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, lo
 			offset,
 			filter,
 			locked,
+			video,
+			videoSize,
 			coords)
 	end
 
@@ -135,7 +148,7 @@ end
 function StartDefaultPhonographs()
 	for _, phonograph in ipairs(Config.DefaultPhonographs) do
 		if phonograph.url then
-			StartPhonographByCoords(phonograph.x, phonograph.y, phonograph.z, phonograph.url, phonograph.title, phonograph.volume, phonograph.offset, phonograph.filter, phonograph.locked)
+			StartPhonographByCoords(phonograph.x, phonograph.y, phonograph.z, phonograph.url, phonograph.title, phonograph.volume, phonograph.offset, phonograph.filter, phonograph.locked, phonograph.video, phonograph.videoSize)
 		end
 	end
 end
@@ -173,7 +186,7 @@ exports('startByNetworkId', StartPhonographByNetworkId)
 exports('startByCoords', StartPhonographByCoords)
 exports('stop', RemovePhonograph)
 
-AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter, locked, coords)
+AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter, locked, video, videoSize, coords)
 	if coords then
 		handle = GetHandleFromCoords(coords)
 	end
@@ -201,6 +214,8 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 			offset,
 			Config.Presets[url].filter,
 			locked,
+			Config.Presets[url].video,
+			videoSize,
 			coords)
 	elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then
 		TriggerClientEvent('phonograph:start', source,
@@ -211,13 +226,15 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 			offset,
 			filter,
 			locked,
+			video,
+			videoSize,
 			coords)
 	else
 		ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
 	end
 end)
 
-AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, filter, locked, coords)
+AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, filter, locked, video, videoSize, coords)
 	if Phonographs[handle] then
 		return
 	end
@@ -232,7 +249,7 @@ AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, 
 		return
 	end
 
-	AddPhonograph(handle, url, title, volume, offset, filter, locked, coords)
+	AddPhonograph(handle, url, title, volume, offset, filter, locked, video, videoSize, coords)
 end)
 
 AddEventHandler('phonograph:pause', function(handle)
@@ -339,6 +356,60 @@ AddEventHandler('phonograph:unlock', function(handle)
 	end
 
 	Phonographs[handle].locked = false
+end)
+
+AddEventHandler('phonograph:enableVideo', function(handle)
+	if not Phonographs[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to enable video on phonographs')
+		return
+	end
+
+	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to enable video on locked phonographs')
+		return
+	end
+
+	Phonographs[handle].video = true
+end)
+
+AddEventHandler('phonograph:disableVideo', function(handle)
+	if not Phonographs[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to disable video on phonographs')
+		return
+	end
+
+	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to disable video on locked phonographs')
+		return
+	end
+
+	Phonographs[handle].video = false
+end)
+
+AddEventHandler('phonograph:setVideoSize', function(handle, size)
+	if not Phonographs[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to change video size on phonographs')
+		return
+	end
+
+	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to change video size on locked phonographs')
+		return
+	end
+
+	Phonographs[handle].videoSize = Clamp(size, 10, 100)
 end)
 
 CreateThread(function()

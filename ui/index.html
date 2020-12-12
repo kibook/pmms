@@ -1,8 +1,8 @@
 <html>
 	<head>
 		<title>Phonograph</title>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 		<link rel="stylesheet" href="style.css">
+		<script src="https://kit.fontawesome.com/5537a772c3.js" crossorigin="anonymous"></script>
 		<script src="jsmediatags.min.js"></script>
 		<script src="script.js"></script>
 	</head>
@@ -17,27 +17,32 @@
 				<select id="preset"></select>
 				<input id="url" type="text" placeholder="Enter URL...">
 				<span id="volume-container">
-					<i class="fa fa-volume-off"></i>
+					<i class="fas fa-volume-off"></i>
 					<input id="volume" type="number" min="0" max="100" value="100">
 				</span>
 				<span id="offset-container">
-					<i class="fa fa-clock-o"></i>
+					<i class="fas fa-clock"></i>
 					<input id="offset" type="text" size="8" value="00:00:00">
 				</span>
 				<span id="filter-container">
-					<i class="fa fa-filter"></i>
+					<i class="fas fa-filter"></i>
 					<input id="filter" type="checkbox">
 				</span>
+				<span id="video-container">
+					<i class="fas fa-video"></i>
+					<input id="video" type="checkbox">
+					<input hidden id="video-size" type="number" min="10" max="100" step="10" value="50">
+				</span>
 				<span id="locked-container">
-					<i class="fa fa-lock"></i>
+					<i class="fas fa-lock"></i>
 					<input id="locked" type="checkbox">
 				</span>
 				<button id="play-button">
-					<i class="fa fa-play"></i>
+					<i class="fas fa-play"></i>
 				</button>
 			</div>
 			<div id="base-volume-container">
-				<i class="fa fa-volume-off"></i>
+				<i class="fas fa-volume-off"></i>
 				<div id="base-volume">100</div>
 				<input id="set-base-volume" type="range" min="0" max="100" step="1" value="100">
 			</div>

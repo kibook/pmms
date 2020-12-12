@@ -86,9 +86,9 @@ function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, l
 			Config.Presets[url].title,
 			volume,
 			offset,
-			Config.Presets[url].filter,
+			Config.Presets[url].filter or false,
 			locked,
-			Config.Presets[url].video,
+			Config.Presets[url].video or false,
 			videoSize,
 			nil)
 	else
@@ -121,9 +121,9 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, lo
 			Config.Presets[url].title,
 			volume,
 			offset,
-			Config.Presets[url].filter,
+			Config.Presets[url].filter or false,
 			locked,
-			Config.Presets[url].video,
+			Config.Presets[url].video or false,
 			videoSize,
 			coords)
 	else
@@ -213,9 +213,9 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 			Config.Presets[url].title,
 			volume,
 			offset,
-			Config.Presets[url].filter,
+			Config.Presets[url].filter or false,
 			locked,
-			Config.Presets[url].video,
+			Config.Presets[url].video or false,
 			videoSize,
 			coords)
 	elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then

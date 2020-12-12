@@ -342,6 +342,10 @@ function DisableVideo(handle)
 	TriggerServerEvent('phonograph:disableVideo', handle)
 end
 
+function IsPauseMenuOrMapActive()
+	return IsPauseMenuActive() or IsAppActive(`MAP`) ~= 0
+end
+
 RegisterCommand('phono', function(source, args, raw)
 	if #args > 0 then
 		local command = args[1]
@@ -597,7 +601,8 @@ CreateThread(function()
 				local camDistance
 				local onScreen, screenX, screenY = GetScreenCoordFromWorldCoord(phonoPos.x, phonoPos.y, phonoPos.z + 0.8)
 
-				if onScreen then
+				if onScreen and not IsPauseMenuOrMapActive() then
+					print(camDistance)
 					camDistance = GetDistanceBetweenCoords(viewerPos.x, viewerPos.y, viewerPos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
 				else
 					camDistance = -1

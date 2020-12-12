@@ -4,9 +4,9 @@ Allows players to play music from a phonograph object.
 
 # Features
 
-- NUI with HTML5 audio
+- NUI with HTML5 audio and video
 
-- Music is synchronized between players
+- Synchronized between players
 
 - Multiple phonographs can play different songs at the same time
 
@@ -17,6 +17,10 @@ Allows players to play music from a phonograph object.
 - Optional "phonograph" filter can be applied to any audio
 
 - Show video on a screen displayed above the phonograph
+
+- Permissions system and ability to lock phonographs
+
+- Configure default phonographs which are spawned and play music automatically
 
 # Examples
 
@@ -33,3 +37,4 @@ Allows players to play music from a phonograph object.
 | `/phono pause`                                                     | Pause playback on the nearest phonograph.  |
 | `/phono stop`                                                      | Stop playback on the nearest phonograph.   |
 | `/phono status`                                                    | Show the status of the nearest phonograph. |
+| `/phono songs`                                                     | Show preset song selection.                |

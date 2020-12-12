@@ -671,6 +671,7 @@ function updateUi(data) {
 		filterCheckbox.disabled = true;
 		lockedCheckbox.disabled = true;
 		videoCheckbox.disabled = true;
+		videoSizeInput.disabled = true;
 		playButton.disabled = true;
 		urlInput.value = '';
 	} else {
@@ -691,10 +692,12 @@ function updateUi(data) {
 			urlInput.disabled = false;
 			filterCheckbox.disabled = false;
 			videoCheckbox.disabled = false;
+			videoSizeInput.disabled = false;
 		} else {
 			urlInput.disabled = true;
 			filterCheckbox.disabled = true;
 			videoCheckbox.disabled = true;
+			videoSizeInput.disabled = true;
 		}
 
 		if (data.fullControls) {

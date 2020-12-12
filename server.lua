@@ -32,6 +32,7 @@ function AddPhonograph(handle, url, title, volume, offset, filter, locked, video
 		title = title or url
 		volume = Clamp(volume, 0, 100)
 		offset = offset or 0
+		videoSize = Clamp(videoSize, 10, 100)
 
 		Phonographs[handle] = {
 			url = url,

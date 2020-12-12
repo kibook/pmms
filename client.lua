@@ -289,6 +289,10 @@ function CreatePhonograph(phonograph)
 	SetModelAsNoLongerNeeded(model)
 
 	SetEntityRotation(phonograph.handle, phonograph.pitch, phonograph.roll, phonograph.yaw, 2)
+
+	if phonograph.invisible then
+		SetEntityVisible(phonograph.handle, false)
+	end
 end
 
 function SetPhonographVolume(handle, volume)

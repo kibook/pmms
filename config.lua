@@ -28,6 +28,9 @@ Config.Presets = {
 -- pitch, roll, yaw
 -- 	The rotation of the phonograph, if one is to be spawned.
 --
+-- invisible
+-- 	If true, the phonograph will be made invisible.
+--
 -- url
 -- 	The URL or preset name of music to start playing on this phonograph
 -- 	when the resource starts. 'random' can be used to select a random
@@ -62,6 +65,7 @@ Config.DefaultPhonographs = {
 		pitch = 0.0,
 		roll = 0.0,
 		yaw = -76.858,
+		invisible = false,
 		url = 'https://example.com/example.ogg',
 		title = 'Example Song',
 		volume = 100,

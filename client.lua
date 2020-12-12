@@ -149,6 +149,16 @@ function GetViewerCoords()
 	end
 end
 
+function GetViewerFov()
+	local cam = GetRenderingCam()
+
+	if cam == -1 then
+		return GetGameplayCamFov()
+	else
+		return GetCamFov(cam)
+	end
+end
+
 function SortByDistance(a, b)
 	if a.distance < 0 then
 		return false
@@ -582,6 +592,7 @@ CreateThread(function()
 
 		local listenPos = GetListenerCoords()
 		local viewerPos = GetViewerCoords()
+		local viewerFov = GetViewerFov()
 		local ped = PlayerPedId()
 
 		for handle, info in pairs(Phonographs) do
@@ -599,6 +610,7 @@ CreateThread(function()
 				local distance = GetDistanceBetweenCoords(listenPos.x, listenPos.y, listenPos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
 
 				local camDistance
+				local camFov
 				local onScreen, screenX, screenY = GetScreenCoordFromWorldCoord(phonoPos.x, phonoPos.y, phonoPos.z + 0.8)
 
 				if onScreen and not IsPauseMenuOrMapActive() then
@@ -623,6 +635,7 @@ CreateThread(function()
 					distance = distance,
 					sameRoom = IsInSameRoom(ped, object),
 					camDistance = camDistance,
+					fov = viewerFov,
 					screenX = screenX,
 					screenY = screenY,
 					maxDistance = Config.MaxDistance
@@ -644,6 +657,7 @@ CreateThread(function()
 					distance = -1,
 					sameRoom = false,
 					camDistance = -1,
+					fov = viewerFov,
 					screenX = 0,
 					screenY = 0,
 					maxDistance = Config.MaxDistance

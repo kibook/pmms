@@ -275,6 +275,12 @@ function setVolumeFactor(player, target) {
 	player.setAttribute('data-volumeFactor', volumeFactor);
 }
 
+function calculateFocalLength(fov) {
+	const x = 43.266615300557;
+	var f = x / 2 * Math.tan(Math.PI * fov / 360);
+	return 1 / f * 50;
+}
+
 function update(data) {
 	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.filter, data.locked, data.video, data.videoSize, data.coords);
 
@@ -327,7 +333,7 @@ function update(data) {
 		}
 
 		if (data.video && data.sameRoom && data.camDistance >= 0 && data.distance <= data.maxDistance) {
-			var scale = 1 / data.camDistance * 4;
+			var scale = calculateFocalLength(data.fov) / data.camDistance;
 
 			player.style.left = data.screenX * 100 + '%';
 			player.style.top  = data.screenY * 100 + '%';

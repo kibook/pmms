@@ -176,11 +176,7 @@ option {
 	width: 1.7vw;
 }
 
-.active-phonograph-volume span {
-	padding: 0 0.25vw;
-}
-
-.active-phonograph-time span {
+.active-phonograph-volume span, .active-phonograph-time span, .active-phonograph-video-size span {
 	padding: 0 0.25vw;
 }
 

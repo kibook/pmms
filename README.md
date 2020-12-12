@@ -26,10 +26,10 @@ Allows players to play music from a phonograph object.
 
 # Commands
 
-| Command                                      | Description                                |
-|----------------------------------------------|--------------------------------------------|
-| `/phono`                                     | Open the phonograph control panel.         |
-| `/phono play [url] [volume] [time] [filter]` | Play music on the nearest phonograph.      |
-| `/phono pause`                               | Pause playback on the nearest phonograph.  |
-| `/phono stop`                                | Stop playback on the nearest phonograph.   |
-| `/phono status`                              | Show the status of the nearest phonograph. |
+| Command                                                            | Description                                |
+|--------------------------------------------------------------------|--------------------------------------------|
+| `/phono`                                                           | Open the phonograph control panel.         |
+| `/phono play [url] [volume] [time] [filter] [lock] [video] [size]` | Play music on the nearest phonograph.      |
+| `/phono pause`                                                     | Pause playback on the nearest phonograph.  |
+| `/phono stop`                                                      | Stop playback on the nearest phonograph.   |
+| `/phono status`                                                    | Show the status of the nearest phonograph. |

@@ -602,7 +602,6 @@ CreateThread(function()
 				local onScreen, screenX, screenY = GetScreenCoordFromWorldCoord(phonoPos.x, phonoPos.y, phonoPos.z + 0.8)
 
 				if onScreen and not IsPauseMenuOrMapActive() then
-					print(camDistance)
 					camDistance = GetDistanceBetweenCoords(viewerPos.x, viewerPos.y, viewerPos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
 				else
 					camDistance = -1

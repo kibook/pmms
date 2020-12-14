@@ -30,11 +30,12 @@ Allows players to play music from a phonograph object.
 
 # Commands
 
-| Command                                                            | Description                                |
-|--------------------------------------------------------------------|--------------------------------------------|
-| `/phono`                                                           | Open the phonograph control panel.         |
-| `/phono play [url] [volume] [time] [filter] [lock] [video] [size]` | Play music on the nearest phonograph.      |
-| `/phono pause`                                                     | Pause playback on the nearest phonograph.  |
-| `/phono stop`                                                      | Stop playback on the nearest phonograph.   |
-| `/phono status`                                                    | Show the status of the nearest phonograph. |
-| `/phono songs`                                                     | Show preset song selection.                |
+| Command                                                            | Description                                     |
+|--------------------------------------------------------------------|-------------------------------------------------|
+| `/phono`                                                           | Open the phonograph control panel.              |
+| `/phono play [url] [volume] [time] [filter] [lock] [video] [size]` | Play music on the nearest phonograph.           |
+| `/phono pause`                                                     | Pause playback on the nearest phonograph.       |
+| `/phono stop`                                                      | Stop playback on the nearest phonograph.        |
+| `/phono status`                                                    | Show the status of the nearest phonograph.      |
+| `/phono songs`                                                     | Show preset song selection.                     |
+| `/phonovol [volume]`                                               | Set a personal base volume for all phonographs. |

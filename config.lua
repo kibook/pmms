@@ -1,15 +1,31 @@
 Config = {}
 
--- Max distance at which to interact with phonographs with the /phono command
+-- Max distance at which to interact with phonographs with the /phono command.
 Config.MaxDistance = 30
 
--- Pre-defined music URLs
+-- Pre-defined music URLs.
+--
+-- Mandatory properties:
+--
+-- url
+-- 	The URL of the music.
+--
+-- title
+-- 	The title displayed for the music.
+--
+-- filter
+-- 	Whether to apply the phonograph filter.
+--
+-- video
+-- 	If true and the media specified is a video, the video will be displayed
+-- 	above the phonograph.
+--
 Config.Presets = {
-	--['1'] = {title = 'Example Preset', url = 'https://example.com/example.ogg', filter = true, video = false}
+	--['1'] = {url = 'https://example.com/example.ogg', title = 'Example Preset', filter = true, video = false}
 }
 
 -- These phonographs will be automatically spawned and start playing when the
--- resource starts
+-- resource starts.
 --
 -- Mandatory properties:
 --
@@ -55,6 +71,14 @@ Config.Presets = {
 -- locked
 -- 	If true, the phonograph can only be controlled by players with the
 -- 	phonograph.manage ace.
+--
+-- video
+-- 	If true and the media specified is a video, the video will be displayed
+-- 	above the phonograph. If a preset is specified, the video setting of
+-- 	the preset will be used instead.
+--
+-- videoSize
+-- 	The default size of the video screen above the phonograph.
 --
 Config.DefaultPhonographs = {
 	--[[{

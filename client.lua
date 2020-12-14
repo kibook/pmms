@@ -363,7 +363,7 @@ RegisterCommand('phono', function(source, args, raw)
 		if command == 'play' then
 			if #args > 1 then
 				local url = args[2]
-				local volume = tonumber(args[3])
+				local volume = tonumber(args[3]) or 100
 				local offset = args[4]
 				local filter = args[5] == '1'
 				local locked = args[6] == '1'
@@ -396,7 +396,10 @@ RegisterCommand('phonovol', function(source, args, raw)
 		})
 	else
 		local volume = tonumber(args[1])
-		SetBaseVolume(volume)
+
+		if volume then
+			SetBaseVolume(volume)
+		end
 	end
 end)
 

@@ -305,7 +305,7 @@ function update(data) {
 			if (player.readyState > 0) {
 				var volume;
 
-				if (data.distance < 0) {
+				if (data.distance < 0 || data.muted) {
 					volume = 0;
 				} else {
 					var attenuationFactor = parseFloat(player.getAttribute('data-attenuationFactor'));
@@ -371,6 +371,18 @@ function enableVideo(handle) {
 
 function disableVideo(handle) {
 	sendMessage('disableVideo', {
+		handle: handle
+	});
+}
+
+function mute(handle) {
+	sendMessage('mute', {
+		handle: handle
+	});
+}
+
+function unmute(handle) {
+	sendMessage('unmute', {
 		handle: handle
 	});
 }
@@ -549,6 +561,20 @@ function createActivePhonographDiv(phonograph, fullControls) {
 			videoButton.disabled = true;
 		}
 
+		var muteButton = document.createElement('button');
+		muteButton.className = 'control-button';
+		if (phonograph.info.muted) {
+			muteButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
+			muteButton.addEventListener('click', event => {
+				unmute(phonograph.handle);
+			});
+		} else {
+			muteButton.innerHTML = '<i class="fas fa-volume-off"></i>';
+			muteButton.addEventListener('click', event => {
+				mute(phonograph.handle);
+			});
+		}
+
 		var pauseResumeButton = document.createElement('button');
 		pauseResumeButton.className = 'control-button';
 		if (phonograph.info.paused) {
@@ -577,6 +603,7 @@ function createActivePhonographDiv(phonograph, fullControls) {
 
 		controlsDiv.appendChild(lockedButton);
 		controlsDiv.appendChild(videoButton);
+		controlsDiv.appendChild(muteButton);
 		controlsDiv.appendChild(pauseResumeButton);
 		controlsDiv.appendChild(stopButton);
 

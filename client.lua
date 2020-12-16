@@ -501,6 +501,16 @@ RegisterNUICallback('increaseVideoSize', function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback('mute', function(data, cb)
+	TriggerServerEvent('phonograph:mute', data.handle)
+	cb({})
+end)
+
+RegisterNUICallback('unmute', function(data, cb)
+	TriggerServerEvent('phonograph:unmute', data.handle)
+	cb({})
+end)
+
 AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	Phonographs = phonographs
 	UpdateUi(fullControls, anyUrl)
@@ -622,6 +632,7 @@ CreateThread(function()
 					url = info.url,
 					title = info.title,
 					volume = math.floor(info.volume * (BaseVolume / 100)),
+					muted = info.muted,
 					offset = info.offset,
 					filter = info.filter,
 					locked = info.locked,
@@ -644,6 +655,7 @@ CreateThread(function()
 					url = info.url,
 					title = info.title,
 					volume = 0,
+					muted = true,
 					offset = info.offset,
 					filter = info.filter,
 					locked = info.locked,

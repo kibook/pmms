@@ -14,6 +14,8 @@ RegisterNetEvent('phonograph:unlock')
 RegisterNetEvent('phonograph:enableVideo')
 RegisterNetEvent('phonograph:disableVideo')
 RegisterNetEvent('phonograph:setVideoSize')
+RegisterNetEvent('phonograph:mute')
+RegisterNetEvent('phonograph:unmute')
 
 function Enqueue(queue, cb)
 	table.insert(queue, 1, cb)
@@ -45,7 +47,8 @@ function AddPhonograph(handle, url, title, volume, offset, filter, locked, video
 			video = video,
 			videoSize = videoSize,
 			coords = coords,
-			paused = nil
+			paused = nil,
+			muted = false
 		}
 
 		Enqueue(SyncQueue, function()
@@ -411,6 +414,46 @@ AddEventHandler('phonograph:setVideoSize', function(handle, size)
 	end
 
 	Phonographs[handle].videoSize = Clamp(size, 10, 100)
+end)
+
+AddEventHandler('phonograph:mute', function(handle)
+	if not Phonographs[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to mute phonographs')
+		return
+	end
+
+	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to mute locked phonographs')
+		return
+	end
+
+	print('mute')
+
+	Phonographs[handle].muted = true
+end)
+
+AddEventHandler('phonograph:unmute', function(handle)
+	if not Phonographs[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to mute phonographs')
+		return
+	end
+
+	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to mute locked phonographs')
+		return
+	end
+
+	print('test')
+
+	Phonographs[handle].muted = false
 end)
 
 CreateThread(function()

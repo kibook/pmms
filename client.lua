@@ -323,11 +323,7 @@ end
 
 function SetBaseVolume(volume)
 	BaseVolume = Clamp(volume, 0, 100)
-end
-
-function SaveSettings()
 	SetResourceKvp('baseVolume', tostring(BaseVolume))
-	SetResourceKvpInt('showStatus', StatusIsShown and 1 or 0)
 end
 
 function LoadSettings()
@@ -552,6 +548,7 @@ AddEventHandler('phonograph:toggleStatus', function()
 		type = 'toggleStatus'
 	})
 	StatusIsShown = not StatusIsShown
+	SetResourceKvpInt('showStatus', StatusIsShown and 1 or 0)
 end)
 
 AddEventHandler('phonograph:error', function(message)
@@ -568,8 +565,6 @@ AddEventHandler('onResourceStop', function(resource)
 			DeleteEntity(defaultPhonograph.handle)
 		end
 	end
-
-	SaveSettings()
 end)
 
 CreateThread(function()

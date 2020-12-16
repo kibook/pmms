@@ -788,11 +788,11 @@ function startPhonograph() {
 	var video = videoCheckbox.checked;
 	var videoSize = parseInt(videoSizeInput.value);
 
-	if (!volume) {
+	if (isNaN(volume)) {
 		volume = 100;
 	}
 
-	if (!videoSize) {
+	if (isNaN(videoSize)) {
 		videoSize = 50;
 	}
 
@@ -809,7 +809,6 @@ function startPhonograph() {
 
 	presetSelect.value = '';
 	urlInput.value = '';
-	volumeInput.value = 100;
 	offsetInput.value = '00:00:00';
 }
 

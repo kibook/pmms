@@ -207,3 +207,7 @@ option {
 	transform: translate(-50%, -100%);
 	opacity: 0.9;
 }
+
+#preset {
+	font-family: Helvetica, FontAwesome
+}

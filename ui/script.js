@@ -669,19 +669,25 @@ function updateUi(data) {
 	inactivePhonographsSelect.innerHTML = '';
 
 	if (presetValue == 'random') {
-		presetSelect.innerHTML = '<option></option><option value="random" selected="true">Random</option>';
+		presetSelect.innerHTML = '<option></option><option value="random" selected="true">&#xf522; Random</option>';
 	} else {
-		presetSelect.innerHTML = '<option></option><option value="random">Random</option>';
+		presetSelect.innerHTML = '<option></option><option value="random">&#xf522; Random</option>';
 	}
 
 	var presetKeys = Object.keys(presets).sort();
 
 	if (presetKeys.length > 0) {
 		presetKeys.forEach(key => {
+			var preset = presets[key];
 			var option = document.createElement('option');
 
 			option.value = key;
-			option.innerHTML = presets[key].title;
+
+			if (preset.video) {
+				option.innerHTML = '&#xf008; ' + preset.title;
+			} else {
+				option.innerHTML = '&#xf001; ' + preset.title;
+			}
 
 			if (key == presetValue) {
 				option.selected = true;
@@ -730,7 +736,14 @@ function updateUi(data) {
 			urlInput.disabled = true;
 			filterCheckbox.disabled = true;
 			videoCheckbox.disabled = true;
-			videoSizeInput.disabled = true;
+
+			if (presets[presetSelect.value].video) {
+				videoSizeInput.disabled = false;
+				videoCheckbox.checked = true;
+			} else {
+				videoSizeInput.disabled = true;
+				videoCheckbox.checked = false;
+			}
 		}
 
 		if (data.fullControls) {

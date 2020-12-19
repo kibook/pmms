@@ -491,11 +491,9 @@ function createActivePhonographDiv(phonograph, fullControls) {
 		timeDiv.appendChild(timeSpan);
 		timeDiv.appendChild(seekForwardButton);
 
-		var videoSizeDiv;
+		var videoSizeDiv = document.createElement('div');
+		videoSizeDiv.className = 'active-phonograph-video-size';
 		if (phonograph.info.video > 0) {
-			var videoSizeDiv = document.createElement('div');
-			videoSizeDiv.className = 'active-phonograph-video-size';
-
 			var videoSizeDecreaseButton = document.createElement('button');
 			videoSizeDecreaseButton.className = 'control-button';
 			videoSizeDecreaseButton.innerHTML = '<i class="fas fa-minus"></i>';
@@ -612,9 +610,7 @@ function createActivePhonographDiv(phonograph, fullControls) {
 		div.appendChild(titleDiv);
 		div.appendChild(volumeDiv);
 		div.appendChild(timeDiv);
-		if (videoSizeDiv) {
-			div.appendChild(videoSizeDiv);
-		}
+		div.appendChild(videoSizeDiv);
 		div.appendChild(controlsDiv);
 
 		return div;

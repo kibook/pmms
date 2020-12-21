@@ -186,9 +186,30 @@ function IsLockedDefaultPhonograph(handle)
 	return false
 end
 
+function LockPhonograph(handle)
+	Phonographs[handle].locked = true
+end
+
+function UnlockPhonograph(handle)
+	Phonographs[handle].locked = false
+end
+
+function MutePhonograph(handle)
+	Phonographs[handle].muted = true
+end
+
+function UnmutePhonograph(handle)
+	Phonographs[handle].muted = false
+end
+
 exports('startByNetworkId', StartPhonographByNetworkId)
 exports('startByCoords', StartPhonographByCoords)
 exports('stop', RemovePhonograph)
+exports('pause', PausePhonograph)
+exports('lock', LockPhonograph)
+exports('unlock', UnlockPhonograph)
+exports('mute', MutePhonograph)
+exports('unmute', UnmutePhonograph)
 
 AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter, locked, video, videoSize, coords)
 	if coords then
@@ -346,7 +367,7 @@ AddEventHandler('phonograph:lock', function(handle)
 		return
 	end
 
-	Phonographs[handle].locked = true
+	LockPhonograph(handle)
 end)
 
 AddEventHandler('phonograph:unlock', function(handle)
@@ -359,7 +380,7 @@ AddEventHandler('phonograph:unlock', function(handle)
 		return
 	end
 
-	Phonographs[handle].locked = false
+	UnlockPhonograph(handle)
 end)
 
 AddEventHandler('phonograph:enableVideo', function(handle)
@@ -431,9 +452,7 @@ AddEventHandler('phonograph:mute', function(handle)
 		return
 	end
 
-	print('mute')
-
-	Phonographs[handle].muted = true
+	MutePhonograph(handle)
 end)
 
 AddEventHandler('phonograph:unmute', function(handle)
@@ -451,10 +470,45 @@ AddEventHandler('phonograph:unmute', function(handle)
 		return
 	end
 
-	print('test')
-
-	Phonographs[handle].muted = false
+	UnmutePhonograph(handle)
 end)
+
+RegisterCommand('phonoctl', function(source, args, raw)
+	if #args < 1 then
+		print('Usage:')
+		print('  phonoctl list')
+		print('  phonoctl lock <handle>')
+		print('  phonoctl unlock <handle>')
+		print('  phonoctl mute <handle>')
+		print('  phonoctl unmute <handle>')
+		print('  phonoctl pause <handle>')
+		print('  phonoctl stop <handle>')
+	elseif args[1] == 'list' then
+		for handle, info in pairs(Phonographs) do
+			print(string.format('[%x] %s %d %d %s %s %s %s',
+				handle,
+				info.title,
+				info.volume,
+				info.offset,
+				info.locked and 'locked' or 'unlocked',
+				info.video and 'video' or 'audio',
+				info.muted and 'muted' or 'unmuted',
+				info.paused and 'paused' or 'playing'))
+		end
+	elseif args[1] == 'lock' then
+		LockPhonograph(tonumber(args[2], 16))
+	elseif args[1] == 'unlock' then
+		UnlockPhonograph(tonumber(args[2], 16))
+	elseif args[1] == 'mute' then
+		MutePhonograph(tonumber(args[2], 16))
+	elseif args[1] == 'unmute' then
+		UnmutePhonograph(tonumber(args[2], 16))
+	elseif args[1] == 'pause' then
+		PausePhonograph(tonumber(args[2], 16))
+	elseif args[1] == 'stop' then
+		RemovePhonograph(tonumber(args[2], 16))
+	end
+end, true)
 
 CreateThread(function()
 	StartDefaultPhonographs()

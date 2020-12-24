@@ -1,7 +1,7 @@
 Config = {}
 
 -- Max distance at which to interact with phonographs with the /phono command.
-Config.MaxDistance = 30
+Config.MaxDistance = 30.0
 
 -- Pre-defined music URLs.
 --

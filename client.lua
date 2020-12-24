@@ -1,7 +1,9 @@
 local Phonographs = {}
+local LocalPhonographs = {}
 
 local BaseVolume = 100
 local StatusIsShown = false
+local UiIsOpen = false
 
 RegisterNetEvent('phonograph:sync')
 RegisterNetEvent('phonograph:start')
@@ -56,29 +58,55 @@ function GetHandle(object)
 	return NetworkGetEntityIsNetworked(object) and ObjToNet(object) or object
 end
 
-function GetClosestPhonograph()
-	local pos = GetEntityCoords(PlayerPedId())
+function FindHandle(object)
+	if NetworkGetEntityIsNetworked(object) then
+		local netId = ObjToNet(object)
 
-	local closestPhonograph = nil
-	local closestDistance = nil
-
-	for object in EnumerateObjects() do
-		if IsPhonograph(object) then
-			local phonoPos = GetEntityCoords(object)
-			local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
-
-			if distance <= Config.MaxDistance and (not closestDistance or distance < closestDistance) then
-				closestPhonograph = object
-				closestDistance = distance
-			end
+		if Phonographs[netId] then
+			return netId
 		end
 	end
 
-	if NetworkGetEntityIsNetworked(closestPhonograph) then
-		return ObjToNet(closestPhonograph), true
-	else
-		return closestPhonograph, false
+	local handle = GetHandleFromCoords(GetEntityCoords(object))
+
+	if Phonographs[handle] then
+		return handle
 	end
+
+	return nil
+end
+
+function ForEachPhonograph(func)
+	for object in EnumerateObjects() do
+		if IsPhonograph(object) then
+			func(object)
+		end
+	end
+end
+
+function GetClosestPhonographObject(centre, radius, listenerPos)
+	if listenerPos and GetDistanceBetweenCoords(centre.x, centre.y, centre.z, listenerPos.x, listenerPos.y, listenerPos.z, true) > Config.MaxDistance then
+		return nil
+	end
+
+	local min
+	local closest
+
+	ForEachPhonograph(function(object)
+		local coords = GetEntityCoords(object)
+		local distance = GetDistanceBetweenCoords(centre.x, centre.y, centre.z, coords.x, coords.y, coords.z, true)
+
+		if distance <= radius and (not min or distance < min) then
+			min = distance
+			closest = object
+		end
+	end)
+
+	return closest
+end
+
+function GetClosestPhonograph()
+	return GetClosestPhonographObject(GetEntityCoords(PlayerPedId()), Config.MaxDistance)
 end
 
 function StartPhonograph(handle, url, volume, offset, filter, locked, video, videoSize)
@@ -92,71 +120,57 @@ function StartPhonograph(handle, url, volume, offset, filter, locked, video, vid
 		offset = '0'
 	end
 
-	local coords = not NetworkDoesNetworkIdExist(handle) and GetEntityCoords(handle)
-
-	TriggerServerEvent('phonograph:start', handle, url, volume, offset, filter, locked, video, videoSize, coords)
+	if NetworkDoesNetworkIdExist(handle) then
+		TriggerServerEvent('phonograph:start', handle, url, volume, offset, filter, locked, video, videoSize, nil)
+	else
+		local coords = GetEntityCoords(handle)
+		TriggerServerEvent('phonograph:start', nil, url, volume, offset, filter, locked, video, videoSize, coords)
+	end
 end
 
 function StartClosestPhonograph(url, volume, offset, filter, locked, video, videoSize)
-	local closestPhonograph, isNetId = GetClosestPhonograph()
-	StartPhonograph(closestPhonograph, url, volume, offset, filter, locked, video, videoSize)
+	StartPhonograph(GetHandle(GetClosestPhonograph()), url, volume, offset, filter, locked, video, videoSize)
 end
 
-function PausePhonograph(handle, isNetId)
-	SendNUIMessage({
-		type = 'pause',
-		handle = isNetId and handle or GetHandleFromCoords(GetEntityCoords(handle))
-	})
+function PausePhonograph(handle)
+	TriggerServerEvent('phonograph:pause', handle)
 end
 
 function PauseClosestPhonograph()
-	local closestPhonograph, isNetId = GetClosestPhonograph()
-	PausePhonograph(closestPhonograph, isNetId)
+	PausePhonograph(FindHandle(GetClosestPhonograph()))
 end
 
-function StopPhonograph(handle, isNetId)
-	TriggerServerEvent('phonograph:stop', isNetId and handle or GetHandleFromCoords(GetEntityCoords(handle)))
+function StopPhonograph(handle)
+	TriggerServerEvent('phonograph:stop', handle)
 end
 
 function StopClosestPhonograph()
-	local closestPhonograph, isNetId = GetClosestPhonograph()
-	StopPhonograph(closestPhonograph, isNetId)
+	StopPhonograph(FindHandle(GetClosestPhonograph()))
 end
 
-function GetListenerCoords()
+function GetListenerAndViewerInfo()
 	local cam = GetRenderingCam()
+	local ped = PlayerPedId()
+
+	local listenerCoords, viewerCoords, viewerFov
 
 	if cam == -1 then
-		local ped = PlayerPedId()
-
 		if IsPedDeadOrDying(ped) then
-			return GetGameplayCamCoord()
+			listenerCoords = GetGameplayCamCoord()
+			viewerCoords = listenerCoords
 		else
-			return GetEntityCoords(ped)
+			listenerCoords = GetEntityCoords(ped)
+			viewerCoords = GetGameplayCamCoord()
 		end
+
+		viewerFov = GetGameplayCamFov()
 	else
-		return GetCamCoord(cam)
+		listenerCoords = GetCamCoord(cam)
+		viewerCoords = listenerCoords
+		viewerFov = GetCamFov(cam)
 	end
-end
 
-function GetViewerCoords()
-	local cam = GetRenderingCam()
-
-	if cam == -1 then
-		return GetGameplayCamCoord()
-	else
-		return GetCamCoord(cam)
-	end
-end
-
-function GetViewerFov()
-	local cam = GetRenderingCam()
-
-	if cam == -1 then
-		return GetGameplayCamFov()
-	else
-		return GetCamFov(cam)
-	end
+	return ped, listenerCoords, viewerCoords, viewerFov
 end
 
 function SortByDistance(a, b)
@@ -187,10 +201,6 @@ function IsInSameRoom(entity1, entity2)
 	return true
 end
 
-function GetPhonographClosestToCoords(coords)
-	return GetClosestObjectOfType(coords.x, coords.y, coords.z, 1.0, GetHashKey('p_phonograph01x'), true, false, false)
-end
-
 function ListPresets()
 	local presets = {}
 
@@ -214,6 +224,16 @@ function ListPresets()
 	end
 end
 
+function GetLocalPhonograph(coords, listenerPos)
+	local handle = GetHandleFromCoords(coords)
+
+	if LocalPhonographs[handle] and DoesEntityExist(LocalPhonographs[handle]) then
+		return LocalPhonographs[handle]
+	else
+		LocalPhonographs[handle] = GetClosestPhonographObject(coords, 1.0, listenerPos)
+	end
+end
+
 function UpdateUi(fullControls, anyUrl)
 	local pos = GetEntityCoords(PlayerPedId())
 
@@ -223,7 +243,7 @@ function UpdateUi(fullControls, anyUrl)
 		local object
 
 		if info.coords then
-			object = GetPhonographClosestToCoords(info.coords)
+			object = GetLocalPhonograph(info.coords, pos)
 		elseif NetworkDoesNetworkIdExist(handle) then
 			object = NetToObj(handle)
 		end
@@ -254,12 +274,12 @@ function UpdateUi(fullControls, anyUrl)
 
 	local inactivePhonographs = {}
 
-	for object in EnumerateObjects() do
-		if IsPhonograph(object) then
+	if UiIsOpen then
+		ForEachPhonograph(function(object)
 			local phonoPos = GetEntityCoords(object)
 			local handle = GetHandle(object)
 
-			if not (Phonographs[handle] or Phonographs[GetHandleFromCoords(phonoPos)]) then
+			if handle then
 				local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
 
 				if fullControls or distance <= Config.MaxDistance then
@@ -269,10 +289,10 @@ function UpdateUi(fullControls, anyUrl)
 					})
 				end
 			end
-		end
-	end
+		end)
 
-	table.sort(inactivePhonographs, SortByDistance)
+		table.sort(inactivePhonographs, SortByDistance)
+	end
 
 	SendNUIMessage({
 		type = 'updateUi',
@@ -443,6 +463,7 @@ end)
 
 RegisterNUICallback('closeUi', function(data, cb)
 	SetNuiFocus(false, false)
+	UiIsOpen = false
 	cb({})
 end)
 
@@ -513,7 +534,10 @@ end)
 
 AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	Phonographs = phonographs
-	UpdateUi(fullControls, anyUrl)
+
+	if UiIsOpen or StatusIsShown then
+		UpdateUi(fullControls, anyUrl)
+	end
 end)
 
 AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, filter, locked, video, videoSize, coords)
@@ -551,6 +575,7 @@ AddEventHandler('phonograph:showControls', function()
 		type = 'showUi'
 	})
 	SetNuiFocus(true, true)
+	UiIsOpen = true
 end)
 
 AddEventHandler('phonograph:toggleStatus', function()
@@ -575,6 +600,10 @@ AddEventHandler('onResourceStop', function(resource)
 			DeleteEntity(defaultPhonograph.handle)
 		end
 	end
+
+	if UiIsOpen then
+		SetNuiFocus(false, false)
+	end
 end)
 
 CreateThread(function()
@@ -598,16 +627,13 @@ CreateThread(function()
 	while true do
 		Wait(0)
 
-		local listenPos = GetListenerCoords()
-		local viewerPos = GetViewerCoords()
-		local viewerFov = GetViewerFov()
-		local ped = PlayerPedId()
+		local ped, listenPos, viewerPos, viewerFov = GetListenerAndViewerInfo()
 
 		for handle, info in pairs(Phonographs) do
 			local object
 
 			if info.coords then
-				object = GetPhonographClosestToCoords(info.coords)
+				object = GetLocalPhonograph(info.coords, listenPos)
 			elseif NetworkDoesNetworkIdExist(handle) then
 				object = NetToObj(handle)
 			end

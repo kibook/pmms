@@ -238,8 +238,7 @@ function play(handle) {
 
 function pause(handle) {
 	sendMessage('pause', {
-		handle: handle,
-		paused: Math.floor(Date.now() / 1000)
+		handle: handle
 	});
 }
 
@@ -855,9 +854,6 @@ window.addEventListener('message', event => {
 			break;
 		case 'play':
 			play(event.data.handle);
-			break;
-		case 'pause':
-			pause(event.data.handle);
 			break;
 		case 'stop':
 			stop(event.data.handle);

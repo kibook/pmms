@@ -140,10 +140,14 @@ option {
 	white-space: nowrap;
 }
 
+#active-phonographs-container {
+	overflow-y: auto;
+}
+
 #active-phonographs {
 	display: table;
+	width: 100%;
 	padding: 0;
-	overflow-y: auto;
 }
 
 .active-phonograph {

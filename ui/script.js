@@ -732,7 +732,7 @@ function updateUi(data) {
 			filterCheckbox.disabled = true;
 			videoCheckbox.disabled = true;
 
-			if (presets[presetSelect.value].video) {
+			if (presets[presetSelect.value] && presets[presetSelect.value].video) {
 				videoSizeInput.disabled = false;
 				videoCheckbox.checked = true;
 			} else {

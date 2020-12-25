@@ -277,14 +277,15 @@ function UpdateUi(fullControls, anyUrl)
 	if UiIsOpen then
 		ForEachPhonograph(function(object)
 			local phonoPos = GetEntityCoords(object)
-			local handle = GetHandle(object)
+			local clHandle = GetHandle(object)
+			local svHandle = NetworkGetEntityIsNetworked(object) and ObjToNet(object) or GetHandleFromCoords(phonoPos)
 
-			if handle then
+			if clHandle and not Phonographs[svHandle] then
 				local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
 
 				if fullControls or distance <= Config.MaxDistance then
 					table.insert(inactivePhonographs, {
-						handle = handle,
+						handle = clHandle,
 						distance = distance
 					})
 				end

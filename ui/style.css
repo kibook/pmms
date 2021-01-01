@@ -136,7 +136,7 @@ option {
 	flex-grow: 1;
 }
 
-#volume-container, #offset-container, #filter-container, #locked-container, #video-container {
+#volume-container, #offset-container, #filter-container, #locked-container, #video-container, #muted-container {
 	padding: 0 0.2vw;
 	white-space: nowrap;
 }

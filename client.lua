@@ -109,7 +109,7 @@ function GetClosestPhonograph()
 	return GetClosestPhonographObject(GetEntityCoords(PlayerPedId()), Config.MaxDistance)
 end
 
-function StartPhonograph(handle, url, volume, offset, filter, locked, video, videoSize)
+function StartPhonograph(handle, url, volume, offset, filter, locked, video, videoSize, muted)
 	if url == 'random' then
 		url = GetRandomPreset()
 	end
@@ -121,15 +121,15 @@ function StartPhonograph(handle, url, volume, offset, filter, locked, video, vid
 	end
 
 	if NetworkDoesNetworkIdExist(handle) then
-		TriggerServerEvent('phonograph:start', handle, url, volume, offset, filter, locked, video, videoSize, nil)
+		TriggerServerEvent('phonograph:start', handle, url, volume, offset, filter, locked, video, videoSize, muted, nil)
 	else
 		local coords = GetEntityCoords(handle)
-		TriggerServerEvent('phonograph:start', nil, url, volume, offset, filter, locked, video, videoSize, coords)
+		TriggerServerEvent('phonograph:start', nil, url, volume, offset, filter, locked, video, videoSize, muted, coords)
 	end
 end
 
-function StartClosestPhonograph(url, volume, offset, filter, locked, video, videoSize)
-	StartPhonograph(GetHandle(GetClosestPhonograph()), url, volume, offset, filter, locked, video, videoSize)
+function StartClosestPhonograph(url, volume, offset, filter, locked, video, videoSize, muted)
+	StartPhonograph(GetHandle(GetClosestPhonograph()), url, volume, offset, filter, locked, video, videoSize, muted)
 end
 
 function PausePhonograph(handle)
@@ -395,8 +395,9 @@ RegisterCommand('phono', function(source, args, raw)
 				local locked = args[6] == '1'
 				local video = args[7] == '1'
 				local videoSize = tonumber(args[8]) or 50
+				local muted = args[9] == '1'
 
-				StartClosestPhonograph(url, volume, offset, filter, locked, video, videoSize)
+				StartClosestPhonograph(url, volume, offset, filter, locked, video, videoSize, muted)
 			else
 				PauseClosestPhonograph()
 			end
@@ -446,6 +447,7 @@ RegisterNUICallback('init', function(data, cb)
 			data.locked,
 			data.video,
 			data.videoSize,
+			data.muted,
 			data.coords and json.decode(data.coords))
 	end
 	cb({})
@@ -457,7 +459,7 @@ RegisterNUICallback('initError', function(data, cb)
 end)
 
 RegisterNUICallback('play', function(data, cb)
-	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.filter, data.locked, data.video, data.videoSize)
+	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.filter, data.locked, data.video, data.videoSize, data.muted)
 	cb({})
 end)
 
@@ -555,7 +557,7 @@ AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	end
 end)
 
-AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, filter, locked, video, videoSize, coords)
+AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords)
 	SendNUIMessage({
 		type = 'init',
 		handle = handle,
@@ -567,6 +569,7 @@ AddEventHandler('phonograph:start', function(handle, url, title, volume, offset,
 		locked = locked,
 		video = video,
 		videoSize = videoSize,
+		muted = muted,
 		coords = json.encode(coords)
 	})
 end)
@@ -630,7 +633,8 @@ CreateThread(function()
 		{name = 'filter', help = '0 = normal audio, 1 = add phonograph filter'},
 		{name = 'lock', help = '0 = unlocked, 1 = locked'},
 		{name = 'video', help = '0 = hide video, 1 = show video'},
-		{name = 'size', help = 'Video size'}
+		{name = 'size', help = 'Video size'},
+		{name = 'mute', help = '0 = unmuted, 1 = muted'}
 	})
 
 	TriggerEvent('chat:addSuggestion', '/phonovol', 'Adjust the base volume of all phonographs', {

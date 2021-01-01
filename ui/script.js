@@ -52,7 +52,7 @@ function hideLoadingIcon() {
 	document.getElementById('loading').style.display = 'none';
 }
 
-function initPlayer(id, handle, url, title, volume, offset, filter, locked, video, videoSize, coords) {
+function initPlayer(id, handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords) {
 	interpretUrl(url).then(info => {
 		url = info.url;
 
@@ -100,6 +100,7 @@ function initPlayer(id, handle, url, title, volume, offset, filter, locked, vide
 				locked: locked,
 				video: video,
 				videoSize: videoSize,
+				muted: muted,
 				coords: coords
 			});
 		}, {once: true});
@@ -117,13 +118,13 @@ function initPlayer(id, handle, url, title, volume, offset, filter, locked, vide
 	});
 }
 
-function getPlayer(handle, url, title, volume, offset, filter, locked, video, videoSize, coords) {
+function getPlayer(handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords) {
 	var id = 'player_' + handle.toString(16);
 
 	var player = document.getElementById(id);
 
 	if (!player && url) {
-		player = initPlayer(id, handle, url, title, volume, offset, filter, locked, video, videoSize, coords);
+		player = initPlayer(id, handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords);
 	}
 
 	return player;
@@ -197,7 +198,7 @@ function init(data) {
 	var offset = parseTimecode(data.offset);
 
 	if (data.title) {
-		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.coords);
+		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
 	} else{
 		try {
 			jsmediatags.read(data.url, {
@@ -210,10 +211,10 @@ function init(data) {
 						title = data.url;
 					}
 
-					getPlayer(data.handle, data.url, title, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.coords);
+					getPlayer(data.handle, data.url, title, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
 				},
 				onError: function(error) {
-					getPlayer(data.handle, data.url, data.url, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.coords);
+					getPlayer(data.handle, data.url, data.url, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
 				}
 			});
 		} catch (err) {
@@ -281,7 +282,7 @@ function calculateFocalLength(fov) {
 }
 
 function update(data) {
-	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.filter, data.locked, data.video, data.videoSize, data.coords);
+	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
 
 	if (player) {
 		if (data.paused) {
@@ -675,6 +676,7 @@ function updateUi(data) {
 	var lockedCheckbox = document.getElementById('locked');
 	var videoCheckbox = document.getElementById('video');
 	var videoSizeInput = document.getElementById('video-size');
+	var mutedInput = document.getElementById('muted');
 	var playButton = document.getElementById('play-button');
 
 	var inactivePhonographsValue = inactivePhonographsSelect.value;
@@ -725,6 +727,7 @@ function updateUi(data) {
 		lockedCheckbox.disabled = true;
 		videoCheckbox.disabled = true;
 		videoSizeInput.disabled = true;
+		mutedInput.disabled = true;
 		playButton.disabled = true;
 		urlInput.value = '';
 	} else {
@@ -825,6 +828,7 @@ function startPhonograph() {
 	var lockedCheckbox = document.getElementById('locked');
 	var videoCheckbox = document.getElementById('video');
 	var videoSizeInput = document.getElementById('video-size');
+	var mutedInput = document.getElementById('muted');
 
 	var handle = parseInt(handleInput.value);
 
@@ -841,6 +845,7 @@ function startPhonograph() {
 	var locked = lockedCheckbox.checked;
 	var video = videoCheckbox.checked;
 	var videoSize = parseInt(videoSizeInput.value);
+	var muted = mutedInput.checked;
 
 	if (isNaN(volume)) {
 		volume = 100;
@@ -858,7 +863,8 @@ function startPhonograph() {
 		filter: filter,
 		locked: locked,
 		video: video,
-		videoSize: videoSize
+		videoSize: videoSize,
+		muted: muted
 	});
 
 	presetSelect.value = '';

@@ -30,7 +30,7 @@ function Dequeue(queue)
 	end
 end
 
-function AddPhonograph(handle, url, title, volume, offset, filter, locked, video, videoSize, coords)
+function AddPhonograph(handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords)
 	if not Phonographs[handle] then
 		title = title or url
 		volume = Clamp(volume, 0, 100)
@@ -49,7 +49,7 @@ function AddPhonograph(handle, url, title, volume, offset, filter, locked, video
 			videoSize = videoSize,
 			coords = coords,
 			paused = nil,
-			muted = false
+			muted = muted
 		}
 
 		Enqueue(SyncQueue, function()
@@ -79,7 +79,7 @@ function PausePhonograph(handle)
 	end
 end
 
-function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, locked, video, videoSize)
+function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, locked, video, videoSize, muted)
 	if url == 'random' then
 		url = GetRandomPreset()
 	end
@@ -94,6 +94,7 @@ function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, l
 			locked,
 			Config.Presets[url].video or false,
 			videoSize,
+			muted,
 			nil)
 	else
 		AddPhonograph(netId,
@@ -105,13 +106,14 @@ function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, l
 			locked,
 			video,
 			videoSize,
+			muted,
 			nil)
 	end
 
 	return netId
 end
 
-function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, locked, video, videoSize)
+function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, locked, video, videoSize, muted)
 	local coords = vector3(x, y, z)
 	local handle = GetHandleFromCoords(coords)
 
@@ -129,6 +131,7 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, lo
 			locked,
 			Config.Presets[url].video or false,
 			videoSize,
+			muted,
 			coords)
 	else
 		AddPhonograph(handle,
@@ -140,6 +143,7 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, lo
 			locked,
 			video,
 			videoSize,
+			muted,
 			coords)
 	end
 
@@ -153,7 +157,7 @@ end
 function StartDefaultPhonographs()
 	for _, phonograph in ipairs(Config.DefaultPhonographs) do
 		if phonograph.url then
-			StartPhonographByCoords(phonograph.x, phonograph.y, phonograph.z, phonograph.url, phonograph.title, phonograph.volume, phonograph.offset, phonograph.filter, phonograph.locked, phonograph.video, phonograph.videoSize)
+			StartPhonographByCoords(phonograph.x, phonograph.y, phonograph.z, phonograph.url, phonograph.title, phonograph.volume, phonograph.offset, phonograph.filter, phonograph.locked, phonograph.video, phonograph.videoSize, phonograph.muted)
 		end
 	end
 end
@@ -214,7 +218,8 @@ function CopyPhonograph(oldHandle, newHandle, newCoords)
 			Phonographs[oldHandle].filter,
 			Phonographs[oldHandle].locked,
 			Phonographs[oldHandle].video,
-			Phonographs[oldHandle].videoSize)
+			Phonographs[oldHandle].videoSize,
+			Phonographs[oldHandle].muted)
 	elseif newCoords then
 		StartPhonographByCoords(
 			newCoords.x,
@@ -227,7 +232,8 @@ function CopyPhonograph(oldHandle, newHandle, newCoords)
 			Phonographs[oldHandle].filter,
 			Phonographs[oldHandle].locked,
 			Phonographs[oldHandle].video,
-			Phonographs[oldHandle].videoSize)
+			Phonographs[oldHandle].videoSize,
+			Phonographs[oldHandle].muted)
 	end
 end
 
@@ -240,7 +246,7 @@ exports('unlock', UnlockPhonograph)
 exports('mute', MutePhonograph)
 exports('unmute', UnmutePhonograph)
 
-AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter, locked, video, videoSize, coords)
+AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter, locked, video, videoSize, muted, coords)
 	if coords then
 		handle = GetHandleFromCoords(coords)
 	end
@@ -270,6 +276,7 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 			locked,
 			Config.Presets[url].video or false,
 			videoSize,
+			muted,
 			coords)
 	elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then
 		TriggerClientEvent('phonograph:start', source,
@@ -282,13 +289,14 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 			locked,
 			video,
 			videoSize,
+			muted,
 			coords)
 	else
 		ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
 	end
 end)
 
-AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, filter, locked, video, videoSize, coords)
+AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords)
 	if Phonographs[handle] then
 		return
 	end
@@ -303,7 +311,7 @@ AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, 
 		return
 	end
 
-	AddPhonograph(handle, url, title, volume, offset, filter, locked, video, videoSize, coords)
+	AddPhonograph(handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords)
 end)
 
 AddEventHandler('phonograph:pause', function(handle)

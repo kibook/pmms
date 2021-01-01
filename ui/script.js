@@ -386,6 +386,17 @@ function unmute(handle) {
 	});
 }
 
+function copy(oldHandle) {
+	var handleInput = document.getElementById('inactive-phonographs');
+
+	var newHandle = parseInt(handleInput.value);
+
+	sendMessage('copy', {
+		oldHandle: oldHandle,
+		newHandle: newHandle
+	});
+}
+
 function timeToString(time) {
 	var h = Math.floor(time / 60 / 60);
 	var m = Math.floor(time / 60) % 60;
@@ -539,6 +550,13 @@ function createActivePhonographDiv(phonograph, fullControls) {
 			lockedButton.disabled = true;
 		}
 
+		var copyButton = document.createElement('button');
+		copyButton.className = 'control-button';
+		copyButton.innerHTML = '<i class="fas fa-clone"></i>';
+		copyButton.addEventListener('click', event => {
+			copy(phonograph.handle);
+		});
+
 		var videoButton = document.createElement('button');
 		videoButton.className = 'control-button';
 		if (player.videoTracks.length > 0) {
@@ -599,6 +617,7 @@ function createActivePhonographDiv(phonograph, fullControls) {
 		}
 
 		controlsDiv.appendChild(lockedButton);
+		controlsDiv.appendChild(copyButton);
 		controlsDiv.appendChild(videoButton);
 		controlsDiv.appendChild(muteButton);
 		controlsDiv.appendChild(pauseResumeButton);

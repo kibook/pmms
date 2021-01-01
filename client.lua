@@ -373,6 +373,15 @@ function IsPauseMenuOrMapActive()
 	return IsPauseMenuActive() or IsAppActive(`MAP`) ~= 0
 end
 
+function CopyPhonograph(oldHandle, newHandle)
+	if NetworkDoesNetworkIdExist(newHandle) then
+		TriggerServerEvent('phonograph:copy', oldHandle, newHandle)
+	else
+		local coords = GetEntityCoords(newHandle)
+		TriggerServerEvent('phonograph:copy', oldHandle, false, coords)
+	end
+end
+
 RegisterCommand('phono', function(source, args, raw)
 	if #args > 0 then
 		local command = args[1]
@@ -530,6 +539,11 @@ end)
 
 RegisterNUICallback('unmute', function(data, cb)
 	TriggerServerEvent('phonograph:unmute', data.handle)
+	cb({})
+end)
+
+RegisterNUICallback('copy', function(data, cb)
+	CopyPhonograph(data.oldHandle, data.newHandle)
 	cb({})
 end)
 

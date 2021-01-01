@@ -16,6 +16,7 @@ RegisterNetEvent('phonograph:disableVideo')
 RegisterNetEvent('phonograph:setVideoSize')
 RegisterNetEvent('phonograph:mute')
 RegisterNetEvent('phonograph:unmute')
+RegisterNetEvent('phonograph:copy')
 
 function Enqueue(queue, cb)
 	table.insert(queue, 1, cb)
@@ -200,6 +201,34 @@ end
 
 function UnmutePhonograph(handle)
 	Phonographs[handle].muted = false
+end
+
+function CopyPhonograph(oldHandle, newHandle, newCoords)
+	if newHandle then
+		StartPhonographByNetworkId(
+			newHandle,
+			Phonographs[oldHandle].url,
+			Phonographs[oldHandle].title,
+			Phonographs[oldHandle].volume,
+			Phonographs[oldHandle].offset,
+			Phonographs[oldHandle].filter,
+			Phonographs[oldHandle].locked,
+			Phonographs[oldHandle].video,
+			Phonographs[oldHandle].videoSize)
+	elseif newCoords then
+		StartPhonographByCoords(
+			newCoords.x,
+			newCoords.y,
+			newCoords.z,
+			Phonographs[oldHandle].url,
+			Phonographs[oldHandle].title,
+			Phonographs[oldHandle].volume,
+			Phonographs[oldHandle].offset,
+			Phonographs[oldHandle].filter,
+			Phonographs[oldHandle].locked,
+			Phonographs[oldHandle].video,
+			Phonographs[oldHandle].videoSize)
+	end
 end
 
 exports('startByNetworkId', StartPhonographByNetworkId)
@@ -471,6 +500,24 @@ AddEventHandler('phonograph:unmute', function(handle)
 	end
 
 	UnmutePhonograph(handle)
+end)
+
+AddEventHandler('phonograph:copy', function(oldHandle, newHandle, newCoords)
+	if not Phonographs[oldHandle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to copy phonographs')
+		return
+	end
+
+	if Phonographs[oldHandle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to mute locked phonographs')
+		return
+	end
+
+	CopyPhonograph(oldHandle, newHandle, newCoords)
 end)
 
 RegisterCommand('phonoctl', function(source, args, raw)

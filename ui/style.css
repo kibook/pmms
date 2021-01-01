@@ -178,7 +178,8 @@ option {
 
 .control-button {
 	text-align: center;
-	width: 1.7vw;
+	width: 1.8vw;
+	height: 2.5vh;
 }
 
 .active-phonograph-volume span, .active-phonograph-time span, .active-phonograph-video-size span {

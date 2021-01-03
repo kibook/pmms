@@ -85,7 +85,7 @@ function ForEachPhonograph(func)
 end
 
 function GetClosestPhonographObject(centre, radius, listenerPos)
-	if listenerPos and GetDistanceBetweenCoords(centre.x, centre.y, centre.z, listenerPos.x, listenerPos.y, listenerPos.z, true) > Config.MaxDistance then
+	if listenerPos and #(centre - listenerPos) > Config.MaxDistance then
 		return nil
 	end
 
@@ -94,7 +94,7 @@ function GetClosestPhonographObject(centre, radius, listenerPos)
 
 	ForEachPhonograph(function(object)
 		local coords = GetEntityCoords(object)
-		local distance = GetDistanceBetweenCoords(centre.x, centre.y, centre.z, coords.x, coords.y, coords.z, true)
+		local distance = #(centre - coords)
 
 		if distance <= radius and (not min or distance < min) then
 			min = distance
@@ -137,7 +137,6 @@ function PausePhonograph(handle)
 end
 
 function PauseClosestPhonograph()
-	PausePhonograph(FindHandle(GetClosestPhonograph()))
 end
 
 function StopPhonograph(handle)
@@ -250,7 +249,7 @@ function UpdateUi(fullControls, anyUrl)
 
 		if object and object > 0 then
 			local phonoPos = GetEntityCoords(object)
-			local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
+			local distance = #(pos - phonoPos)
 
 			if fullControls or distance <= Config.MaxDistance then
 				table.insert(activePhonographs, {
@@ -281,7 +280,7 @@ function UpdateUi(fullControls, anyUrl)
 			local svHandle = NetworkGetEntityIsNetworked(object) and ObjToNet(object) or GetHandleFromCoords(phonoPos)
 
 			if clHandle and not Phonographs[svHandle] then
-				local distance = GetDistanceBetweenCoords(pos.x, pos.y, pos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
+				local distance = #(pos - phonoPos)
 
 				if fullControls or distance <= Config.MaxDistance then
 					table.insert(inactivePhonographs, {
@@ -382,6 +381,10 @@ function CopyPhonograph(oldHandle, newHandle)
 	end
 end
 
+function tovector3(t)
+	return vector3(t.x, t.y, t.z)
+end
+
 RegisterCommand('phono', function(source, args, raw)
 	if #args > 0 then
 		local command = args[1]
@@ -448,7 +451,7 @@ RegisterNUICallback('init', function(data, cb)
 			data.video,
 			data.videoSize,
 			data.muted,
-			data.coords and json.decode(data.coords))
+			data.coords and tovector3(json.decode(data.coords)))
 	end
 	cb({})
 end)
@@ -660,13 +663,13 @@ CreateThread(function()
 			if object and object > 0 then
 				local phonoPos = GetEntityCoords(object)
 
-				local distance = GetDistanceBetweenCoords(listenPos.x, listenPos.y, listenPos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
+				local distance = #(listenPos - phonoPos)
 
 				local camDistance
 				local onScreen, screenX, screenY = GetScreenCoordFromWorldCoord(phonoPos.x, phonoPos.y, phonoPos.z + 0.8)
 
 				if onScreen and not IsPauseMenuOrMapActive() then
-					camDistance = GetDistanceBetweenCoords(viewerPos.x, viewerPos.y, viewerPos.z, phonoPos.x, phonoPos.y, phonoPos.z, true)
+					camDistance = #(viewerPos - phonoPos)
 				else
 					camDistance = -1
 				end

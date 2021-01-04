@@ -137,6 +137,7 @@ function PausePhonograph(handle)
 end
 
 function PauseClosestPhonograph()
+	PausePhonograph(FindHandle(GetClosestPhonograph()))
 end
 
 function StopPhonograph(handle)
@@ -440,6 +441,8 @@ end)
 
 RegisterNUICallback('init', function(data, cb)
 	if NetworkDoesNetworkIdExist(data.handle) or data.coords then
+		local coords = json.decode(data.coords)
+
 		TriggerServerEvent('phonograph:init',
 			data.handle,
 			data.url,
@@ -451,7 +454,7 @@ RegisterNUICallback('init', function(data, cb)
 			data.video,
 			data.videoSize,
 			data.muted,
-			data.coords and tovector3(json.decode(data.coords)))
+			coords and tovector3(coords))
 	end
 	cb({})
 end)

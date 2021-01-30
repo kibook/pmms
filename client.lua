@@ -1,5 +1,6 @@
 local Phonographs = {}
 local LocalPhonographs = {}
+local PhonographLabels = {}
 
 local BaseVolume = 100
 local StatusIsShown = false
@@ -256,7 +257,8 @@ function UpdateUi(fullControls, anyUrl)
 				table.insert(activePhonographs, {
 					handle = handle,
 					info = info,
-					distance = distance
+					distance = distance,
+					label = PhonographLabels[object]
 				})
 			end
 		else
@@ -286,7 +288,8 @@ function UpdateUi(fullControls, anyUrl)
 				if fullControls or distance <= Config.MaxDistance then
 					table.insert(inactivePhonographs, {
 						handle = clHandle,
-						distance = distance
+						distance = distance,
+						label = PhonographLabels[clHandle]
 					})
 				end
 			end
@@ -324,6 +327,8 @@ function CreatePhonograph(phonograph)
 	if phonograph.invisible then
 		SetEntityVisible(phonograph.handle, false)
 	end
+
+	PhonographLabels[phonograph.handle] = phonograph.label
 end
 
 function SetPhonographVolume(handle, volume)

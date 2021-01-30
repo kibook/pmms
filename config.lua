@@ -10,6 +10,8 @@ Config.MaxDistance = 30.0
 -- url
 -- 	The URL of the music.
 --
+-- Optional properties:
+--
 -- title
 -- 	The title displayed for the music.
 --
@@ -33,6 +35,9 @@ Config.Presets = {
 -- 	The position of the phonograph.
 --
 -- Optional properties:
+--
+-- label
+-- 	A name to use for the phonograph in the UI instead of the handle.
 --
 -- spawn
 -- 	If true, a new phonograph will be spawned. The pitch, roll and yaw
@@ -85,6 +90,7 @@ Config.DefaultPhonographs = {
 		x = 2071.527,
 		y = -850.825,
 		z = 43.399,
+		label = "Example Phonograph",
 		spawn = true,
 		pitch = 0.0,
 		roll = 0.0,

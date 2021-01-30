@@ -415,7 +415,12 @@ function createActivePhonographDiv(phonograph, fullControls) {
 
 		var handleDiv = document.createElement('div');
 		handleDiv.className = 'active-phonograph-handle';
-		handleDiv.innerHTML = phonograph.handle.toString(16);
+
+		if (phonograph.label) {
+			handleDiv.innerHTML = phonograph.label;
+		} else {
+			handleDiv.innerHTML = phonograph.handle.toString(16);
+		}
 
 		var distanceDiv = document.createElement('div');
 		distanceDiv.className = 'active-phonograph-distance';
@@ -735,7 +740,12 @@ function updateUi(data) {
 			var option = document.createElement('option');
 
 			option.value = phonograph.handle;
-			option.innerHTML = phonograph.handle.toString(16) + ' (' + Math.floor(phonograph.distance) + 'm)';
+
+			if (phonograph.label) {
+				option.innerHTML = phonograph.label + ' (' + Math.floor(phonograph.distance) + 'm)';
+			} else {
+				option.innerHTML = phonograph.handle.toString(16) + ' (' + Math.floor(phonograph.distance) + 'm)';
+			}
 
 			if (phonograph.handle == inactivePhonographsValue) {
 				option.selected = true;

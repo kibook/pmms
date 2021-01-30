@@ -343,7 +343,7 @@ function UnlockPhonograph(handle)
 end
 
 function SetBaseVolume(volume)
-	BaseVolume = Clamp(volume, 0, 100, 50)
+	BaseVolume = Clamp(volume, 0, 100, 100)
 	SetResourceKvp('baseVolume', tostring(BaseVolume))
 end
 
@@ -393,7 +393,7 @@ RegisterCommand('phono', function(source, args, raw)
 		if command == 'play' then
 			if #args > 1 then
 				local url = args[2]
-				local volume = tonumber(args[3]) or 100
+				local volume = tonumber(args[3]) or 50
 				local offset = args[4]
 				local filter = args[5] == '1'
 				local locked = args[6] == '1'

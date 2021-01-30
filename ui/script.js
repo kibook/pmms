@@ -848,7 +848,7 @@ function startPhonograph() {
 	var muted = mutedInput.checked;
 
 	if (isNaN(volume)) {
-		volume = 100;
+		volume = 50;
 	}
 
 	if (isNaN(videoSize)) {

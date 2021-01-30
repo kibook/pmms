@@ -114,7 +114,7 @@ function StartPhonograph(handle, url, volume, offset, filter, locked, video, vid
 		url = GetRandomPreset()
 	end
 
-	volume = Clamp(volume, 0, 100)
+	volume = Clamp(volume, 0, 100, 50)
 
 	if not offset then
 		offset = '0'
@@ -343,7 +343,7 @@ function UnlockPhonograph(handle)
 end
 
 function SetBaseVolume(volume)
-	BaseVolume = Clamp(volume, 0, 100)
+	BaseVolume = Clamp(volume, 0, 100, 50)
 	SetResourceKvp('baseVolume', tostring(BaseVolume))
 end
 

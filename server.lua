@@ -33,9 +33,9 @@ end
 function AddPhonograph(handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords)
 	if not Phonographs[handle] then
 		title = title or url
-		volume = Clamp(volume, 0, 100)
+		volume = Clamp(volume, 0, 100, 50)
 		offset = offset or 0
-		videoSize = Clamp(videoSize, 10, 100)
+		videoSize = Clamp(videoSize, 10, 100, 50)
 
 		Phonographs[handle] = {
 			url = url,
@@ -373,7 +373,7 @@ AddEventHandler('phonograph:setVolume', function(handle, volume)
 		return
 	end
 
-	Phonographs[handle].volume = Clamp(volume, 0, 100)
+	Phonographs[handle].volume = Clamp(volume, 0, 100, 50)
 end)
 
 AddEventHandler('phonograph:setStartTime', function(handle, time)
@@ -471,7 +471,7 @@ AddEventHandler('phonograph:setVideoSize', function(handle, size)
 		return
 	end
 
-	Phonographs[handle].videoSize = Clamp(size, 10, 100)
+	Phonographs[handle].videoSize = Clamp(size, 10, 100, 50)
 end)
 
 AddEventHandler('phonograph:mute', function(handle)

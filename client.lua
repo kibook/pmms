@@ -326,6 +326,7 @@ function CreatePhonograph(phonograph)
 
 	if phonograph.invisible then
 		SetEntityVisible(phonograph.handle, false)
+		SetEntityCollision(phonograph.handle, false, false)
 	end
 
 	PhonographLabels[phonograph.handle] = phonograph.label

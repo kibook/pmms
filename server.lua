@@ -183,7 +183,7 @@ function IsLockedDefaultPhonograph(handle)
 	for _, phonograph in ipairs(Config.DefaultPhonographs) do
 		local coords = vector3(phonograph.x, phonograph.y, phonograph.z)
 
-		if handle == GetHandleFromCoords(coords) then
+		if handle == GetHandleFromCoords(coords) and phonograph.locked then
 			return true
 		end
 	end

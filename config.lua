@@ -106,3 +106,6 @@ Config.DefaultPhonographs = {
 		videoSize = 50
 	}]]
 }
+
+-- Distance at which default phonographs spawn/despawn
+Config.DefaultPhonographSpawnDistance = 100.0

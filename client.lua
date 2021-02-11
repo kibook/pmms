@@ -735,12 +735,25 @@ end)
 
 CreateThread(function()
 	while true do
-		Wait(0)
+		local myPos = GetEntityCoords(PlayerPedId())
 
 		for _, phonograph in ipairs(Config.DefaultPhonographs) do
-			if (not phonograph.handle or not DoesEntityExist(phonograph.handle)) and phonograph.spawn then
-				CreatePhonograph(phonograph)
+			if phonograph.spawn then
+				local phonoPos = vector3(phonograph.x, phonograph.y, phonograph.z)
+				local nearby = #(myPos - phonoPos) <= Config.DefaultPhonographSpawnDistance
+
+				if phonograph.handle and not DoesEntityExist(phonograph.handle) then
+					phonograph.handle = nil
+				end
+
+				if nearby and not phonograph.handle then
+					CreatePhonograph(phonograph)
+				elseif not nearby and phonograph.handle then
+					DeleteObject(phonograph.handle)
+				end
 			end
 		end
+
+		Wait(1000)
 	end
 end)

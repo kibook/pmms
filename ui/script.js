@@ -201,22 +201,7 @@ function init(data) {
 		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
 	} else{
 		try {
-			jsmediatags.read(data.url, {
-				onSuccess: function(tag) {
-					var title;
-
-					if (tag.tags.title) {
-						title = tag.tags.title;
-					} else {
-						title = data.url;
-					}
-
-					getPlayer(data.handle, data.url, title, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
-				},
-				onError: function(error) {
-					getPlayer(data.handle, data.url, data.url, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
-				}
-			});
+			getPlayer(data.handle, data.url, data.url, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
 		} catch (err) {
 			console.log(err);
 

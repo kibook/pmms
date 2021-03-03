@@ -462,7 +462,7 @@ function createActivePhonographDiv(phonograph, fullControls) {
 				handle: phonograph.handle
 			});
 		});
-		if (phonograph.info.locked && !fullControls) {
+		if ((phonograph.info.locked && !fullControls) || !player.duration || player.duration == Infinity) {
 			seekBackwardButton.disabled = true;
 		}
 
@@ -474,7 +474,7 @@ function createActivePhonographDiv(phonograph, fullControls) {
 				handle: phonograph.handle
 			});
 		});
-		if (phonograph.info.locked && !fullControls) {
+		if ((phonograph.info.locked && !fullControls) || !player.duration || player.duration == Infinity) {
 			seekForwardButton.disabled = true;
 		}
 

@@ -401,7 +401,7 @@ RegisterCommand('phono', function(source, args, raw)
 				local url = args[2]
 				local volume = tonumber(args[3]) or 50
 				local offset = args[4]
-				local filter = args[5] == '1'
+				local filter = args[5] and args[5] == '1' or true
 				local locked = args[6] == '1'
 				local video = args[7] == '1'
 				local videoSize = tonumber(args[8]) or 50

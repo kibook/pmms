@@ -200,17 +200,7 @@ function init(data) {
 	if (data.title) {
 		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
 	} else{
-		try {
-			getPlayer(data.handle, data.url, data.url, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
-		} catch (err) {
-			console.log(err);
-
-			sendMessage('initError', {
-				url: data.url
-			});
-
-			hideLoadingIcon();
-		}
+		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
 	}
 }
 

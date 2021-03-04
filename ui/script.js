@@ -90,6 +90,10 @@ function initPlayer(id, handle, url, title, volume, offset, filter, locked, vide
 		player.addEventListener('canplay', () => {
 			hideLoadingIcon();
 
+			if (player.duration == NaN || player.duration == Infinity) {
+				offset = 0;
+			}
+
 			sendMessage('init', {
 				handle: handle,
 				url: url,
@@ -462,9 +466,6 @@ function createActivePhonographDiv(phonograph, fullControls) {
 				handle: phonograph.handle
 			});
 		});
-		if ((phonograph.info.locked && !fullControls) || !player.duration || player.duration == Infinity) {
-			seekBackwardButton.disabled = true;
-		}
 
 		var seekForwardButton = document.createElement('button');
 		seekForwardButton.className = 'control-button';
@@ -474,7 +475,9 @@ function createActivePhonographDiv(phonograph, fullControls) {
 				handle: phonograph.handle
 			});
 		});
-		if ((phonograph.info.locked && !fullControls) || !player.duration || player.duration == Infinity) {
+
+		if ((phonograph.info.locked && !fullControls) || player.duration == NaN || player.duration == Infinity) {
+			seekBackwardButton.disabled = true;
 			seekForwardButton.disabled = true;
 		}
 

@@ -68,6 +68,9 @@ Config.Presets = {
 -- offset
 -- 	The time in seconds to start playing the music from.
 --
+-- loop
+-- 	Whether or not to loop playback of the music.
+--
 -- filter
 -- 	Whether to apply the phonograph filter to the music when using a URL.
 -- 	If a preset is specified, the filter setting of the preset will be used

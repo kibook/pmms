@@ -52,7 +52,7 @@ function hideLoadingIcon() {
 	document.getElementById('loading').style.display = 'none';
 }
 
-function initPlayer(id, handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords) {
+function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, coords) {
 	interpretUrl(url).then(info => {
 		url = info.url;
 
@@ -90,8 +90,14 @@ function initPlayer(id, handle, url, title, volume, offset, filter, locked, vide
 		player.addEventListener('canplay', () => {
 			hideLoadingIcon();
 
+			var duration;
+
 			if (player.duration == NaN || player.duration == Infinity) {
 				offset = 0;
+				duration = false;
+				loop = false;
+			} else {
+				duration = player.duration;
 			}
 
 			sendMessage('init', {
@@ -100,12 +106,14 @@ function initPlayer(id, handle, url, title, volume, offset, filter, locked, vide
 				title: title,
 				volume: volume,
 				offset: offset,
+				duration: duration,
+				loop: loop,
 				filter: filter,
 				locked: locked,
 				video: video,
 				videoSize: videoSize,
 				muted: muted,
-				coords: coords
+				coords: coords,
 			});
 		}, {once: true});
 
@@ -122,13 +130,13 @@ function initPlayer(id, handle, url, title, volume, offset, filter, locked, vide
 	});
 }
 
-function getPlayer(handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords) {
+function getPlayer(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, coords) {
 	var id = 'player_' + handle.toString(16);
 
 	var player = document.getElementById(id);
 
 	if (!player && url) {
-		player = initPlayer(id, handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords);
+		player = initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, coords);
 	}
 
 	return player;
@@ -202,9 +210,9 @@ function init(data) {
 	var offset = parseTimecode(data.offset);
 
 	if (data.title) {
-		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
+		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
 	} else{
-		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
+		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
 	}
 }
 
@@ -261,7 +269,7 @@ function calculateFocalLength(fov) {
 }
 
 function update(data) {
-	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
+	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.coords);
 
 	if (player) {
 		if (data.paused) {
@@ -374,6 +382,13 @@ function copy(oldHandle) {
 	sendMessage('copy', {
 		oldHandle: oldHandle,
 		newHandle: newHandle
+	});
+}
+
+function setLoop(handle, loop) {
+	sendMessage('setLoop', {
+		handle: handle,
+		loop: loop
 	});
 }
 
@@ -540,6 +555,23 @@ function createActivePhonographDiv(phonograph, fullControls) {
 		copyButton.addEventListener('click', event => {
 			copy(phonograph.handle);
 		});
+		if (phonograph.info.locked && !fullControls) {
+			copyButton.disabled = true;
+		}
+
+		var loopButton = document.createElement('button');
+		loopButton.className = 'control-button';
+		if (phonograph.info.loop) {
+			loopButton.innerHTML = '<i class="fas fa-retweet"></i>';
+		} else {
+			loopButton.innerHTML = '<i class="fas fa-arrow-right"></i>';
+		}
+		loopButton.addEventListener('click', event => {
+			setLoop(phonograph.handle, !phonograph.info.loop);
+		});
+		if ((phonograph.info.locked && !fullControls) || !phonograph.info.duration) {
+			loopButton.disabled = true;
+		}
 
 		var videoButton = document.createElement('button');
 		videoButton.className = 'control-button';
@@ -559,6 +591,9 @@ function createActivePhonographDiv(phonograph, fullControls) {
 			videoButton.innerHTML = '<i class="fas fa-video-slash"></i>';
 			videoButton.disabled = true;
 		}
+		if (phonograph.info.locked && !fullControls) {
+			videoButton.disabled = true;
+		}
 
 		var muteButton = document.createElement('button');
 		muteButton.className = 'control-button';
@@ -572,6 +607,9 @@ function createActivePhonographDiv(phonograph, fullControls) {
 			muteButton.addEventListener('click', event => {
 				mute(phonograph.handle);
 			});
+		}
+		if (phonograph.info.locked && !fullControls) {
+			muteButton.disabled = true;
 		}
 
 		var pauseResumeButton = document.createElement('button');
@@ -602,6 +640,7 @@ function createActivePhonographDiv(phonograph, fullControls) {
 
 		controlsDiv.appendChild(lockedButton);
 		controlsDiv.appendChild(copyButton);
+		controlsDiv.appendChild(loopButton);
 		controlsDiv.appendChild(videoButton);
 		controlsDiv.appendChild(muteButton);
 		controlsDiv.appendChild(pauseResumeButton);
@@ -655,6 +694,7 @@ function updateUi(data) {
 	var urlInput = document.getElementById('url');
 	var volumeInput = document.getElementById('volume');
 	var offsetInput = document.getElementById('offset');
+	var loopCheckbox = document.getElementById('loop');
 	var filterCheckbox = document.getElementById('filter');
 	var lockedCheckbox = document.getElementById('locked');
 	var videoCheckbox = document.getElementById('video');
@@ -706,6 +746,7 @@ function updateUi(data) {
 		urlInput.disabled = true;
 		volumeInput.disabled = true;
 		offsetInput.disabled = true;
+		loopCheckbox.disabled = true;
 		filterCheckbox.disabled = true;
 		lockedCheckbox.disabled = true;
 		videoCheckbox.disabled = true;
@@ -762,6 +803,7 @@ function updateUi(data) {
 		presetSelect.disabled = false;
 		volumeInput.disabled = false;
 		offsetInput.disabled = false;
+		loopCheckbox.disabled = false;
 
 		if (presetSelect.value == '' && urlInput.value == '') {
 			playButton.disabled = true;
@@ -812,6 +854,7 @@ function startPhonograph() {
 	var urlInput = document.getElementById('url');
 	var volumeInput = document.getElementById('volume');
 	var offsetInput = document.getElementById('offset');
+	var loopCheckbox = document.getElementById('loop');
 	var filterCheckbox = document.getElementById('filter');
 	var lockedCheckbox = document.getElementById('locked');
 	var videoCheckbox = document.getElementById('video');
@@ -829,6 +872,7 @@ function startPhonograph() {
 
 	var volume = parseInt(volumeInput.value);
 	var offset = offsetInput.value;
+	var loop = loopCheckbox.checked;
 	var filter = filterCheckbox.checked;
 	var locked = lockedCheckbox.checked;
 	var video = videoCheckbox.checked;
@@ -848,6 +892,7 @@ function startPhonograph() {
 		url: url,
 		volume: volume,
 		offset: offset,
+		loop: loop,
 		filter: filter,
 		locked: locked,
 		video: video,

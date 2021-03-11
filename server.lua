@@ -17,6 +17,7 @@ RegisterNetEvent('phonograph:setVideoSize')
 RegisterNetEvent('phonograph:mute')
 RegisterNetEvent('phonograph:unmute')
 RegisterNetEvent('phonograph:copy')
+RegisterNetEvent('phonograph:setLoop')
 
 function Enqueue(queue, cb)
 	table.insert(queue, 1, cb)
@@ -30,7 +31,7 @@ function Dequeue(queue)
 	end
 end
 
-function AddPhonograph(handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords)
+function AddPhonograph(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, coords)
 	if not Phonographs[handle] then
 		title = title or url
 		volume = Clamp(volume, 0, 100, 50)
@@ -43,6 +44,8 @@ function AddPhonograph(handle, url, title, volume, offset, filter, locked, video
 			volume = volume,
 			startTime = os.time() - offset,
 			offset = 0,
+			duration = duration,
+			loop = loop,
 			filter = filter,
 			locked = locked,
 			video = video,
@@ -79,7 +82,7 @@ function PausePhonograph(handle)
 	end
 end
 
-function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, locked, video, videoSize, muted)
+function StartPhonographByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted)
 	if url == 'random' then
 		url = GetRandomPreset()
 	end
@@ -90,6 +93,8 @@ function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, l
 			Config.Presets[url].title,
 			volume,
 			offset,
+			duration,
+			loop,
 			Config.Presets[url].filter or false,
 			locked,
 			Config.Presets[url].video or false,
@@ -102,6 +107,8 @@ function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, l
 			title,
 			volume,
 			offset,
+			duration,
+			loop,
 			filter,
 			locked,
 			video,
@@ -113,7 +120,7 @@ function StartPhonographByNetworkId(netId, url, title, volume, offset, filter, l
 	return netId
 end
 
-function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, locked, video, videoSize, muted)
+function StartPhonographByCoords(x, y, z, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted)
 	local coords = vector3(x, y, z)
 	local handle = GetHandleFromCoords(coords)
 
@@ -127,6 +134,8 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, lo
 			Config.Presets[url].title,
 			volume,
 			offset,
+			duration,
+			loop,
 			Config.Presets[url].filter or false,
 			locked,
 			Config.Presets[url].video or false,
@@ -139,6 +148,8 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, filter, lo
 			title,
 			volume,
 			offset,
+			duration,
+			loop,
 			filter,
 			locked,
 			video,
@@ -157,15 +168,38 @@ end
 function StartDefaultPhonographs()
 	for _, phonograph in ipairs(Config.DefaultPhonographs) do
 		if phonograph.url then
-			StartPhonographByCoords(phonograph.x, phonograph.y, phonograph.z, phonograph.url, phonograph.title, phonograph.volume, phonograph.offset, phonograph.filter, phonograph.locked, phonograph.video, phonograph.videoSize, phonograph.muted)
+			StartPhonographByCoords(
+				phonograph.x,
+				phonograph.y,
+				phonograph.z,
+				phonograph.url,
+				phonograph.title,
+				phonograph.volume,
+				phonograph.offset,
+				phonograph.duration,
+				phonograph.loop,
+				phonograph.filter,
+				phonograph.locked,
+				phonograph.video,
+				phonograph.videoSize,
+				phonograph.muted)
 		end
 	end
 end
 
 function SyncPhonographs()
-	for handle, _ in pairs(Phonographs) do
-		if not Phonographs[handle].paused then
-			Phonographs[handle].offset = os.time() - Phonographs[handle].startTime
+	for handle, phono in pairs(Phonographs) do
+		if not phono.paused then
+			phono.offset = os.time() - phono.startTime
+
+			if phono.duration and phono.offset >= phono.duration then
+				if phono.loop then
+					phono.offset = 0
+					phono.startTime = os.time()
+				else
+					RemovePhonograph(handle)
+				end
+			end
 		end
 	end
 
@@ -215,6 +249,8 @@ function CopyPhonograph(oldHandle, newHandle, newCoords)
 			Phonographs[oldHandle].title,
 			Phonographs[oldHandle].volume,
 			Phonographs[oldHandle].offset,
+			Phonographs[oldHandle].duration,
+			Phonographs[oldHandle].loop,
 			Phonographs[oldHandle].filter,
 			Phonographs[oldHandle].locked,
 			Phonographs[oldHandle].video,
@@ -229,12 +265,18 @@ function CopyPhonograph(oldHandle, newHandle, newCoords)
 			Phonographs[oldHandle].title,
 			Phonographs[oldHandle].volume,
 			Phonographs[oldHandle].offset,
+			Phonographs[oldHandle].duration,
+			Phonographs[oldHandle].loop,
 			Phonographs[oldHandle].filter,
 			Phonographs[oldHandle].locked,
 			Phonographs[oldHandle].video,
 			Phonographs[oldHandle].videoSize,
 			Phonographs[oldHandle].muted)
 	end
+end
+
+function SetPhonographLoop(handle, loop)
+	Phonographs[handle].loop = loop
 end
 
 exports('startByNetworkId', StartPhonographByNetworkId)
@@ -246,7 +288,7 @@ exports('unlock', UnlockPhonograph)
 exports('mute', MutePhonograph)
 exports('unmute', UnmutePhonograph)
 
-AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter, locked, video, videoSize, muted, coords)
+AddEventHandler('phonograph:start', function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, coords)
 	if coords then
 		handle = GetHandleFromCoords(coords)
 	end
@@ -272,6 +314,7 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 			Config.Presets[url].title,
 			volume,
 			offset,
+			loop,
 			Config.Presets[url].filter or false,
 			locked,
 			Config.Presets[url].video or false,
@@ -285,6 +328,7 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 			nil,
 			volume,
 			offset,
+			loop,
 			filter,
 			locked,
 			video,
@@ -296,7 +340,7 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, filter
 	end
 end)
 
-AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords)
+AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, coords)
 	if Phonographs[handle] then
 		return
 	end
@@ -311,7 +355,7 @@ AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, 
 		return
 	end
 
-	AddPhonograph(handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords)
+	AddPhonograph(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, coords)
 end)
 
 AddEventHandler('phonograph:pause', function(handle)
@@ -521,11 +565,29 @@ AddEventHandler('phonograph:copy', function(oldHandle, newHandle, newCoords)
 	end
 
 	if Phonographs[oldHandle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to mute locked phonographs')
+		ErrorMessage(source, 'You do not have permission to copy locked phonographs')
 		return
 	end
 
 	CopyPhonograph(oldHandle, newHandle, newCoords)
+end)
+
+AddEventHandler('phonograph:setLoop', function(handle, loop)
+	if not Phonographs[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to change loop settings on phonographs')
+		return
+	end
+
+	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to change loop settings on locked phonographs')
+		return
+	end
+
+	SetPhonographLoop(handle, loop)
 end)
 
 RegisterCommand('phonoctl', function(source, args, raw)
@@ -536,15 +598,18 @@ RegisterCommand('phonoctl', function(source, args, raw)
 		print('  phonoctl unlock <handle>')
 		print('  phonoctl mute <handle>')
 		print('  phonoctl unmute <handle>')
+		print('  phonoctl loop <handle> <on|off>')
 		print('  phonoctl pause <handle>')
 		print('  phonoctl stop <handle>')
 	elseif args[1] == 'list' then
 		for handle, info in pairs(Phonographs) do
-			print(string.format('[%x] %s %d %d %s %s %s %s',
+			print(string.format('[%x] %s %d %d/%s %s %s %s %s',
 				handle,
 				info.title,
 				info.volume,
 				info.offset,
+				info.duration or 'inf',
+				info.loop and 'loop' or 'noloop',
 				info.locked and 'locked' or 'unlocked',
 				info.video and 'video' or 'audio',
 				info.muted and 'muted' or 'unmuted',
@@ -562,6 +627,8 @@ RegisterCommand('phonoctl', function(source, args, raw)
 		PausePhonograph(tonumber(args[2], 16))
 	elseif args[1] == 'stop' then
 		RemovePhonograph(tonumber(args[2], 16))
+	elseif args[1] == 'loop' then
+		SetPhonographLoop(tonumber(args[2], 16), args[3] == 'on')
 	end
 end, true)
 

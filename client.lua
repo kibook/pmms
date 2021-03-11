@@ -110,7 +110,7 @@ function GetClosestPhonograph()
 	return GetClosestPhonographObject(GetEntityCoords(PlayerPedId()), Config.MaxDistance)
 end
 
-function StartPhonograph(handle, url, volume, offset, filter, locked, video, videoSize, muted)
+function StartPhonograph(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted)
 	if url == 'random' then
 		url = GetRandomPreset()
 	end
@@ -122,15 +122,15 @@ function StartPhonograph(handle, url, volume, offset, filter, locked, video, vid
 	end
 
 	if NetworkDoesNetworkIdExist(handle) then
-		TriggerServerEvent('phonograph:start', handle, url, volume, offset, filter, locked, video, videoSize, muted, nil)
+		TriggerServerEvent('phonograph:start', handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, nil)
 	else
 		local coords = GetEntityCoords(handle)
-		TriggerServerEvent('phonograph:start', nil, url, volume, offset, filter, locked, video, videoSize, muted, coords)
+		TriggerServerEvent('phonograph:start', nil, url, volume, offset, loop, filter, locked, video, videoSize, muted, coords)
 	end
 end
 
-function StartClosestPhonograph(url, volume, offset, filter, locked, video, videoSize, muted)
-	StartPhonograph(GetHandle(GetClosestPhonograph()), url, volume, offset, filter, locked, video, videoSize, muted)
+function StartClosestPhonograph(url, volume, offset, loop, filter, locked, video, videoSize, muted)
+	StartPhonograph(GetHandle(GetClosestPhonograph()), url, volume, offset, loop, filter, locked, video, videoSize, muted)
 end
 
 function PausePhonograph(handle)
@@ -401,13 +401,14 @@ RegisterCommand('phono', function(source, args, raw)
 				local url = args[2]
 				local volume = tonumber(args[3]) or 50
 				local offset = args[4]
-				local filter = args[5] and args[5] == '1' or true
-				local locked = args[6] == '1'
-				local video = args[7] == '1'
-				local videoSize = tonumber(args[8]) or 50
-				local muted = args[9] == '1'
+				local loop = args[5] == '1'
+				local filter = args[6] ~= '0'
+				local locked = args[7] == '1'
+				local video = args[8] == '1'
+				local videoSize = tonumber(args[9]) or 50
+				local muted = args[10] == '1'
 
-				StartClosestPhonograph(url, volume, offset, filter, locked, video, videoSize, muted)
+				StartClosestPhonograph(url, volume, offset, loop, filter, locked, video, videoSize, muted)
 			else
 				PauseClosestPhonograph()
 			end
@@ -455,6 +456,8 @@ RegisterNUICallback('init', function(data, cb)
 			data.title,
 			data.volume,
 			data.offset,
+			data.duration,
+			data.loop,
 			data.filter,
 			data.locked,
 			data.video,
@@ -471,7 +474,7 @@ RegisterNUICallback('initError', function(data, cb)
 end)
 
 RegisterNUICallback('play', function(data, cb)
-	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.filter, data.locked, data.video, data.videoSize, data.muted)
+	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted)
 	cb({})
 end)
 
@@ -561,6 +564,11 @@ RegisterNUICallback('copy', function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback('setLoop', function(data, cb)
+	TriggerServerEvent('phonograph:setLoop', data.handle, data.loop)
+	cb({})
+end)
+
 AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	Phonographs = phonographs
 
@@ -569,7 +577,7 @@ AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	end
 end)
 
-AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, filter, locked, video, videoSize, muted, coords)
+AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, coords)
 	SendNUIMessage({
 		type = 'init',
 		handle = handle,
@@ -577,6 +585,7 @@ AddEventHandler('phonograph:start', function(handle, url, title, volume, offset,
 		title = title,
 		volume = volume,
 		offset = offset,
+		loop = loop,
 		filter = filter,
 		locked = locked,
 		video = video,
@@ -642,6 +651,7 @@ CreateThread(function()
 		{name = 'url', help = 'URL or preset name of music to play. Use "random" to play a random preset.'},
 		{name = 'volume', help = 'Volume to play the music at (0-100).'},
 		{name = 'time', help = 'Time in seconds to start playing at.'},
+		{name = 'loop', help = '0 = play once, 1 = loop'},
 		{name = 'filter', help = '0 = normal audio, 1 = add phonograph filter'},
 		{name = 'lock', help = '0 = unlocked, 1 = locked'},
 		{name = 'video', help = '0 = hide video, 1 = show video'},
@@ -691,6 +701,7 @@ CreateThread(function()
 					volume = math.floor(info.volume * (BaseVolume / 100)),
 					muted = info.muted,
 					offset = info.offset,
+					loop = info.loop,
 					filter = info.filter,
 					locked = info.locked,
 					video = info.video,
@@ -714,6 +725,7 @@ CreateThread(function()
 					volume = 0,
 					muted = true,
 					offset = info.offset,
+					loop = info.loop,
 					filter = info.filter,
 					locked = info.locked,
 					video = info.video,

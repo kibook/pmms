@@ -128,16 +128,13 @@ option {
 }
 
 #start-phonograph {
-	display: flex;
+	display: grid;
+	grid-template-columns: auto auto auto repeat(7, max-content) auto;
+	grid-gap: 0.25vh 0.25vw;
 	padding: 0.5vh 0;
 }
 
-#url {
-	flex-grow: 1;
-}
-
 #volume-container, #offset-container, #loop-container, #filter-container, #locked-container, #video-container, #muted-container {
-	padding: 0 0.2vw;
 	white-space: nowrap;
 }
 
@@ -146,29 +143,42 @@ option {
 }
 
 #active-phonographs {
-	display: table;
-	width: 100%;
-	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(6, max-content) auto;
+	grid-gap: 1vh 1vw;
 }
 
 .active-phonograph {
-	display: table-row;
+	display: contents;
 }
 
-.active-phonograph-handle, .active-phonograph-distance, .active-phonograph-title, .active-phonograph-volume, .active-phonograph-time, .active-phonograph-video-size, .active-phonograph-controls {
-	display: table-cell;
+.active-phonograph-main {
+	display: contents;
 }
 
 .active-phonograph-handle, .active-phonograph-distance, .active-phonograph-volume, .active-phonograph-time, .active-phonograph-video-size, .active-phonograph-controls {
 	white-space: nowrap;
 }
 
-.active-phonograph-handle, .active-phonograph-distance, .active-phonograph-title, .active-phonograph-volume, .active-phonograph-time, .active-phonograph-video-size {
-	padding: 0.5vh 0.5vw 0.5vh 0;
-}
-
 .active-phonograph-controls {
 	text-align: right;
+}
+
+.active-phonograph-queue {
+	grid-column: 2 / 8;
+	display: grid;
+	grid-template-columns: repeat(7, max-content);
+	grid-gap: 1vh 1vw;
+	align-items: baseline;
+	padding: 0 0 0.5vh 0;
+}
+
+.queue-head, .queue-body {
+	display: contents;
+}
+
+.queue-head {
+	font-weight: bold;
 }
 
 #loading {
@@ -187,7 +197,9 @@ option {
 }
 
 #status {
-	display: none;
+	display: grid;
+	grid-template-columns: repeat(6, max-content) auto;
+	grid-gap: 0.5vh 0.5vw;
 	background: none;
 	position: absolute;
 	bottom: 2%;
@@ -215,5 +227,9 @@ option {
 }
 
 #preset {
-	font-family: Helvetica, FontAwesome
+	font-family: Helvetica, FontAwesome;
+}
+
+#usable-phonographs {
+	font-family: Helvetica, FontAwesome;
 }

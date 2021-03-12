@@ -15,41 +15,45 @@
 				<div id="active-phonographs"></div>
 			</div>
 			<div id="start-phonograph">
-				<select id="inactive-phonographs"></select>
+				<select id="usable-phonographs"></select>
 				<select id="preset"></select>
-				<input id="url" type="text" placeholder="Enter URL...">
-				<span id="volume-container">
+				<div id="url-container">
+					<input id="url" type="text" placeholder="Enter URL...">
+				</div>
+				<div id="volume-container">
 					<i class="fas fa-volume-off"></i>
 					<input id="volume" type="number" min="0" max="100" step="5" value="50">
-				</span>
-				<span id="offset-container">
+				</div>
+				<div id="offset-container">
 					<i class="fas fa-clock"></i>
 					<input id="offset" type="text" size="8" value="00:00:00">
-				</span>
-				<span id="loop-container">
+				</div>
+				<div id="loop-container">
 					<i class="fas fa-retweet"></i>
 					<input id="loop" type="checkbox">
-				</span>
-				<span id="filter-container">
+				</div>
+				<div id="filter-container">
 					<i class="fas fa-filter"></i>
 					<input id="filter" type="checkbox" checked>
-				</span>
-				<span id="muted-container">
+				</div>
+				<div id="muted-container">
 					<i class="fas fa-volume-mute"></i>
 					<input id="muted" type="checkbox">
-				</span>
-				<span id="video-container">
+				</div>
+				<div id="video-container">
 					<i class="fas fa-video"></i>
 					<input id="video" type="checkbox">
 					<input hidden id="video-size" type="number" min="10" max="100" step="10" value="50">
-				</span>
-				<span id="locked-container">
+				</div>
+				<div id="locked-container">
 					<i class="fas fa-lock"></i>
 					<input id="locked" type="checkbox">
-				</span>
-				<button id="play-button">
-					<i class="fas fa-play"></i>
-				</button>
+				</div>
+				<div id="play-button-container">
+					<button id="play-button" class="control-button">
+						<i class="fas fa-play"></i>
+					</button>
+				</div>
 			</div>
 			<div id="base-volume-container">
 				<i class="fas fa-volume-off"></i>
@@ -58,6 +62,6 @@
 			</div>
 			<button id="close-ui">Close</button>
 		</div>
-		<div id="status"></div>
+		<div id="status" style="display: none;"></div>
 	</body>
 </html>

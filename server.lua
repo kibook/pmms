@@ -1,4 +1,5 @@
 local Phonographs = {}
+local RestrictedHandles = {}
 local SyncQueue = {}
 
 RegisterNetEvent('phonograph:start')
@@ -18,6 +19,8 @@ RegisterNetEvent('phonograph:mute')
 RegisterNetEvent('phonograph:unmute')
 RegisterNetEvent('phonograph:copy')
 RegisterNetEvent('phonograph:setLoop')
+RegisterNetEvent('phonograph:next')
+RegisterNetEvent('phonograph:removeFromQueue')
 
 function Enqueue(queue, cb)
 	table.insert(queue, 1, cb)
@@ -31,33 +34,88 @@ function Dequeue(queue)
 	end
 end
 
-function AddPhonograph(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, coords)
-	if not Phonographs[handle] then
-		title = title or url
-		volume = Clamp(volume, 0, 100, 50)
-		offset = offset or 0
-		videoSize = Clamp(videoSize, 10, 100, 50)
+function AddToQueue(handle, source, url, volume, offset, filter, video)
+	table.insert(Phonographs[handle].queue, {
+		source = source,
+		name = GetPlayerName(source),
+		url = url,
+		volume = volume,
+		offset = offset,
+		filter = filter,
+		video = video
+	})
+end
 
-		Phonographs[handle] = {
-			url = url,
-			title = title,
-			volume = volume,
-			startTime = os.time() - offset,
-			offset = 0,
-			duration = duration,
-			loop = loop,
-			filter = filter,
-			locked = locked,
-			video = video,
-			videoSize = videoSize,
-			coords = coords,
-			paused = nil,
-			muted = muted
-		}
+function RemoveFromQueue(handle, index)
+	table.remove(Phonographs[handle].queue, index)
+end
 
-		Enqueue(SyncQueue, function()
-			TriggerClientEvent('phonograph:play', -1, handle)
-		end)
+function AddPhonograph(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, queue, coords)
+	if Phonographs[handle] then
+		return
+	end
+
+	Phonographs[handle] = {
+		url = url,
+		title = title or url,
+		volume = Clamp(volume, 0, 100, 50),
+		startTime = os.time() - (offset or 0),
+		offset = 0,
+		duration = duration,
+		loop = loop,
+		filter = filter,
+		locked = locked,
+		video = video,
+		videoSize = Clamp(videoSize, 10, 100, 50),
+		coords = coords,
+		paused = false,
+		muted = muted,
+		queue = queue or {}
+	}
+
+	Enqueue(SyncQueue, function()
+		TriggerClientEvent('phonograph:play', -1, handle)
+	end)
+end
+
+function PlayNextInQueue(handle)
+	local phono = Phonographs[handle]
+
+	RemovePhonograph(handle)
+
+	while #phono.queue > 0 do
+		local next = table.remove(phono.queue, 1)
+
+		local client
+
+		if GetPlayerName(next.source) == next.name then
+			client = next.source
+		else
+			client = GetPlayers()[1]
+		end
+
+		if client then
+			RestrictedHandles[handle] = client
+
+			Enqueue(SyncQueue, function()
+				TriggerClientEvent('phonograph:init',
+					client,
+					handle,
+					next.url,
+					next.volume,
+					next.offset,
+					phono.loop,
+					next.filter,
+					phono.locked,
+					next.video,
+					phono.videoSize,
+					phono.muted,
+					phono.queue,
+					phono.coords)
+			end)
+
+			break
+		end
 	end
 end
 
@@ -76,46 +134,56 @@ function PausePhonograph(handle)
 
 	if Phonographs[handle].paused then
 		Phonographs[handle].startTime = Phonographs[handle].startTime + (os.time() - Phonographs[handle].paused)
-		Phonographs[handle].paused = nil
+		Phonographs[handle].paused = false
 	else
 		Phonographs[handle].paused = os.time()
 	end
 end
 
-function StartPhonographByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted)
+function GetRandomPreset()
+	local presets = {}
+
+	for preset, info in pairs(Config.Presets) do
+		table.insert(presets, preset)
+	end
+
+	return #presets > 0 and presets[math.random(#presets)] or ''
+end
+
+function ResolvePreset(url, title, filter, video)
 	if url == 'random' then
 		url = GetRandomPreset()
 	end
 
 	if Config.Presets[url] then
-		AddPhonograph(netId,
-			Config.Presets[url].url,
-			Config.Presets[url].title,
-			volume,
-			offset,
-			duration,
-			loop,
-			Config.Presets[url].filter or false,
-			locked,
-			Config.Presets[url].video or false,
-			videoSize,
-			muted,
-			nil)
+		return Config.Presets[url]
 	else
-		AddPhonograph(netId,
-			url,
-			title,
-			volume,
-			offset,
-			duration,
-			loop,
-			filter,
-			locked,
-			video,
-			videoSize,
-			muted,
-			nil)
+		return {
+			url = url,
+			title = title,
+			filter = filter,
+			video = video
+		}
 	end
+end
+
+function StartPhonographByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted)
+	local resolved = ResolvePreset(url, title, filter, video)
+
+	AddPhonograph(netId,
+		resolved.url,
+		resolved.title,
+		volume,
+		offset,
+		duration,
+		loop,
+		resolved.filter,
+		locked,
+		resolved.video,
+		videoSize,
+		muted,
+		false,
+		false)
 
 	return netId
 end
@@ -124,39 +192,22 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, duration, 
 	local coords = vector3(x, y, z)
 	local handle = GetHandleFromCoords(coords)
 
-	if url == 'random' then
-		url = GetRandomPreset()
-	end
+	local resolved = ResolvePreset(url, title, filter, video)
 
-	if Config.Presets[url] then
-		AddPhonograph(handle,
-			Config.Presets[url].url,
-			Config.Presets[url].title,
-			volume,
-			offset,
-			duration,
-			loop,
-			Config.Presets[url].filter or false,
-			locked,
-			Config.Presets[url].video or false,
-			videoSize,
-			muted,
-			coords)
-	else
-		AddPhonograph(handle,
-			url,
-			title,
-			volume,
-			offset,
-			duration,
-			loop,
-			filter,
-			locked,
-			video,
-			videoSize,
-			muted,
-			coords)
-	end
+	AddPhonograph(handle,
+		resolved.url,
+		resolved.title,
+		volume,
+		offset,
+		duration,
+		loop,
+		resolved.filter,
+		locked,
+		resolved.video,
+		videoSize,
+		muted,
+		false,
+		coords)
 
 	return handle
 end
@@ -187,6 +238,11 @@ function StartDefaultPhonographs()
 	end
 end
 
+function ResetPlaytime(handle)
+	Phonographs[handle].offset = 0
+	Phonographs[handle].startTime = os.time()
+end
+
 function SyncPhonographs()
 	for handle, phono in pairs(Phonographs) do
 		if not phono.paused then
@@ -194,8 +250,9 @@ function SyncPhonographs()
 
 			if phono.duration and phono.offset >= phono.duration then
 				if phono.loop then
-					phono.offset = 0
-					phono.startTime = os.time()
+					ResetPlaytime(handle)
+				elseif #phono.queue > 0 then
+					PlayNextInQueue(handle)
 				else
 					RemovePhonograph(handle)
 				end
@@ -288,59 +345,74 @@ exports('unlock', UnlockPhonograph)
 exports('mute', MutePhonograph)
 exports('unmute', UnmutePhonograph)
 
-AddEventHandler('phonograph:start', function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, coords)
+AddEventHandler('phonograph:start', function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
 	if coords then
 		handle = GetHandleFromCoords(coords)
 	end
 
+	if RestrictedHandles[handle] then
+		if RestrictedHandles[handle] ~= source then
+			ErrorMessage(source, 'This player is busy')
+			return
+		end
+
+		RestrictedHandles[handle] = nil
+	end
+
 	if Phonographs[handle] then
-		return
-	end
-
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to play a song on a phonograph')
-		return
-	end
-
-	if (locked or IsLockedDefaultPhonograph(handle)) and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to play a song on a locked phonograph')
-		return
-	end
-
-	if Config.Presets[url] then
-		TriggerClientEvent('phonograph:start', source,
-			handle,
-			Config.Presets[url].url,
-			Config.Presets[url].title,
-			volume,
-			offset,
-			loop,
-			Config.Presets[url].filter or false,
-			locked,
-			Config.Presets[url].video or false,
-			videoSize,
-			muted,
-			coords)
-	elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then
-		TriggerClientEvent('phonograph:start', source,
-			handle,
-			url,
-			nil,
-			volume,
-			offset,
-			loop,
-			filter,
-			locked,
-			video,
-			videoSize,
-			muted,
-			coords)
+		AddToQueue(handle, source, url, volume, offset, filter, video)
 	else
-		ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
+		if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+			ErrorMessage(source, 'You do not have permission to play a song on a phonograph')
+			return
+		end
+
+		if (locked or IsLockedDefaultPhonograph(handle)) and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+			ErrorMessage(source, 'You do not have permission to play a song on a locked phonograph')
+			return
+		end
+
+		if url == 'random' then
+			url = GetRandomPreset()
+		end
+
+		if Config.Presets[url] then
+			TriggerClientEvent('phonograph:start', source,
+				handle,
+				Config.Presets[url].url,
+				Config.Presets[url].title,
+				volume,
+				offset,
+				loop,
+				Config.Presets[url].filter or false,
+				locked,
+				Config.Presets[url].video or false,
+				videoSize,
+				muted,
+				queue,
+				coords)
+		elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then
+			TriggerClientEvent('phonograph:start', source,
+				handle,
+				url,
+				false,
+				volume,
+				offset,
+				loop,
+				filter,
+				locked,
+				video,
+				videoSize,
+				muted,
+				queue,
+				coords)
+		else
+			ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
+		end
 	end
 end)
 
-AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, coords)
+AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, queue, coords)
 	if Phonographs[handle] then
 		return
 	end
@@ -355,7 +427,7 @@ AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, 
 		return
 	end
 
-	AddPhonograph(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, coords)
+	AddPhonograph(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, queue, coords)
 end)
 
 AddEventHandler('phonograph:pause', function(handle)
@@ -590,6 +662,42 @@ AddEventHandler('phonograph:setLoop', function(handle, loop)
 	SetPhonographLoop(handle, loop)
 end)
 
+AddEventHandler('phonograph:next', function(handle)
+	if not Phonographs[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to skip forward on phonographs')
+		return
+	end
+
+	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to skip forward on locked phonographs')
+		return
+	end
+
+	PlayNextInQueue(handle)
+end)
+
+AddEventHandler('phonograph:removeFromQueue', function(handle, id)
+	if not Phonographs[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
+		ErrorMessage(source, 'You do not have permission to remove an item from the queue of phonographs')
+		return
+	end
+
+	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
+		ErrorMessage(source, 'You do not have permission to remove an item from the queue of locked phonographs')
+		return
+	end
+
+	RemoveFromQueue(handle, id)
+end)
+
 RegisterCommand('phonoctl', function(source, args, raw)
 	if #args < 1 then
 		print('Usage:')
@@ -599,6 +707,7 @@ RegisterCommand('phonoctl', function(source, args, raw)
 		print('  phonoctl mute <handle>')
 		print('  phonoctl unmute <handle>')
 		print('  phonoctl loop <handle> <on|off>')
+		print('  phonoctl next <handle>')
 		print('  phonoctl pause <handle>')
 		print('  phonoctl stop <handle>')
 	elseif args[1] == 'list' then
@@ -623,6 +732,8 @@ RegisterCommand('phonoctl', function(source, args, raw)
 		MutePhonograph(tonumber(args[2], 16))
 	elseif args[1] == 'unmute' then
 		UnmutePhonograph(tonumber(args[2], 16))
+	elseif args[1] == 'next' then
+		PlayNextInQueue(tonumber(args[2], 16))
 	elseif args[1] == 'pause' then
 		PausePhonograph(tonumber(args[2], 16))
 	elseif args[1] == 'stop' then

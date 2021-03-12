@@ -13,6 +13,7 @@ RegisterNetEvent('phonograph:stop')
 RegisterNetEvent('phonograph:showControls')
 RegisterNetEvent('phonograph:toggleStatus')
 RegisterNetEvent('phonograph:error')
+RegisterNetEvent('phonograph:init')
 
 local entityEnumerator = {
 	__gc = function(enum)
@@ -110,11 +111,7 @@ function GetClosestPhonograph()
 	return GetClosestPhonographObject(GetEntityCoords(PlayerPedId()), Config.MaxDistance)
 end
 
-function StartPhonograph(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted)
-	if url == 'random' then
-		url = GetRandomPreset()
-	end
-
+function StartPhonograph(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
 	volume = Clamp(volume, 0, 100, 50)
 
 	if not offset then
@@ -122,15 +119,18 @@ function StartPhonograph(handle, url, volume, offset, loop, filter, locked, vide
 	end
 
 	if NetworkDoesNetworkIdExist(handle) then
-		TriggerServerEvent('phonograph:start', handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, nil)
+		TriggerServerEvent('phonograph:start', handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, false)
 	else
-		local coords = GetEntityCoords(handle)
-		TriggerServerEvent('phonograph:start', nil, url, volume, offset, loop, filter, locked, video, videoSize, muted, coords)
+		if not coords then
+			coords = GetEntityCoords(handle)
+		end
+
+		TriggerServerEvent('phonograph:start', nil, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
 	end
 end
 
 function StartClosestPhonograph(url, volume, offset, loop, filter, locked, video, videoSize, muted)
-	StartPhonograph(GetHandle(GetClosestPhonograph()), url, volume, offset, loop, filter, locked, video, videoSize, muted)
+	StartPhonograph(GetHandle(GetClosestPhonograph()), url, volume, offset, loop, filter, locked, video, videoSize, muted, false, false)
 end
 
 function PausePhonograph(handle)
@@ -274,34 +274,35 @@ function UpdateUi(fullControls, anyUrl)
 
 	table.sort(activePhonographs, SortByDistance)
 
-	local inactivePhonographs = {}
+	local usablePhonographs = {}
 
 	if UiIsOpen then
 		ForEachPhonograph(function(object)
 			local phonoPos = GetEntityCoords(object)
 			local clHandle = GetHandle(object)
-			local svHandle = NetworkGetEntityIsNetworked(object) and ObjToNet(object) or GetHandleFromCoords(phonoPos)
 
-			if clHandle and not Phonographs[svHandle] then
+			if clHandle then
+				local svHandle = NetworkGetEntityIsNetworked(object) and ObjToNet(object) or GetHandleFromCoords(phonoPos)
 				local distance = #(pos - phonoPos)
 
 				if fullControls or distance <= Config.MaxDistance then
-					table.insert(inactivePhonographs, {
+					table.insert(usablePhonographs, {
 						handle = clHandle,
 						distance = distance,
-						label = PhonographLabels[clHandle]
+						label = PhonographLabels[clHandle],
+						active = Phonographs[svHandle] ~= nil
 					})
 				end
 			end
 		end)
 
-		table.sort(inactivePhonographs, SortByDistance)
+		table.sort(usablePhonographs, SortByDistance)
 	end
 
 	SendNUIMessage({
 		type = 'updateUi',
 		activePhonographs = json.encode(activePhonographs),
-		inactivePhonographs = json.encode(inactivePhonographs),
+		usablePhonographs = json.encode(usablePhonographs),
 		presets = json.encode(Config.Presets),
 		anyUrl = anyUrl,
 		maxDistance = Config.MaxDistance,
@@ -463,6 +464,7 @@ RegisterNUICallback('init', function(data, cb)
 			data.video,
 			data.videoSize,
 			data.muted,
+			data.queue,
 			coords and tovector3(coords))
 	end
 	cb({})
@@ -474,7 +476,7 @@ RegisterNUICallback('initError', function(data, cb)
 end)
 
 RegisterNUICallback('play', function(data, cb)
-	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted)
+	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, false, false)
 	cb({})
 end)
 
@@ -569,6 +571,16 @@ RegisterNUICallback('setLoop', function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback('next', function(data, cb)
+	TriggerServerEvent('phonograph:next', data.handle)
+	cb({})
+end)
+
+RegisterNUICallback('removeFromQueue', function(data, cb)
+	TriggerServerEvent('phonograph:removeFromQueue', data.handle, data.index)
+	cb({})
+end)
+
 AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	Phonographs = phonographs
 
@@ -577,7 +589,7 @@ AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	end
 end)
 
-AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, coords)
+AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
 	SendNUIMessage({
 		type = 'init',
 		handle = handle,
@@ -591,6 +603,7 @@ AddEventHandler('phonograph:start', function(handle, url, title, volume, offset,
 		video = video,
 		videoSize = videoSize,
 		muted = muted,
+		queue = queue,
 		coords = json.encode(coords)
 	})
 end)
@@ -627,6 +640,10 @@ end)
 
 AddEventHandler('phonograph:error', function(message)
 	print(message)
+end)
+
+AddEventHandler('phonograph:init', function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
+	StartPhonograph(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
 end)
 
 AddEventHandler('onResourceStop', function(resource)

@@ -989,10 +989,6 @@ function startPhonograph() {
 		videoSize: videoSize,
 		muted: muted
 	});
-
-	presetSelect.value = '';
-	urlInput.value = '';
-	offsetInput.value = '00:00:00';
 }
 
 window.addEventListener('message', event => {

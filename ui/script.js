@@ -25,6 +25,8 @@ function applyPhonographFilter(player) {
 		var html5Player = player.youTubeApi.getIframe().contentWindow.document.querySelector('.html5-main-video');
 
 		source = context.createMediaElementSource(html5Player);
+	} else if (player.hlsPlayer) {
+		source = context.createMediaElementSource(player.hlsPlayer.media);
 	} else if (player.originalNode) {
 		source = context.createMediaElementSource(player.originalNode);
 	} else {
@@ -147,7 +149,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 
 				var duration;
 
-				if (media.duration == NaN || media.duration == Infinity) {
+				if (media.duration == NaN || media.duration == Infinity || media.hlsPlayer) {
 					offset = 0;
 					duration = false;
 					loop = false;

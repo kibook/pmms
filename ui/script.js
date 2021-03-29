@@ -62,6 +62,7 @@ function applyPhonographFilter(player) {
 	var noise = document.createElement('audio');
 	noise.id = player.id + '_noise';
 	noise.src = 'https://redm.khzae.net/phonograph/noise.webm';
+	noise.volume = 0;
 	document.body.appendChild(noise);
 	noise.play();
 
@@ -129,7 +130,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 				media.remove();
 			});
 
-			media.addEventListener('canplay', () => {
+			media.addEventListener('playing', () => {
 				if (media.getAttribute("data-initialized")) {
 					return;
 				}

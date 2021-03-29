@@ -475,6 +475,11 @@ RegisterNUICallback('initError', function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback('playError', function(data, cb)
+	TriggerEvent('phonograph:error', 'Error playing ' .. data.url)
+	cb({})
+end)
+
 RegisterNUICallback('play', function(data, cb)
 	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, false, false)
 	cb({})

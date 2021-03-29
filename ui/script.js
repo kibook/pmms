@@ -109,6 +109,8 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 		success: function(media, domNode) {
 			media.className = 'player';
 
+			media.setAttribute('data-initialized', 'false');
+
 			media.setAttribute('data-attenuationFactor', maxAttenuationFactor);
 			media.setAttribute('data-volumeFactor', maxVolumeFactor);
 
@@ -120,18 +122,20 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 				media.style.display = 'none';
 			}
 
-			media.addEventListener('error', () => {
+			media.addEventListener('error', event => {
 				hideLoadingIcon();
 
-				sendMessage('initError', {
+				sendMessage('playError', {
 					url: url
 				});
 
-				media.remove();
+				if (media.getAttribute('data-initialized') != 'true') {
+					media.remove();
+				}
 			});
 
-			media.addEventListener('playing', () => {
-				if (media.getAttribute("data-initialized")) {
+			media.addEventListener('canplay', () => {
+				if (media.getAttribute('data-initialized') != 'false') {
 					return;
 				}
 
@@ -172,7 +176,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					coords: coords,
 				});
 
-				media.setAttribute("data-initialized", "true");
+				media.setAttribute('data-initialized', 'true');
 			}, {once: true});
 
 			if (!media.videoTracks) {
@@ -480,10 +484,10 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 		timeDiv.className = 'active-phonograph-time';
 
 		var timeSpan = document.createElement('span');
-		if (player.duration && player.duration != Infinity) {
-			timeSpan.innerHTML = timeToString(player.currentTime) + '/' + timeToString(player.duration);
+		if (phonograph.info.duration) {
+			timeSpan.innerHTML = timeToString(phonograph.info.offset) + '/' + timeToString(phonograph.info.duration);
 		} else {
-			timeSpan.innerHTML = timeToString(player.currentTime);
+			timeSpan.innerHTML = timeToString(phonograph.info.offset);
 		}
 
 		var seekBackwardButton = document.createElement('button');
@@ -517,7 +521,7 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 			});
 		}
 
-		if ((phonograph.info.locked && !fullControls) || player.duration == NaN || player.duration == Infinity) {
+		if ((phonograph.info.locked && !fullControls) || !phonograph.info.duration) {
 			seekBackwardButton.disabled = true;
 			seekForwardButton.disabled = true;
 		}

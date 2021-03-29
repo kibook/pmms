@@ -13,6 +13,7 @@ files {
 	'ui/index.html',
 	'ui/style.css',
 	'ui/script.js',
+	'ui/mediaelement.min.js',
 	'ui/chineserocks.ttf',
 	'ui/loading.svg'
 }

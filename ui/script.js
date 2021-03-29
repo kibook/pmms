@@ -16,32 +16,69 @@ function sendMessage(name, params) {
 	});
 }
 
-function getYoutubeInfo(id) {
-	return new Promise(function(resolve, reject) {
-		fetch('https://redm.khzae.net/phonograph/yt?v=' + id + '&metadata=1').then(resp => {
-			return resp.json();
-		}).then(resp => {
-			return resolve(resp);
-		}).catch(err => {
-			return reject(err);
-		});
-	});
-}
+function applyPhonographFilter(player) {
+	var context = new (window.AudioContext || window.webkitAudioContext)();
 
-function interpretUrl(url) {
-	var isYoutube = url.match(/(?:youtu|youtube)(?:\.com|\.be)\/([\w\W]+)/i);
+	var source;
 
-	if (isYoutube) {
-		var id = isYoutube[1].match(/watch\?v=|[\w\W]+/gi);
-		id = (id.length > 1) ? id.splice(1) : id;
-		id = id.toString();
+	if (player.youTubeApi) {
+		var html5Player = player.youTubeApi.getIframe().contentWindow.document.querySelector('.html5-main-video');
 
-		return getYoutubeInfo(id);
+		source = context.createMediaElementSource(html5Player);
+	} else if (player.originalNode) {
+		source = context.createMediaElementSource(player.originalNode);
 	} else {
-		return new Promise(function(resolve, reject) {
-			resolve({url: url});
-		});
+		source = context.createMediaElementSource(player);
 	}
+
+	if (source) {
+		var splitter = context.createChannelSplitter(2);
+		var merger = context.createChannelMerger(2);
+
+		var gainNode = context.createGain();
+		gainNode.gain.value = 0.5;
+
+		var lowpass = context.createBiquadFilter();
+		lowpass.type = 'lowpass';
+		lowpass.frequency.value = 3000;
+		lowpass.gain.value = -1;
+
+		var highpass = context.createBiquadFilter();
+		highpass.type = 'highpass';
+		highpass.frequency.value = 300;
+		highpass.gain.value = -1;
+
+		source.connect(splitter);
+		splitter.connect(merger, 0, 0);
+		splitter.connect(merger, 1, 0);
+		splitter.connect(merger, 0, 1);
+		splitter.connect(merger, 1, 1);
+		merger.connect(gainNode);
+		gainNode.connect(lowpass);
+		lowpass.connect(highpass);
+		highpass.connect(context.destination);
+	}
+
+	var noise = document.createElement('audio');
+	noise.id = player.id + '_noise';
+	noise.src = 'https://redm.khzae.net/phonograph/noise.webm';
+	document.body.appendChild(noise);
+	noise.play();
+
+	player.style.filter = 'sepia()';
+
+	player.addEventListener('play', event => {
+		noise.play();
+	});
+	player.addEventListener('pause', event => {
+		noise.pause();
+	});
+	player.addEventListener('volumechange', event => {
+		noise.volume = player.volume;
+	});
+	player.addEventListener('seeked', event => {
+		noise.currentTime = player.currentTime;
+	});
 }
 
 function showLoadingIcon() {
@@ -53,81 +90,96 @@ function hideLoadingIcon() {
 }
 
 function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords) {
-	interpretUrl(url).then(info => {
-		url = info.url;
+	var player = document.createElement('video');
+	player.id = id;
+	player.src = url;
+	document.body.appendChild(player);
 
-		if (info.title) {
-			title = info.title;
-		}
-
-		player = document.createElement('video');
-		player.crossOrigin = 'anonymous';
-		player.id = id;
-		player.setAttribute('data-attenuationFactor', maxAttenuationFactor);
-		player.setAttribute('data-volumeFactor', maxVolumeFactor);
-		player.className = 'player';
-		if (video) {
-			player.style.display = 'block';
-		} else {
-			player.style.display = 'none';
-		}
-		document.body.appendChild(player);
-
-		if (filter) {
-			applyPhonographFilter(player);
-		}
-
-		player.addEventListener('error', () => {
+	new MediaElement(id, {
+		error: function(media) {
 			hideLoadingIcon();
 
 			sendMessage('initError', {
 				url: url
 			});
 
-			player.remove();
-		});
+			media.remove();
+		},
+		success: function(media, domNode) {
+			media.className = 'player';
 
-		player.addEventListener('canplay', () => {
-			hideLoadingIcon();
+			media.setAttribute('data-attenuationFactor', maxAttenuationFactor);
+			media.setAttribute('data-volumeFactor', maxVolumeFactor);
 
-			var duration;
+			media.volume = 0;
 
-			if (player.duration == NaN || player.duration == Infinity) {
-				offset = 0;
-				duration = false;
-				loop = false;
+			if (video) {
+				media.style.display = 'block';
 			} else {
-				duration = player.duration;
+				media.style.display = 'none';
 			}
 
-			sendMessage('init', {
-				handle: handle,
-				url: url,
-				title: title,
-				volume: volume,
-				offset: offset,
-				duration: duration,
-				loop: loop,
-				filter: filter,
-				locked: locked,
-				video: video,
-				videoSize: videoSize,
-				muted: muted,
-				queue: queue,
-				coords: coords,
+			media.addEventListener('error', () => {
+				hideLoadingIcon();
+
+				sendMessage('initError', {
+					url: url
+				});
+
+				media.remove();
 			});
-		}, {once: true});
 
-		player.src = url;
-		player.volume = 0;
-	}).catch(err => {
-		console.log(err);
+			media.addEventListener('canplay', () => {
+				if (media.getAttribute("data-initialized")) {
+					return;
+				}
 
-		sendMessage('initError', {
-			url: url
-		});
+				hideLoadingIcon();
 
-		hideLoadingIcon();
+				if (filter) {
+					applyPhonographFilter(media);
+				}
+
+				var duration;
+
+				if (media.duration == NaN || media.duration == Infinity) {
+					offset = 0;
+					duration = false;
+					loop = false;
+				} else {
+					duration = media.duration;
+				}
+
+				if (media.youTubeApi) {
+					title = media.youTubeApi.getVideoData().title;
+				}
+
+				sendMessage('init', {
+					handle: handle,
+					url: url,
+					title: title,
+					volume: volume,
+					offset: offset,
+					duration: duration,
+					loop: loop,
+					filter: filter,
+					locked: locked,
+					video: video,
+					videoSize: videoSize,
+					muted: muted,
+					queue: queue,
+					coords: coords,
+				});
+
+				media.setAttribute("data-initialized", "true");
+			}, {once: true});
+
+			if (!media.videoTracks) {
+				media.videoTracks = {length: 1};
+			}
+
+			media.play();
+		}
 	});
 }
 
@@ -150,55 +202,6 @@ function parseTimecode(timecode) {
 	} else {
 		return parseInt(timecode);
 	}
-}
-
-function applyPhonographFilter(player) {
-	var context = new (window.AudioContext || window.webkitAudioContext)();
-	var source = context.createMediaElementSource(player);
-
-	var splitter = context.createChannelSplitter(2);
-	var merger = context.createChannelMerger(2);
-
-	var gainNode = context.createGain();
-	gainNode.gain.value = 0.5;
-
-	var lowpass = context.createBiquadFilter();
-	lowpass.type = 'lowpass';
-	lowpass.frequency.value = 3000;
-	lowpass.gain.value = -1;
-
-	var highpass = context.createBiquadFilter();
-	highpass.type = 'highpass';
-	highpass.frequency.value = 300;
-	highpass.gain.value = -1;
-
-	source.connect(splitter);
-	splitter.connect(merger, 0, 0);
-	splitter.connect(merger, 1, 0);
-	splitter.connect(merger, 0, 1);
-	splitter.connect(merger, 1, 1);
-	merger.connect(gainNode);
-	gainNode.connect(lowpass);
-	lowpass.connect(highpass);
-	highpass.connect(context.destination);
-
-	var noise = document.createElement('audio');
-	noise.src = 'https://redm.khzae.net/phonograph/noise.webm';
-
-	player.style.filter = 'sepia()';
-
-	player.addEventListener('play', event => {
-		noise.play();
-	});
-	player.addEventListener('pause', event => {
-		noise.pause();
-	});
-	player.addEventListener('volumechange', event => {
-		noise.volume = player.volume;
-	});
-	player.addEventListener('seeked', event => {
-		noise.currentTime = player.currentTime;
-	});
 }
 
 function init(data) {
@@ -235,6 +238,11 @@ function stop(handle) {
 	var player = getPlayer(handle);
 
 	if (player) {
+		var noise = document.getElementById(player.id + '_noise');
+		if (noise) {
+			noise.remove();
+		}
+
 		player.remove();
 	}
 }
@@ -286,10 +294,6 @@ function update(data) {
 				setVolumeFactor(player, maxVolumeFactor);
 			}
 
-			if (player.src != data.url) {
-				player.src = data.url;
-			}
-
 			if (player.readyState > 0) {
 				var volume;
 
@@ -322,10 +326,14 @@ function update(data) {
 
 		if (data.video && data.sameRoom && data.camDistance >= 0 && data.distance <= data.maxDistance) {
 			var scale = calculateFocalLength(data.fov) / data.camDistance;
+			var width = data.videoSize * scale;
 
 			player.style.left = data.screenX * 100 + '%';
 			player.style.top  = data.screenY * 100 + '%';
-			player.style.width = data.videoSize * scale + 'vw';
+			player.style.width = width + 'vw';
+			if (player.youTubeApi) {
+				player.style.height = width * (9 / 16) + 'vw';
+			}
 			player.style.zIndex = Math.floor(data.camDistance * -1).toString();
 
 			if (player.style.display == 'none') {

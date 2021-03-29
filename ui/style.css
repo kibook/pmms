@@ -233,3 +233,8 @@ option {
 #usable-phonographs {
 	font-family: Helvetica, FontAwesome;
 }
+
+mediaelementwrapper > iframe {
+	width: 100%;
+	height: 100%;
+}

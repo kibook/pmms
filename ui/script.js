@@ -143,10 +143,6 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 
 				hideLoadingIcon();
 
-				if (filter) {
-					applyPhonographFilter(media);
-				}
-
 				var duration;
 
 				if (media.duration == NaN || media.duration == Infinity || media.hlsPlayer) {
@@ -179,7 +175,14 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 				});
 
 				media.setAttribute('data-initialized', 'true');
-			}, {once: true});
+			});
+
+			media.addEventListener('playing', () => {
+				if (filter && media.getAttribute('data-filter-added') != 'true') {
+					applyPhonographFilter(media);
+					media.setAttribute('data-filter-added', 'true');
+				}
+			});
 
 			if (!media.videoTracks) {
 				media.videoTracks = {length: 1};

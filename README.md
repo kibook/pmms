@@ -4,23 +4,21 @@ Allows players to play music from a phonograph object.
 
 # Features
 
-- NUI with HTML5 audio and video
+- NUI-based, using [MediaElement.js](https://www.mediaelementjs.com/) to support HTML5 media, HLS, YouTube, and more.
 
-- Synchronized between players
+- Synchronized between players.
 
-- Multiple phonographs can play different songs at the same time
+- Multiple phonographs can play different songs at the same time.
 
-- Dynamic sound attenuation based on whether the player and phonograph are in the same interior room
+- Dynamic sound attenuation based on whether the player and phonograph are in the same interior room.
 
-- YouTube video support
+- Optional "phonograph" filter can be applied to any audio.
 
-- Optional "phonograph" filter can be applied to any audio
+- Show video on a screen displayed above the phonograph.
 
-- Show video on a screen displayed above the phonograph
+- Permissions system and ability to lock phonographs.
 
-- Permissions system and ability to lock phonographs
-
-- Configure default phonographs which are spawned and play music automatically
+- Configure default phonographs which are spawned and play music automatically.
 
 # Examples
 
@@ -30,12 +28,12 @@ Allows players to play music from a phonograph object.
 
 # Commands
 
-| Command                                                            | Description                                     |
-|--------------------------------------------------------------------|-------------------------------------------------|
-| `/phono`                                                           | Open the phonograph control panel.              |
-| `/phono play [url] [volume] [time] [filter] [lock] [video] [size]` | Play music on the nearest phonograph.           |
-| `/phono pause`                                                     | Pause playback on the nearest phonograph.       |
-| `/phono stop`                                                      | Stop playback on the nearest phonograph.        |
-| `/phono status`                                                    | Show the status of the nearest phonograph.      |
-| `/phono songs`                                                     | Show preset song selection.                     |
-| `/phonovol [volume]`                                               | Set a personal base volume for all phonographs. |
+| Command                                                                          | Description                                     |
+|----------------------------------------------------------------------------------|-------------------------------------------------|
+| `/phono`                                                                         | Open the phonograph control panel.              |
+| `/phono play [url] [volume] [time] [loop] [filter] [lock] [video] [size] [mute]` | Play music on the nearest phonograph.           |
+| `/phono pause`                                                                   | Pause playback on the nearest phonograph.       |
+| `/phono stop`                                                                    | Stop playback on the nearest phonograph.        |
+| `/phono status`                                                                  | Show the status of the nearest phonograph.      |
+| `/phono songs`                                                                   | Show preset song selection.                     |
+| `/phonovol [volume]`                                                             | Set a personal base volume for all phonographs. |

@@ -111,10 +111,10 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 		success: function(media, domNode) {
 			media.className = 'player';
 
-			media.setAttribute('data-initialized', 'false');
-
-			media.setAttribute('data-attenuationFactor', maxAttenuationFactor);
-			media.setAttribute('data-volumeFactor', maxVolumeFactor);
+			media.phono = {};
+			media.phono.initialized = false;
+			media.phono.attenuationFactor = maxAttenuationFactor;
+			media.phono.volumeFactor = maxVolumeFactor;
 
 			media.volume = 0;
 
@@ -131,13 +131,13 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					url: url
 				});
 
-				if (media.getAttribute('data-initialized') != 'true') {
+				if (!media.phono.initialized) {
 					media.remove();
 				}
 			});
 
 			media.addEventListener('canplay', () => {
-				if (media.getAttribute('data-initialized') != 'false') {
+				if (media.phono.initialized) {
 					return;
 				}
 
@@ -155,6 +155,12 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 
 				if (media.youTubeApi) {
 					title = media.youTubeApi.getVideoData().title;
+
+					media.videoTracks = {length: 1};
+				} else if (media.hlsPlayer) {
+					media.videoTracks = media.hlsPlayer.videoTracks;
+				} else {
+					media.videoTracks = media.originalNode.videoTracks;
 				}
 
 				sendMessage('init', {
@@ -174,19 +180,15 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					coords: coords,
 				});
 
-				media.setAttribute('data-initialized', 'true');
+				media.phono.initialized = true;
 			});
 
 			media.addEventListener('playing', () => {
-				if (filter && media.getAttribute('data-filter-added') != 'true') {
+				if (filter && !media.phono.filterAdded) {
 					applyPhonographFilter(media);
-					media.setAttribute('data-filter-added', 'true');
+					media.phono.filterAdded = true;
 				}
 			});
-
-			if (!media.videoTracks) {
-				media.videoTracks = {length: 1};
-			}
 
 			media.play();
 		}
@@ -258,27 +260,19 @@ function stop(handle) {
 }
 
 function setAttenuationFactor(player, target) {
-	var attenuationFactor = parseFloat(player.getAttribute('data-attenuationFactor'));
-
-	if (attenuationFactor > target) {
-		attenuationFactor -= 0.1;
+	if (player.phono.attenuationFactor > target) {
+		player.phono.attenuationFactor -= 0.1;
 	} else {
-		attenuationFactor += 0.1;
+		player.phono.attenuationFactor += 0.1;
 	}
-
-	player.setAttribute('data-attenuationFactor', attenuationFactor);
 }
 
 function setVolumeFactor(player, target) {
-	var volumeFactor = parseFloat(player.getAttribute('data-volumeFactor'));
-
-	if (volumeFactor > target) {
-		volumeFactor -= 0.1;
+	if (player.phono.volumeFactor > target) {
+		player.phono.volumeFactor -= 0.1;
 	} else {
-		volumeFactor += 0.1;
+		player.phono.volumeFactor += 0.1;
 	}
-
-	player.setAttribute('data-volumeFactor', volumeFactor);
 }
 
 function calculateFocalLength(fov) {
@@ -310,10 +304,7 @@ function update(data) {
 				if (data.distance < 0 || data.muted) {
 					volume = 0;
 				} else {
-					var attenuationFactor = parseFloat(player.getAttribute('data-attenuationFactor'));
-					var volumeFactor = parseFloat(player.getAttribute('data-volumeFactor'));
-
-					volume = (((100 - data.distance * attenuationFactor) / 100) / volumeFactor) * (data.volume / 100);
+					volume = (((100 - data.distance * player.phono.attenuationFactor) / 100) / player.phono.volumeFactor) * (data.volume / 100);
 				}
 
 				if (volume > 0) {

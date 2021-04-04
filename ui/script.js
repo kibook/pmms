@@ -529,7 +529,7 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 
 		var videoSizeDiv = document.createElement('div');
 		videoSizeDiv.className = 'active-phonograph-video-size';
-		if (phonograph.info.video && player.videoTracks.length > 0) {
+		if (phonograph.info.video && player.videoTracks && player.videoTracks.length > 0) {
 			var videoSizeDecreaseButton = document.createElement('button');
 			videoSizeDecreaseButton.className = 'control-button';
 			videoSizeDecreaseButton.innerHTML = '<i class="fas fa-minus"></i>';
@@ -602,7 +602,7 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 
 		var videoButton = document.createElement('button');
 		videoButton.className = 'control-button';
-		if (player.videoTracks.length > 0) {
+		if (player.videoTracks && player.videoTracks.length > 0) {
 			if (phonograph.info.video) {
 				videoButton.innerHTML = '<i class="fas fa-video"></i>';
 				videoButton.addEventListener('click', event => {

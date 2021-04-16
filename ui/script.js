@@ -285,7 +285,7 @@ function update(data) {
 	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.queue, data.coords);
 
 	if (player) {
-		if (data.paused) {
+		if (data.paused || data.distance < 0) {
 			if (!player.paused) {
 				player.pause();
 			}
@@ -301,7 +301,7 @@ function update(data) {
 			if (player.readyState > 0) {
 				var volume;
 
-				if (data.distance < 0 || data.muted) {
+				if (data.muted) {
 					volume = 0;
 				} else {
 					volume = (((100 - data.distance * player.phono.attenuationFactor) / 100) / player.phono.volumeFactor) * (data.volume / 100);

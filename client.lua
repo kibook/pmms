@@ -15,41 +15,23 @@ RegisterNetEvent('phonograph:toggleStatus')
 RegisterNetEvent('phonograph:error')
 RegisterNetEvent('phonograph:init')
 
-local entityEnumerator = {
-	__gc = function(enum)
-		if enum.destructor and enum.handle then
-			enum.destructor(enum.handle)
+function GetNearbyObjects(coords)
+	local itemset = CreateItemset(true)
+	local size = Citizen.InvokeNative(0x59B57C4B06531E1E, coords, Config.MaxDistance, itemset, 3, Citizen.ResultAsInteger())
+
+	local objects = {}
+
+	if size > 0 then
+		for i = 0, size - 1 do
+			table.insert(objects, GetIndexedItemInItemset(i, itemset))
 		end
-		enum.destructor = nil
-		enum.handle = nil
 	end
-}
 
-function EnumerateEntities(firstFunc, nextFunc, endFunc)
-	return coroutine.wrap(function()
-		local iter, id = firstFunc()
+	if IsItemsetValid(itemset) then
+		DestroyItemset(itemset)
+	end
 
-		if not id or id == 0 then
-			endFunc(iter)
-			return
-		end
-
-		local enum = {handle = iter, destructor = endFunc}
-		setmetatable(enum, entityEnumerator)
-
-		local next = true
-		repeat
-			coroutine.yield(id)
-			next, id = nextFunc(iter)
-		until not next
-
-		enum.destructor, enum.handle = nil, nil
-		endFunc(iter)
-	end)
-end
-
-function EnumerateObjects()
-	return EnumerateEntities(FindFirstObject, FindNextObject, EndFindObject)
+	return objects
 end
 
 function IsPhonograph(object)
@@ -78,8 +60,8 @@ function FindHandle(object)
 	return nil
 end
 
-function ForEachPhonograph(func)
-	for object in EnumerateObjects() do
+function ForEachPhonograph(pos, func)
+	for _, object in ipairs(GetNearbyObjects(pos)) do
 		if IsPhonograph(object) then
 			func(object)
 		end
@@ -94,7 +76,7 @@ function GetClosestPhonographObject(centre, radius, listenerPos)
 	local min
 	local closest
 
-	ForEachPhonograph(function(object)
+	ForEachPhonograph(listenerPos or centre, function(object)
 		local coords = GetEntityCoords(object)
 		local distance = #(centre - coords)
 
@@ -277,7 +259,7 @@ function UpdateUi(fullControls, anyUrl)
 	local usablePhonographs = {}
 
 	if UiIsOpen then
-		ForEachPhonograph(function(object)
+		ForEachPhonograph(pos, function(object)
 			local phonoPos = GetEntityCoords(object)
 			local clHandle = GetHandle(object)
 
@@ -315,8 +297,9 @@ function CreatePhonograph(phonograph)
 	local model = GetHashKey('p_phonograph01x')
 
 	RequestModel(model)
+
 	while not HasModelLoaded(model) do
-		Wait(0)
+		Citizen.Wait(0)
 	end
 
 	phonograph.handle = CreateObjectNoOffset(GetHashKey('p_phonograph01x'), phonograph.x, phonograph.y, phonograph.z, false, false, false, false)
@@ -667,7 +650,7 @@ AddEventHandler('onResourceStop', function(resource)
 	end
 end)
 
-CreateThread(function()
+Citizen.CreateThread(function()
 	TriggerEvent('chat:addSuggestion', '/phono', 'Interact with phonographs. No arguments will open the phonograph control panel.', {
 		{name = 'command', help = 'play|pause|stop|status|songs'},
 		{name = 'url', help = 'URL or preset name of music to play. Use "random" to play a random preset.'},
@@ -686,11 +669,11 @@ CreateThread(function()
 	})
 end)
 
-CreateThread(function()
+Citizen.CreateThread(function()
 	while true do
-		Wait(0)
-
 		local ped, listenPos, viewerPos, viewerFov = GetListenerAndViewerInfo()
+
+		local canWait = true
 
 		for handle, info in pairs(Phonographs) do
 			local object
@@ -738,6 +721,8 @@ CreateThread(function()
 					screenY = screenY,
 					maxDistance = Config.MaxDistance
 				})
+
+				canWait = false
 			else
 				SendNUIMessage({
 					type = 'update',
@@ -764,10 +749,12 @@ CreateThread(function()
 				})
 			end
 		end
+
+		Citizen.Wait(canWait and 1000 or 0)
 	end
 end)
 
-CreateThread(function()
+Citizen.CreateThread(function()
 	while true do
 		local myPos = GetEntityCoords(PlayerPedId())
 
@@ -788,6 +775,6 @@ CreateThread(function()
 			end
 		end
 
-		Wait(1000)
+		Citizen.Wait(1000)
 	end
 end)

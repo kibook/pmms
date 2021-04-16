@@ -743,11 +743,11 @@ RegisterCommand('phonoctl', function(source, args, raw)
 	end
 end, true)
 
-CreateThread(function()
+Citizen.CreateThread(function()
 	StartDefaultPhonographs()
 
 	while true do
-		Wait(500)
+		Citizen.Wait(500)
 		SyncPhonographs()
 	end
 end)

@@ -15,23 +15,41 @@ RegisterNetEvent('phonograph:toggleStatus')
 RegisterNetEvent('phonograph:error')
 RegisterNetEvent('phonograph:init')
 
-function GetNearbyObjects(coords)
-	local itemset = CreateItemset(true)
-	local size = Citizen.InvokeNative(0x59B57C4B06531E1E, coords, Config.MaxDistance, itemset, 3, Citizen.ResultAsInteger())
-
-	local objects = {}
-
-	if size > 0 then
-		for i = 0, size - 1 do
-			table.insert(objects, GetIndexedItemInItemset(i, itemset))
+local entityEnumerator = {
+	__gc = function(enum)
+		if enum.destructor and enum.handle then
+			enum.destructor(enum.handle)
 		end
+		enum.destructor = nil
+		enum.handle = nil
 	end
+}
 
-	if IsItemsetValid(itemset) then
-		DestroyItemset(itemset)
-	end
+function EnumerateEntities(firstFunc, nextFunc, endFunc)
+	return coroutine.wrap(function()
+		local iter, id = firstFunc()
 
-	return objects
+		if not id or id == 0 then
+			endFunc(iter)
+			return
+		end
+
+		local enum = {handle = iter, destructor = endFunc}
+		setmetatable(enum, entityEnumerator)
+
+		local next = true
+		repeat
+			coroutine.yield(id)
+			next, id = nextFunc(iter)
+		until not next
+
+		enum.destructor, enum.handle = nil, nil
+		endFunc(iter)
+	end)
+end
+
+function EnumerateObjects()
+	return EnumerateEntities(FindFirstObject, FindNextObject, EndFindObject)
 end
 
 function IsPhonograph(object)
@@ -60,8 +78,8 @@ function FindHandle(object)
 	return nil
 end
 
-function ForEachPhonograph(pos, func)
-	for _, object in ipairs(GetNearbyObjects(pos)) do
+function ForEachPhonograph(func)
+	for object in EnumerateObjects() do
 		if IsPhonograph(object) then
 			func(object)
 		end
@@ -76,7 +94,7 @@ function GetClosestPhonographObject(centre, radius, listenerPos)
 	local min
 	local closest
 
-	ForEachPhonograph(listenerPos or centre, function(object)
+	ForEachPhonograph(function(object)
 		local coords = GetEntityCoords(object)
 		local distance = #(centre - coords)
 
@@ -259,7 +277,7 @@ function UpdateUi(fullControls, anyUrl)
 	local usablePhonographs = {}
 
 	if UiIsOpen then
-		ForEachPhonograph(pos, function(object)
+		ForEachPhonograph(function(object)
 			local phonoPos = GetEntityCoords(object)
 			local clHandle = GetHandle(object)
 

@@ -103,6 +103,7 @@ Config.DefaultPhonographs = {
 		title = 'Example Song',
 		volume = 100,
 		offset = 0,
+		loop = false,
 		filter = true,
 		locked = false,
 		video = false,

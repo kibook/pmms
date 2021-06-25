@@ -1,6 +1,6 @@
-# Synchronized music player
+# FiveM/RedM Synchronized music player
 
-Allows players to play music from a phonograph object.
+Allows players to play music from a phonograph or radio object.
 
 # Features
 
@@ -12,7 +12,7 @@ Allows players to play music from a phonograph object.
 
 - Dynamic sound attenuation based on whether the player and phonograph are in the same interior room.
 
-- Optional filter can be applied to any audio.
+- Optional phonograph/radio filter can be applied to any audio.
 
 - Show video on a screen displayed above the phonograph.
 

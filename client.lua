@@ -314,7 +314,7 @@ function UpdateUi(fullControls, anyUrl)
 end
 
 function CreatePhonograph(phonograph)
-	local model = GetHashKey('p_phonograph01x')
+	local model = isRDR and `p_phonograph01x` or `prop_radio_01`
 
 	RequestModel(model)
 
@@ -322,7 +322,7 @@ function CreatePhonograph(phonograph)
 		Citizen.Wait(0)
 	end
 
-	phonograph.handle = CreateObjectNoOffset(GetHashKey('p_phonograph01x'), phonograph.x, phonograph.y, phonograph.z, false, false, false, false)
+	phonograph.handle = CreateObjectNoOffset(model, phonograph.x, phonograph.y, phonograph.z, false, false, false, false)
 
 	SetModelAsNoLongerNeeded(model)
 

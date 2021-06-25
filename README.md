@@ -1,4 +1,4 @@
-# RedM synchronized music player
+# Synchronized music player
 
 Allows players to play music from a phonograph object.
 
@@ -12,7 +12,7 @@ Allows players to play music from a phonograph object.
 
 - Dynamic sound attenuation based on whether the player and phonograph are in the same interior room.
 
-- Optional "phonograph" filter can be applied to any audio.
+- Optional filter can be applied to any audio.
 
 - Show video on a screen displayed above the phonograph.
 

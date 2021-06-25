@@ -6,6 +6,8 @@ const maxVolumeFactor = 4.0;
 
 const maxTimeDifference = 2;
 
+var isRDR = true;
+
 function sendMessage(name, params) {
 	return fetch('https://' + GetParentResourceName() + '/' + name, {
 		method: 'POST',
@@ -82,6 +84,52 @@ function applyPhonographFilter(player) {
 	player.addEventListener('seeked', event => {
 		noise.currentTime = player.currentTime;
 	});
+}
+
+function applyRadioFilter(player) {
+	var context = new (window.AudioContext || window.webkitAudioContext)();
+
+	var source;
+
+	if (player.youTubeApi) {
+		var html5Player = player.youTubeApi.getIframe().contentWindow.document.querySelector('.html5-main-video');
+
+		source = context.createMediaElementSource(html5Player);
+	} else if (player.hlsPlayer) {
+		source = context.createMediaElementSource(player.hlsPlayer.media);
+	} else if (player.originalNode) {
+		source = context.createMediaElementSource(player.originalNode);
+	} else {
+		source = context.createMediaElementSource(player);
+	}
+
+	if (source) {
+		var splitter = context.createChannelSplitter(2);
+		var merger = context.createChannelMerger(2);
+
+		var gainNode = context.createGain();
+		gainNode.gain.value = 0.5;
+
+		var lowpass = context.createBiquadFilter();
+		lowpass.type = 'lowpass';
+		lowpass.frequency.value = 5000;
+		lowpass.gain.value = -1;
+
+		var highpass = context.createBiquadFilter();
+		highpass.type = 'highpass';
+		highpass.frequency.value = 200;
+		highpass.gain.value = -1;
+
+		source.connect(splitter);
+		splitter.connect(merger, 0, 0);
+		splitter.connect(merger, 1, 0);
+		splitter.connect(merger, 0, 1);
+		splitter.connect(merger, 1, 1);
+		merger.connect(gainNode);
+		gainNode.connect(lowpass);
+		lowpass.connect(highpass);
+		highpass.connect(context.destination);
+	}
 }
 
 function showLoadingIcon() {
@@ -185,7 +233,11 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 
 			media.addEventListener('playing', () => {
 				if (filter && !media.phono.filterAdded) {
-					applyPhonographFilter(media);
+					if (isRDR) {
+						applyPhonographFilter(media);
+					} else {
+						applyRadioFilter(media);
+					}
 					media.phono.filterAdded = true;
 				}
 			});
@@ -1030,7 +1082,9 @@ window.addEventListener('message', event => {
 });
 
 window.addEventListener('load', () => {
-	sendMessage('startup', {});
+	sendMessage('startup', {}).then(resp => resp.json()).then(resp => {
+		isRDR = resp.isRDR;
+	});
 
 	document.getElementById('close-ui').addEventListener('click', function(event) {
 		hideUi();

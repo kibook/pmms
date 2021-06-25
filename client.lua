@@ -6,6 +6,8 @@ local BaseVolume = 100
 local StatusIsShown = false
 local UiIsOpen = false
 
+local isRDR = not TerraingridActivate
+
 RegisterNetEvent('phonograph:sync')
 RegisterNetEvent('phonograph:start')
 RegisterNetEvent('phonograph:play')
@@ -53,7 +55,7 @@ function EnumerateObjects()
 end
 
 function IsPhonograph(object)
-	return GetEntityModel(object) == GetHashKey('p_phonograph01x')
+	return GetEntityModel(object) == (isRDR and `p_phonograph01x` or `prop_radio_01`)
 end
 
 function GetHandle(object)
@@ -378,7 +380,11 @@ function DisableVideo(handle)
 end
 
 function IsPauseMenuOrMapActive()
-	return IsPauseMenuActive() or IsAppActive(`MAP`) ~= 0
+	if isRDR then
+		return IsPauseMenuActive() or IsAppActive(`MAP`) ~= 0
+	else
+		return IsPauseMenuActive()
+	end
 end
 
 function CopyPhonograph(oldHandle, newHandle)
@@ -445,7 +451,7 @@ end)
 
 RegisterNUICallback('startup', function(data, cb)
 	LoadSettings()
-	cb({})
+	cb({isRDR = isRDR})
 end)
 
 RegisterNUICallback('init', function(data, cb)

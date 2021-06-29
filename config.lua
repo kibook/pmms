@@ -54,8 +54,8 @@ Config.Presets = {
 --
 -- Mandatory properties:
 --
--- x, y, z
--- 	The position of the phonograph.
+-- position
+-- 	A vector3 giving the position of the phonograph.
 --
 -- Optional properties:
 --
@@ -72,8 +72,8 @@ Config.Presets = {
 -- model
 --  The object model to use for the phonograph, if one is to be spawned.
 --
--- pitch, roll, yaw
--- 	The rotation of the phonograph, if one is to be spawned.
+-- rotation
+--  A vector3 giving the rotation of the phonograph, if one is to be spawned.
 --
 -- invisible
 -- 	If true, the phonograph will be made invisible.
@@ -117,15 +117,11 @@ Config.Presets = {
 Config.DefaultPhonographs = {
 	--[[
 	{
-		x = 2071.527,
-		y = -850.825,
-		z = 43.399,
+		position = vector3(2071.527, -850.825, 43.399),
 		label = "Example Phonograph",
 		spawn = true,
 		model = `p_phonograph01x`,
-		pitch = 0.0,
-		roll = 0.0,
-		yaw = -76.858,
+		rotation = vector3(0.0, 0.0, -76.858),
 		invisible = false,
 		url = 'https://example.com/example.ogg',
 		title = 'Example Song',

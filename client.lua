@@ -328,11 +328,11 @@ function CreatePhonograph(phonograph)
 		Citizen.Wait(0)
 	end
 
-	phonograph.handle = CreateObjectNoOffset(model, phonograph.x, phonograph.y, phonograph.z, false, false, false, false)
+	phonograph.handle = CreateObjectNoOffset(model, phonograph.position, false, false, false, false)
 
 	SetModelAsNoLongerNeeded(model)
 
-	SetEntityRotation(phonograph.handle, phonograph.pitch, phonograph.roll, phonograph.yaw, 2)
+	SetEntityRotation(phonograph.handle, phonograph.rotation, 2)
 
 	if phonograph.invisible then
 		SetEntityVisible(phonograph.handle, false)
@@ -790,8 +790,7 @@ Citizen.CreateThread(function()
 
 		for _, phonograph in ipairs(Config.DefaultPhonographs) do
 			if phonograph.spawn then
-				local phonoPos = vector3(phonograph.x, phonograph.y, phonograph.z)
-				local nearby = #(myPos - phonoPos) <= Config.DefaultPhonographSpawnDistance
+				local nearby = #(myPos - phonograph.position) <= Config.DefaultPhonographSpawnDistance
 
 				if phonograph.handle and not DoesEntityExist(phonograph.handle) then
 					phonograph.handle = nil

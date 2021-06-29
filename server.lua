@@ -220,9 +220,9 @@ function StartDefaultPhonographs()
 	for _, phonograph in ipairs(Config.DefaultPhonographs) do
 		if phonograph.url then
 			StartPhonographByCoords(
-				phonograph.x,
-				phonograph.y,
-				phonograph.z,
+				phonograph.position.x,
+				phonograph.position.y,
+				phonograph.position.z,
 				phonograph.url,
 				phonograph.title,
 				phonograph.volume,
@@ -272,9 +272,7 @@ end
 
 function IsLockedDefaultPhonograph(handle)
 	for _, phonograph in ipairs(Config.DefaultPhonographs) do
-		local coords = vector3(phonograph.x, phonograph.y, phonograph.z)
-
-		if handle == GetHandleFromCoords(coords) and phonograph.locked then
+		if handle == GetHandleFromCoords(phonograph.position) and phonograph.locked then
 			return true
 		end
 	end

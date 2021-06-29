@@ -6,8 +6,6 @@ local BaseVolume = 100
 local StatusIsShown = false
 local UiIsOpen = false
 
-local isRDR = not TerraingridActivate
-
 RegisterNetEvent('phonograph:sync')
 RegisterNetEvent('phonograph:start')
 RegisterNetEvent('phonograph:play')
@@ -55,7 +53,7 @@ function EnumerateObjects()
 end
 
 function IsPhonograph(object)
-	return GetEntityModel(object) == (isRDR and `p_phonograph01x` or `prop_radio_01`)
+	return Config.models[GetEntityModel(object)] ~= nil
 end
 
 function GetHandle(object)
@@ -237,6 +235,14 @@ function GetLocalPhonograph(coords, listenerPos)
 	end
 end
 
+local function getObjectLabel(handle, object)
+	if PhonographLabels[handle] then
+		return PhonographLabels[handle]
+	else
+		return string.format("%x", handle) .. " (" .. Config.models[GetEntityModel(object)] .. ")"
+	end
+end
+
 function UpdateUi(fullControls, anyUrl)
 	local pos = GetEntityCoords(PlayerPedId())
 
@@ -260,7 +266,7 @@ function UpdateUi(fullControls, anyUrl)
 					handle = handle,
 					info = info,
 					distance = distance,
-					label = PhonographLabels[object]
+					label = getObjectLabel(handle, object)
 				})
 			end
 		else
@@ -291,7 +297,7 @@ function UpdateUi(fullControls, anyUrl)
 					table.insert(usablePhonographs, {
 						handle = clHandle,
 						distance = distance,
-						label = PhonographLabels[clHandle],
+						label = getObjectLabel(clHandle, object),
 						active = Phonographs[svHandle] ~= nil
 					})
 				end
@@ -314,7 +320,7 @@ function UpdateUi(fullControls, anyUrl)
 end
 
 function CreatePhonograph(phonograph)
-	local model = isRDR and `p_phonograph01x` or `prop_radio_01`
+	local model = phonograph.model or Config.defaultModel
 
 	RequestModel(model)
 
@@ -380,7 +386,7 @@ function DisableVideo(handle)
 end
 
 function IsPauseMenuOrMapActive()
-	if isRDR then
+	if Config.isRDR then
 		return IsPauseMenuActive() or IsAppActive(`MAP`) ~= 0
 	else
 		return IsPauseMenuActive()
@@ -451,7 +457,7 @@ end)
 
 RegisterNUICallback('startup', function(data, cb)
 	LoadSettings()
-	cb({isRDR = isRDR})
+	cb({isRDR = Config.isRDR})
 end)
 
 RegisterNUICallback('init', function(data, cb)

@@ -1,7 +1,30 @@
 Config = {}
 
+-- Whether the game is RDR2 or GTA V
+Config.isRDR = not TerraingridActivate
+
 -- Max distance at which to interact with phonographs with the /phono command.
 Config.MaxDistance = 30.0
+
+-- Object models that music can be played on, with a label for the type of object it is.
+Config.models = {
+	[`p_phonograph01x`]  = "Phonograph",
+	[`prop_radio_01`] = "Radio",
+	[`prop_boombox_01`] = "Boombox",
+	[`bkr_prop_clubhouse_jukebox_01a`] = "Jukebox",
+	[`bkr_prop_clubhouse_jukebox_01b`] = "Jukebox",
+	[`bkr_prop_clubhouse_jukebox_02a`] = "Jukebox",
+	[`ch_prop_arcade_jukebox_01a`] = "Jukebox",
+	[`prop_50s_jukebox`] = "Jukebox",
+	[`prop_jukebox_01`] = "Jukebox",
+	[`prop_jukebox_01`] = "Jukebox",
+	[`v_res_j_radio`] = "Radio",
+	[`v_res_fa_radioalrm`] = "Alarm Clock",
+	[`sm_prop_smug_radio_01`] = "Radio",
+}
+
+-- The default model to use for default phonographs if none is specified.
+Config.defaultModel = Config.isRDR and `p_phonograph01x` or `prop_boombox_01`
 
 -- Pre-defined music URLs.
 --
@@ -40,11 +63,14 @@ Config.Presets = {
 -- 	A name to use for the phonograph in the UI instead of the handle.
 --
 -- spawn
--- 	If true, a new phonograph will be spawned. The pitch, roll and yaw
+-- 	If true, a new phonograph will be spawned. The model, pitch, roll and yaw
 -- 	properties must be given.
 --
 -- 	If false or omitted, an existing phonograph is expected to exist at the
 -- 	x, y and z specified.
+--
+-- model
+--  The object model to use for the phonograph, if one is to be spawned.
 --
 -- pitch, roll, yaw
 -- 	The rotation of the phonograph, if one is to be spawned.
@@ -89,12 +115,14 @@ Config.Presets = {
 -- 	The default size of the video screen above the phonograph.
 --
 Config.DefaultPhonographs = {
-	--[[{
+	--[[
+	{
 		x = 2071.527,
 		y = -850.825,
 		z = 43.399,
 		label = "Example Phonograph",
 		spawn = true,
+		model = `p_phonograph01x`,
 		pitch = 0.0,
 		roll = 0.0,
 		yaw = -76.858,
@@ -108,7 +136,8 @@ Config.DefaultPhonographs = {
 		locked = false,
 		video = false,
 		videoSize = 50
-	}]]
+	}
+	]]
 }
 
 -- Distance at which default phonographs spawn/despawn

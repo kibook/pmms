@@ -1,6 +1,6 @@
-# FiveM/RedM Synchronized music player
+# FiveM/RedM synchronized music player
 
-Allows players to play music from a phonograph or radio object.
+Allows players to play music from objects such as phonographs or radios.
 
 # Features
 
@@ -8,17 +8,17 @@ Allows players to play music from a phonograph or radio object.
 
 - Synchronized between players.
 
-- Multiple phonographs can play different songs at the same time.
+- Multiple objects can play different songs at the same time.
 
-- Dynamic sound attenuation based on whether the player and phonograph are in the same interior room.
+- Dynamic sound attenuation based on whether the player and object are in the same interior room.
 
 - Optional phonograph/radio filter can be applied to any audio.
 
-- Show video on a screen displayed above the phonograph.
+- Show video on a screen displayed above the object.
 
-- Permissions system and ability to lock phonographs.
+- Permissions system and ability to lock objects so only certain players can control them.
 
-- Configure default phonographs which are spawned and play music automatically.
+- Configure default objects which are spawned and play music automatically.
 
 # Examples
 

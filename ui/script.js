@@ -193,7 +193,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 
 				var duration;
 
-				if (media.duration == NaN || media.duration == Infinity || media.hlsPlayer) {
+				if (media.duration == NaN || media.duration == Infinity || media.hlsPlayer || (media.duration == 0 && media.youTubeApi)) {
 					offset = 0;
 					duration = false;
 					loop = false;

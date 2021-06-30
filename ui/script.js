@@ -365,10 +365,12 @@ function update(data) {
 					player.volume = 0;
 				}
 
-				var currentTime = data.offset % player.duration;
+				if (data.duration) {
+					var currentTime = data.offset % player.duration;
 
-				if (Math.abs(currentTime - player.currentTime) > maxTimeDifference) {
-					player.currentTime = currentTime;
+					if (Math.abs(currentTime - player.currentTime) > maxTimeDifference) {
+						player.currentTime = currentTime;
+					}
 				}
 
 				if (player.paused) {
@@ -701,7 +703,7 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 		pauseResumeButton.addEventListener('click', event => {
 			pause(phonograph.handle);
 		});
-		if (phonograph.info.locked && !fullControls) {
+		if ((phonograph.info.locked && !fullControls) || !phonograph.info.duration) {
 			pauseResumeButton.disabled = true;
 		}
 

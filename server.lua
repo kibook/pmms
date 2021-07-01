@@ -433,6 +433,11 @@ AddEventHandler('phonograph:pause', function(handle)
 		return
 	end
 
+	if not Phonographs[handle].duration then
+		ErrorMessage(source, 'You cannot pause live streams.')
+		return
+	end
+
 	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
 		ErrorMessage(source, 'You do not have permission to pause or resume phonographs')
 		return
@@ -492,6 +497,11 @@ end)
 
 AddEventHandler('phonograph:setStartTime', function(handle, time)
 	if not Phonographs[handle] then
+		return
+	end
+
+	if not Phonographs[handle].duration then
+		ErrorMessage(source, 'You cannot seek on live streams')
 		return
 	end
 

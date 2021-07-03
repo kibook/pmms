@@ -5,6 +5,7 @@ local PhonographLabels = {}
 local BaseVolume = 50
 local StatusIsShown = false
 local UiIsOpen = false
+local syncIsEnabled = true
 
 RegisterNetEvent('phonograph:sync')
 RegisterNetEvent('phonograph:start')
@@ -15,6 +16,7 @@ RegisterNetEvent('phonograph:toggleStatus')
 RegisterNetEvent('phonograph:error')
 RegisterNetEvent('phonograph:init')
 RegisterNetEvent('phonograph:setModel')
+RegisterNetEvent('phonograph:reset')
 
 local entityEnumerator = {
 	__gc = function(enum)
@@ -672,10 +674,12 @@ RegisterNUICallback('removeFromQueue', function(data, cb)
 end)
 
 AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
-	Phonographs = phonographs
+	if syncIsEnabled then
+		Phonographs = phonographs
 
-	if UiIsOpen or StatusIsShown then
-		UpdateUi(fullControls, anyUrl)
+		if UiIsOpen or StatusIsShown then
+			UpdateUi(fullControls, anyUrl)
+		end
 	end
 end)
 
@@ -747,6 +751,20 @@ AddEventHandler('phonograph:setModel', function(model, label, renderTarget)
 		label = label,
 		renderTarget = renderTarget
 	}
+end)
+
+AddEventHandler('phonograph:reset', function()
+	print("Resetting...")
+
+	syncIsEnabled = false
+
+	Phonographs = {}
+	LocalPhonographs = {}
+	PhonographLabels = {}
+
+	DuiBrowser:resetPool()
+
+	syncIsEnabled = true
 end)
 
 AddEventHandler('onResourceStop', function(resource)

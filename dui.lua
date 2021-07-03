@@ -148,6 +148,12 @@ function DuiBrowser:isAvailable()
 	return IsDuiAvailable(self.duiObject)
 end
 
+function DuiBrowser:resetPool()
+	for handle, duiBrowser in pairs(DuiBrowser.pool) do
+		duiBrowser:delete()
+	end
+end
+
 function DuiBrowser:delete()
 	self:renderFrame(false)
 	DuiBrowser.renderTargets[self.renderTarget].disabled = true

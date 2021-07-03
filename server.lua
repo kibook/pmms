@@ -759,6 +759,10 @@ RegisterCommand('phonoadd', function(source, args, raw)
 	TriggerClientEvent('phonograph:setModel', source, GetHashKey(model), label, renderTarget)
 end, true)
 
+RegisterCommand("phonofix", function(source, args, raw)
+	TriggerClientEvent("phonograph:reset", source)
+end, true)
+
 Citizen.CreateThread(function()
 	StartDefaultPhonographs()
 

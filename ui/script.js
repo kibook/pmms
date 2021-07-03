@@ -857,7 +857,6 @@ function updateUi(data) {
 		videoSizeInput.disabled = true;
 		mutedInput.disabled = true;
 		playButton.disabled = true;
-		urlInput.value = '';
 	} else {
 		usablePhonographs.forEach(phonograph => {
 			var option = document.createElement('option');

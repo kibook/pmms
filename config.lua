@@ -394,6 +394,10 @@ Config.models = {
 		label = "Screen",
 		renderTarget = "prop_x17dlc_monitor_wall_01a"
 	},
+	[`ch_prop_ch_tv_rt_01a`] = {
+		label = "TV",
+		renderTarget = "ch_tv_rt_01a"
+	},
 }
 
 -- The default model to use for default phonographs if none is specified.

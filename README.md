@@ -8,30 +8,31 @@ Allows players to play music from objects such as phonographs or radios.
 
 - Synchronized between players.
 
-- Multiple objects can play different songs at the same time.
+- Multiple objects can play different things at the same time.
 
 - Dynamic sound attenuation based on whether the player and object are in the same interior room.
 
 - Optional phonograph/radio filter can be applied to any audio.
 
-- Show video on a screen displayed above the object.
+- Play video on a TV screen with DUI (FiveM only), or on a screen displayed above the object.
 
 - Permissions system and ability to lock objects so only certain players can control them.
 
-- Configure default objects which are spawned and play music automatically.
+- Configure default objects which are spawned and play music/video automatically.
 
 # Examples
 
 | | | |
 |-|-|-|
 |[![Attenuation Example](https://i.imgur.com/BTkglVYm.jpg)](https://imgur.com/BTkglVY)| [![Phonograph Filter](https://i.imgur.com/L8sWpOCm.jpg)](https://imgur.com/L8sWpOC) | [![Video](https://i.imgur.com/2jRYlSem.jpg)](https://imgur.com/2jRYlSe) |
+|[![FiveM basic audio](https://i.imgur.com/CofS0VPm.jpg)](https://imgur.com/CofS0VP)|[![FiveM DUI example](https://i.imgur.com/ndZwPvDm.jpg)](https://imgur.com/ndZwPvD)|[![DUI render target proximity](https://i.imgur.com/m2KddI6m.jpg)](https://imgur.com/m2KddI6)|
 
 # Commands
 
 | Command                                                                          | Description                                     |
 |----------------------------------------------------------------------------------|-------------------------------------------------|
 | `/phono`                                                                         | Open the phonograph control panel.              |
-| `/phono play [url] [volume] [time] [loop] [filter] [lock] [video] [size] [mute]` | Play music on the nearest phonograph.           |
+| `/phono play [url] [time] [loop] [filter] [lock] [video] [size] [mute]`          | Play music on the nearest phonograph.           |
 | `/phono pause`                                                                   | Pause playback on the nearest phonograph.       |
 | `/phono stop`                                                                    | Stop playback on the nearest phonograph.        |
 | `/phono status`                                                                  | Show the status of the nearest phonograph.      |

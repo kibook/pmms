@@ -533,3 +533,9 @@ Config.dui.screenWidth = 1280
 
 -- The screen height of the DUI browser.
 Config.dui.screenHeight = 720
+
+-- Prefix for commands
+Config.commandPrefix = "phono"
+
+-- Separator between prefix and command name
+Config.commandSeparator = "_"

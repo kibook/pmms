@@ -17,6 +17,12 @@ RegisterNetEvent('phonograph:error')
 RegisterNetEvent('phonograph:init')
 RegisterNetEvent('phonograph:setModel')
 RegisterNetEvent('phonograph:reset')
+RegisterNetEvent("phonograph:startClosestPhonograph")
+RegisterNetEvent("phonograph:pauseClosestPhonograph")
+RegisterNetEvent("phonograph:stopClosestPhonograph")
+RegisterNetEvent("phonograph:listPresets")
+RegisterNetEvent("phonograph:setBaseVolume")
+RegisterNetEvent("phonograph:showBaseVolume")
 
 local entityEnumerator = {
 	__gc = function(enum)
@@ -477,54 +483,6 @@ local function sendMessage(handle, coords, data)
 	end
 end
 
-RegisterCommand('phono', function(source, args, raw)
-	if #args > 0 then
-		local command = args[1]
-
-		if command == 'play' then
-			if #args > 1 then
-				local url = args[2]
-				local offset = args[3]
-				local loop = args[4] == '1'
-				local filter = args[5] ~= '0'
-				local locked = args[6] == '1'
-				local video = args[7] == '1'
-				local videoSize = tonumber(args[8]) or 50
-				local muted = args[9] == '1'
-
-				StartClosestPhonograph(url, 100, offset, loop, filter, locked, video, videoSize, muted)
-			else
-				PauseClosestPhonograph()
-			end
-		elseif command == 'pause' then
-			PauseClosestPhonograph()
-		elseif command == 'stop' then
-			StopClosestPhonograph()
-		elseif command == 'status' then
-			TriggerServerEvent('phonograph:toggleStatus')
-		elseif command == 'songs' then
-			ListPresets()
-		end
-	else
-		TriggerServerEvent('phonograph:showControls')
-	end
-end)
-
-RegisterCommand('phonovol', function(source, args, raw)
-	if #args < 1 then
-		TriggerEvent('chat:addMessage', {
-			color = {255, 255, 128},
-			args = {'Volume', BaseVolume}
-		})
-	else
-		local volume = tonumber(args[1])
-
-		if volume then
-			SetBaseVolume(volume)
-		end
-	end
-end)
-
 RegisterNUICallback('startup', function(data, cb)
 	LoadSettings()
 	cb({isRDR = Config.isRDR})
@@ -767,6 +725,33 @@ AddEventHandler('phonograph:reset', function()
 	syncIsEnabled = true
 end)
 
+AddEventHandler("phonograph:startClosestPhonograph", function(url, offset, loop, filter, locked, video, videoSize, muted)
+	StartClosestPhonograph(url, 100, offset, loop, filter, locked, video, videoSize, muted)
+end)
+
+AddEventHandler("phonograph:pauseClosestPhonograph", function()
+	PauseClosestPhonograph()
+end)
+
+AddEventHandler("phonograph:stopClosestPhonograph", function()
+	StopClosestPhonograph()
+end)
+
+AddEventHandler("phonograph:listPresets", function()
+	ListPresets()
+end)
+
+AddEventHandler("phonograph:showBaseVolume", function()
+	TriggerEvent('chat:addMessage', {
+		color = {255, 255, 128},
+		args = {'Volume', BaseVolume}
+	})
+end)
+
+AddEventHandler("phonograph:setBaseVolume", function(volume)
+	SetBaseVolume(volume)
+end)
+
 AddEventHandler('onResourceStop', function(resource)
 	if GetCurrentResourceName() ~= resource then
 		return
@@ -784,21 +769,40 @@ AddEventHandler('onResourceStop', function(resource)
 end)
 
 Citizen.CreateThread(function()
-	TriggerEvent('chat:addSuggestion', '/phono', 'Interact with phonographs. No arguments will open the phonograph control panel.', {
-		{name = 'command', help = 'play|pause|stop|status|songs'},
-		{name = 'url', help = 'URL or preset name of music to play. Use "random" to play a random preset.'},
-		{name = 'time', help = 'Time in seconds to start playing at.'},
-		{name = 'loop', help = '0 = play once, 1 = loop'},
-		{name = 'filter', help = '0 = normal audio, 1 = add phonograph filter'},
-		{name = 'lock', help = '0 = unlocked, 1 = locked'},
-		{name = 'video', help = '0 = hide video, 1 = show video'},
-		{name = 'size', help = 'Video size'},
-		{name = 'mute', help = '0 = unmuted, 1 = muted'}
+	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix, "Open the media player control panel.")
+
+	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "play", "Play something on the closest media player.", {
+		{name = "url", help = "URL or preset name of music to play. Use \"random\" to play a random preset."},
+		{name = "time", help = "Time to start playing at. Specify in seconds (e.g., 120) or hh:mm:ss (e.g., 00:02:00)."},
+		{name = "loop", help = "0 = play once, 1 = loop"},
+		{name = "filter", help = "0 = no filter, 1 = add immersive filter"},
+		{name = "lock", help = "0 = unlocked, 1 = locked"},
+		{name = "video", help = "0 = hide video, 1 = show video"},
+		{name = "size", help = "Video size"},
+		{name = "mute", help = "0 = unmuted, 1 = muted"}
 	})
 
-	TriggerEvent('chat:addSuggestion', '/phonovol', 'Adjust the base volume of all phonographs', {
-		{name = 'volume', help = '0-100'}
+	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "pause", "Pause the closest media player.")
+
+	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "stop", "Stop the closest media player.")
+
+	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "status", "Show/hide the status of the closest media player.")
+
+	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "presets", "List available presets.")
+
+	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "vol", "Adjust the base volume of all media players.", {
+		{name = "volume", help = "0-100"}
 	})
+
+	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "add", "Add or modify a media player model preset.", {
+		{name = "model", help = "The name of the object model"},
+		{name = "label", help = "The label that appears for this model in the UI"},
+		{name = "renderTarget", help = "An optional name of a render target for this model"}
+	})
+
+	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "fix", "Reset all media players to fix issues.")
+
+	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "ctl", "Advanced media player control.")
 end)
 
 Citizen.CreateThread(function()

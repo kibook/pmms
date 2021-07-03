@@ -706,60 +706,109 @@ AddEventHandler('phonograph:removeFromQueue', function(handle, id)
 	RemoveFromQueue(handle, id)
 end)
 
-RegisterCommand('phonoctl', function(source, args, raw)
+RegisterCommand(Config.commandPrefix, function(source, args, raw)
+	TriggerClientEvent('phonograph:showControls', source)
+end, true)
+
+RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "play", function(source, args, raw)
+	if #args > 0 then
+		local url = args[1]
+		local offset = args[2]
+		local loop = args[3] == "1"
+		local filter = args[4] ~= "0"
+		local locked = args[5] == "1"
+		local video = args[6] == "1"
+		local videoSize = tonumber(args[7]) or 50
+		local muted = args[8] == "1"
+
+		TriggerClientEvent("phonograph:startClosestPhonograph", source, url, offset, loop, filter, locked, video, videoSize, muted)
+	else
+		TriggerClientEvent("phonograph:pauseClosestPhonograph", source)
+	end
+end, true)
+
+RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "pause", function(source, args, raw)
+	TriggerClientEvent("phonograph:pauseClosestPhonograph", source)
+end, true)
+
+RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "stop", function(source, args, raw)
+	TriggerClientEvent("phonograph:stopClosestPhonograph", source)
+end, true)
+
+RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "status", function(source, args, raw)
+	TriggerClientEvent("phonograph:toggleStatus", source)
+end, true)
+
+RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "presets", function(source, args, raw)
+	TriggerClientEvent("phonograph:listPresets", source)
+end, true)
+
+RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "vol", function(source, args, raw)
 	if #args < 1 then
-		print('Usage:')
-		print('  phonoctl list')
-		print('  phonoctl lock <handle>')
-		print('  phonoctl unlock <handle>')
-		print('  phonoctl mute <handle>')
-		print('  phonoctl unmute <handle>')
-		print('  phonoctl loop <handle> <on|off>')
-		print('  phonoctl next <handle>')
-		print('  phonoctl pause <handle>')
-		print('  phonoctl stop <handle>')
-	elseif args[1] == 'list' then
+		TriggerClientEvent("phonograph:showBaseVolume", source)
+	else
+		local volume = tonumber(args[1])
+
+		if volume then
+			TriggerClientEvent("phonograph:setBaseVolume", source, volume)
+		end
+	end
+end, true)
+
+RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", function(source, args, raw)
+	if #args < 1 then
+		print("Usage:")
+		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl list")
+		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl lock <handle>")
+		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl unlock <handle>")
+		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl mute <handle>")
+		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl unmute <handle>")
+		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl loop <handle> <on|off>")
+		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl next <handle>")
+		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl pause <handle>")
+		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl stop <handle>")
+	elseif args[1] == "list" then
 		for handle, info in pairs(Phonographs) do
-			print(string.format('[%x] %s %d %d/%s %s %s %s %s',
+			print(string.format("[%x] %s %d %d/%s %s %s %s %s",
 				handle,
 				info.title,
 				info.volume,
 				info.offset,
-				info.duration or 'inf',
-				info.loop and 'loop' or 'noloop',
-				info.locked and 'locked' or 'unlocked',
-				info.video and 'video' or 'audio',
-				info.muted and 'muted' or 'unmuted',
-				info.paused and 'paused' or 'playing'))
+				info.duration or "inf",
+				info.loop and "loop" or "noloop",
+				info.locked and "locked" or "unlocked",
+				info.video and "video" or "audio",
+				info.muted and "muted" or "unmuted",
+				info.paused and "paused" or "playing"))
 		end
-	elseif args[1] == 'lock' then
+	elseif args[1] == "lock" then
 		LockPhonograph(tonumber(args[2], 16))
-	elseif args[1] == 'unlock' then
+	elseif args[1] == "unlock" then
 		UnlockPhonograph(tonumber(args[2], 16))
-	elseif args[1] == 'mute' then
+	elseif args[1] == "mute" then
 		MutePhonograph(tonumber(args[2], 16))
-	elseif args[1] == 'unmute' then
+	elseif args[1] == "unmute" then
 		UnmutePhonograph(tonumber(args[2], 16))
-	elseif args[1] == 'next' then
+	elseif args[1] == "next" then
 		PlayNextInQueue(tonumber(args[2], 16))
-	elseif args[1] == 'pause' then
+	elseif args[1] == "pause" then
 		PausePhonograph(tonumber(args[2], 16))
-	elseif args[1] == 'stop' then
+	elseif args[1] == "stop" then
 		RemovePhonograph(tonumber(args[2], 16))
-	elseif args[1] == 'loop' then
-		SetPhonographLoop(tonumber(args[2], 16), args[3] == 'on')
+	elseif args[1] == "loop" then
+		SetPhonographLoop(tonumber(args[2], 16), args[3] == "on")
 	end
 end, true)
 
-RegisterCommand('phonoadd', function(source, args, raw)
+RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "add", function(source, args, raw)
 	local model = args[1]
 	local label = args[2]
 	local renderTarget = args[3]
 
-	TriggerClientEvent('phonograph:setModel', source, GetHashKey(model), label, renderTarget)
+	TriggerClientEvent("phonograph:setModel", source, GetHashKey(model), label, renderTarget)
 end, true)
 
-RegisterCommand("phonofix", function(source, args, raw)
+RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "fix", function(source, args, raw)
 	TriggerClientEvent("phonograph:reset", source)
 end, true)
 

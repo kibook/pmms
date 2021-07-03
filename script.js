@@ -187,7 +187,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 
 				var duration;
 				
-				if (media.duration == NaN || media.duration == Infinity || media.duration == 0) {
+				if (media.duration == NaN || media.duration == Infinity || media.duration == 0 || media.hlsPlayer) {
 					offset = 0;
 					duration = false;
 					loop = false;

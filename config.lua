@@ -6,18 +6,17 @@ Config.isRDR = not TerraingridActivate
 -- Max distance at which to interact with phonographs with the /phono command.
 Config.maxDistance = 40.0
 
---[[
-Object models that media can be played on.
-
-Optional properties:
-
-	label
-		The label to use for this object in the UI.
-
-	renderTarget
-		If specified, video will be displayed on the render target with DUI,
-		rather than in a floating screen above the object.
-]]
+-- Object models that media can be played on.
+--
+-- Optional properties:
+--
+--	label
+--		The label to use for this object in the UI.
+--
+--	renderTarget
+--		If specified, video will be displayed on the render target with DUI,
+--		rather than in a floating screen above the object.
+--
 Config.models = {
 	[`p_phonograph01x`]  = {
 		label = "Phonograph"
@@ -524,6 +523,9 @@ Config.DefaultPhonographSpawnDistance = 100.0
 Config.dui = {}
 
 -- The URL for the DUI server.
+--
+-- To host your own server:
+-- 	git clone --branch gh-pages https://github.com/kibook/phonograph
 Config.dui.url = "https://kibook.github.io/phonograph"
 
 -- The screen width of the DUI browser

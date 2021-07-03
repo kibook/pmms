@@ -398,6 +398,10 @@ Config.models = {
 		label = "TV",
 		renderTarget = "ch_tv_rt_01a"
 	},
+	[`apa_mp_h_str_avunits_04`] = {
+		label = "TV",
+		renderTarget = "tvscreen"
+	},
 }
 
 -- The default model to use for default phonographs if none is specified.

@@ -528,6 +528,10 @@ RegisterNUICallback('startup', function(data, cb)
 	cb({isRDR = Config.isRDR})
 end)
 
+RegisterNUICallback("duiStartup", function(data, cb)
+	cb({isRDR = Config.isRDR})
+end)
+
 RegisterNUICallback('init', function(data, cb)
 	if NetworkDoesNetworkIdExist(data.handle) or data.coords then
 		local coords = json.decode(data.coords)

@@ -288,10 +288,6 @@ function init(data) {
 
 function play(handle) {
 	var player = getPlayer(handle);
-
-	if (player) {
-		player.currentTime = 0;
-	}
 }
 
 function pause(handle) {

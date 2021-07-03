@@ -2,7 +2,7 @@ local Phonographs = {}
 local LocalPhonographs = {}
 local PhonographLabels = {}
 
-local BaseVolume = 100
+local BaseVolume = 50
 local StatusIsShown = false
 local UiIsOpen = false
 
@@ -482,16 +482,15 @@ RegisterCommand('phono', function(source, args, raw)
 		if command == 'play' then
 			if #args > 1 then
 				local url = args[2]
-				local volume = tonumber(args[3]) or 50
-				local offset = args[4]
-				local loop = args[5] == '1'
-				local filter = args[6] ~= '0'
-				local locked = args[7] == '1'
-				local video = args[8] == '1'
-				local videoSize = tonumber(args[9]) or 50
-				local muted = args[10] == '1'
+				local offset = args[3]
+				local loop = args[4] == '1'
+				local filter = args[5] ~= '0'
+				local locked = args[6] == '1'
+				local video = args[7] == '1'
+				local videoSize = tonumber(args[8]) or 50
+				local muted = args[9] == '1'
 
-				StartClosestPhonograph(url, volume, offset, loop, filter, locked, video, videoSize, muted)
+				StartClosestPhonograph(url, 100, offset, loop, filter, locked, video, videoSize, muted)
 			else
 				PauseClosestPhonograph()
 			end
@@ -766,7 +765,6 @@ Citizen.CreateThread(function()
 	TriggerEvent('chat:addSuggestion', '/phono', 'Interact with phonographs. No arguments will open the phonograph control panel.', {
 		{name = 'command', help = 'play|pause|stop|status|songs'},
 		{name = 'url', help = 'URL or preset name of music to play. Use "random" to play a random preset.'},
-		{name = 'volume', help = 'Volume to play the music at (0-100).'},
 		{name = 'time', help = 'Time in seconds to start playing at.'},
 		{name = 'loop', help = '0 = play once, 1 = loop'},
 		{name = 'filter', help = '0 = normal audio, 1 = add phonograph filter'},

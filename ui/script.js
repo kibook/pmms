@@ -495,40 +495,6 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 	titleDiv.className = 'active-phonograph-title';
 	titleDiv.innerHTML = phonograph.info.title.substring(0, 47);
 
-	var volumeDiv = document.createElement('div');
-	volumeDiv.className = 'active-phonograph-volume';
-
-	var volumeDownButton = document.createElement('button');
-	volumeDownButton.className = 'control-button';
-	volumeDownButton.innerHTML = '<i class="fas fa-volume-down"></i>';
-	volumeDownButton.addEventListener('click', event => {
-		sendMessage('volumeDown', {
-			handle: phonograph.handle
-		});
-	});
-	if (phonograph.info.locked && !fullControls) {
-		volumeDownButton.disabled = true;
-	}
-
-	var volumeUpButton = document.createElement('button');
-	volumeUpButton.className = 'control-button';
-	volumeUpButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-	volumeUpButton.addEventListener('click', event => {
-		sendMessage('volumeUp', {
-			handle: phonograph.handle
-		});
-	});
-	if (phonograph.info.locked && !fullControls) {
-		volumeUpButton.disabled = true;
-	}
-
-	var volumeSpan = document.createElement('span');
-	volumeSpan.innerHTML = phonograph.info.volume;
-
-	volumeDiv.appendChild(volumeDownButton);
-	volumeDiv.appendChild(volumeSpan);
-	volumeDiv.appendChild(volumeUpButton);
-
 	var timeDiv = document.createElement('div');
 	timeDiv.className = 'active-phonograph-time';
 
@@ -729,7 +695,6 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 	mainDiv.appendChild(handleDiv);
 	mainDiv.appendChild(distanceDiv);
 	mainDiv.appendChild(titleDiv);
-	mainDiv.appendChild(volumeDiv);
 	mainDiv.appendChild(timeDiv);
 	mainDiv.appendChild(videoSizeDiv);
 	mainDiv.appendChild(controlsDiv);
@@ -752,9 +717,6 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 
 			var urlDiv = document.createElement('div');
 			urlDiv.innerHTML = entry.url.substring(0, 40);
-
-			var volumeDiv = document.createElement('div');
-			volumeDiv.innerHTML = entry.volume;
 
 			var offsetDiv = document.createElement('div');
 			offsetDiv.innerHTML = entry.offset;
@@ -779,7 +741,6 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 			});
 
 			queueBodyDiv.appendChild(urlDiv);
-			queueBodyDiv.appendChild(volumeDiv);
 			queueBodyDiv.appendChild(offsetDiv);
 			queueBodyDiv.appendChild(filterDiv);
 			queueBodyDiv.appendChild(videoDiv);
@@ -829,7 +790,6 @@ function updateUi(data) {
 	var usablePhonographsSelect = document.getElementById('usable-phonographs');
 	var presetSelect = document.getElementById('preset');
 	var urlInput = document.getElementById('url');
-	var volumeInput = document.getElementById('volume');
 	var offsetInput = document.getElementById('offset');
 	var loopCheckbox = document.getElementById('loop');
 	var filterCheckbox = document.getElementById('filter');
@@ -844,21 +804,21 @@ function updateUi(data) {
 
 	usablePhonographsSelect.innerHTML = '';
 
-	if (data.anyUrl) {
-		presetSelect.innerHTML = '<option value="">&#xf0c1; Custom URL</option>';
-	} else {
-		presetSelect.innerHTML = '';
-	}
-
-	if (presetValue == 'random') {
-		presetSelect.innerHTML += '<option value="random" selected>&#xf522; Random</option>';
-	} else {
-		presetSelect.innerHTML += '<option value="random">&#xf522; Random</option>';
-	}
-
 	var presetKeys = Object.keys(presets).sort();
 
 	if (presetKeys.length > 0) {
+		if (data.anyUrl) {
+			presetSelect.innerHTML = '<option value="">&#xf0c1; Custom URL</option>';
+		} else {
+			presetSelect.innerHTML = '';
+		}
+
+		if (presetValue == 'random') {
+			presetSelect.innerHTML += '<option value="random" selected>&#xf522; Random</option>';
+		} else {
+			presetSelect.innerHTML += '<option value="random">&#xf522; Random</option>';
+		}
+
 		presetKeys.forEach(key => {
 			var preset = presets[key];
 			var option = document.createElement('option');
@@ -887,7 +847,6 @@ function updateUi(data) {
 		usablePhonographsSelect.disabled = true;
 		presetSelect.disabled = true;
 		urlInput.disabled = true;
-		volumeInput.disabled = true;
 		offsetInput.disabled = true;
 		loopCheckbox.disabled = true;
 		filterCheckbox.disabled = true;
@@ -950,7 +909,6 @@ function updateUi(data) {
 
 		usablePhonographsSelect.disabled = false;
 		presetSelect.disabled = false;
-		volumeInput.disabled = false;
 		offsetInput.disabled = false;
 		loopCheckbox.disabled = false;
 
@@ -1001,7 +959,6 @@ function startPhonograph() {
 	var handleInput = document.getElementById('usable-phonographs');
 	var presetSelect = document.getElementById('preset');
 	var urlInput = document.getElementById('url');
-	var volumeInput = document.getElementById('volume');
 	var offsetInput = document.getElementById('offset');
 	var loopCheckbox = document.getElementById('loop');
 	var filterCheckbox = document.getElementById('filter');
@@ -1019,7 +976,6 @@ function startPhonograph() {
 		url = presetSelect.value;
 	}
 
-	var volume = parseInt(volumeInput.value);
 	var offset = offsetInput.value;
 	var loop = loopCheckbox.checked;
 	var filter = filterCheckbox.checked;
@@ -1028,10 +984,6 @@ function startPhonograph() {
 	var videoSize = parseInt(videoSizeInput.value);
 	var muted = mutedInput.checked;
 
-	if (isNaN(volume)) {
-		volume = 50;
-	}
-
 	if (isNaN(videoSize)) {
 		videoSize = 50;
 	}
@@ -1039,7 +991,7 @@ function startPhonograph() {
 	sendMessage('play', {
 		handle: handle,
 		url: url,
-		volume: volume,
+		volume: 100,
 		offset: offset,
 		loop: loop,
 		filter: filter,

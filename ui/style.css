@@ -134,7 +134,11 @@ option {
 	padding: 0.5vh 0;
 }
 
-#volume-container, #offset-container, #loop-container, #filter-container, #locked-container, #video-container, #muted-container {
+#url-container input {
+	width: 100%;
+}
+
+#offset-container, #loop-container, #filter-container, #locked-container, #video-container, #muted-container {
 	white-space: nowrap;
 }
 
@@ -144,7 +148,7 @@ option {
 
 #active-phonographs {
 	display: grid;
-	grid-template-columns: repeat(6, max-content) auto;
+	grid-template-columns: repeat(5, max-content) auto;
 	grid-gap: 1vh 1vw;
 }
 
@@ -156,7 +160,7 @@ option {
 	display: contents;
 }
 
-.active-phonograph-handle, .active-phonograph-distance, .active-phonograph-volume, .active-phonograph-time, .active-phonograph-video-size, .active-phonograph-controls {
+.active-phonograph-handle, .active-phonograph-distance, .active-phonograph-time, .active-phonograph-video-size, .active-phonograph-controls {
 	white-space: nowrap;
 }
 
@@ -167,7 +171,7 @@ option {
 .active-phonograph-queue {
 	grid-column: 2 / 8;
 	display: grid;
-	grid-template-columns: repeat(7, max-content);
+	grid-template-columns: repeat(6, max-content);
 	grid-gap: 1vh 1vw;
 	align-items: baseline;
 	padding: 0 0 0.5vh 0;
@@ -192,13 +196,13 @@ option {
 	height: 2.5vh;
 }
 
-.active-phonograph-volume span, .active-phonograph-time span, .active-phonograph-video-size span {
+.active-phonograph-time span, .active-phonograph-video-size span {
 	padding: 0 0.25vw;
 }
 
 #status {
 	display: grid;
-	grid-template-columns: repeat(6, max-content) auto;
+	grid-template-columns: repeat(5, max-content) auto;
 	grid-gap: 0.5vh 0.5vw;
 	background: none;
 	position: absolute;

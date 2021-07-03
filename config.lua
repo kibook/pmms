@@ -524,7 +524,7 @@ Config.DefaultPhonographSpawnDistance = 100.0
 Config.dui = {}
 
 -- The URL for the DUI server.
-Config.dui.url = "https://redm.khzae.net/phonograph/dui"
+Config.dui.url = "https://kibook.github.io/phonograph"
 
 -- The screen width of the DUI browser
 Config.dui.screenWidth = 1280

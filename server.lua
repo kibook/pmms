@@ -751,6 +751,14 @@ RegisterCommand('phonoctl', function(source, args, raw)
 	end
 end, true)
 
+RegisterCommand('phonoadd', function(source, args, raw)
+	local model = args[1]
+	local label = args[2]
+	local renderTarget = args[3]
+
+	TriggerClientEvent('phonograph:setModel', source, GetHashKey(model), label, renderTarget)
+end, true)
+
 Citizen.CreateThread(function()
 	StartDefaultPhonographs()
 

@@ -14,6 +14,7 @@ RegisterNetEvent('phonograph:showControls')
 RegisterNetEvent('phonograph:toggleStatus')
 RegisterNetEvent('phonograph:error')
 RegisterNetEvent('phonograph:init')
+RegisterNetEvent('phonograph:setModel')
 
 local entityEnumerator = {
 	__gc = function(enum)
@@ -87,7 +88,7 @@ function ForEachPhonograph(func)
 end
 
 function GetClosestPhonographObject(centre, radius, listenerPos)
-	if listenerPos and #(centre - listenerPos) > Config.MaxDistance then
+	if listenerPos and #(centre - listenerPos) > Config.maxDistance then
 		return nil
 	end
 
@@ -108,7 +109,7 @@ function GetClosestPhonographObject(centre, radius, listenerPos)
 end
 
 function GetClosestPhonograph()
-	return GetClosestPhonographObject(GetEntityCoords(PlayerPedId()), Config.MaxDistance)
+	return GetClosestPhonographObject(GetEntityCoords(PlayerPedId()), Config.maxDistance)
 end
 
 function StartPhonograph(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
@@ -228,18 +229,24 @@ end
 function GetLocalPhonograph(coords, listenerPos)
 	local handle = GetHandleFromCoords(coords)
 
-	if LocalPhonographs[handle] and DoesEntityExist(LocalPhonographs[handle]) then
-		return LocalPhonographs[handle]
-	else
+	if not (LocalPhonographs[handle] and DoesEntityExist(LocalPhonographs[handle])) then
 		LocalPhonographs[handle] = GetClosestPhonographObject(coords, 1.0, listenerPos)
 	end
+
+	return LocalPhonographs[handle]
 end
 
 local function getObjectLabel(handle, object)
 	if PhonographLabels[handle] then
 		return PhonographLabels[handle]
 	else
-		return string.format("%x", handle) .. " (" .. Config.models[GetEntityModel(object)] .. ")"
+		local model = GetEntityModel(object)
+
+		if model and Config.models[model] then
+			return Config.models[model].label
+		else
+			return string.format("%x", handle)
+		end
 	end
 end
 
@@ -261,7 +268,7 @@ function UpdateUi(fullControls, anyUrl)
 			local phonoPos = GetEntityCoords(object)
 			local distance = #(pos - phonoPos)
 
-			if fullControls or distance <= Config.MaxDistance then
+			if fullControls or distance <= Config.maxDistance then
 				table.insert(activePhonographs, {
 					handle = handle,
 					info = info,
@@ -293,7 +300,7 @@ function UpdateUi(fullControls, anyUrl)
 				local svHandle = NetworkGetEntityIsNetworked(object) and ObjToNet(object) or GetHandleFromCoords(phonoPos)
 				local distance = #(pos - phonoPos)
 
-				if fullControls or distance <= Config.MaxDistance then
+				if fullControls or distance <= Config.maxDistance then
 					table.insert(usablePhonographs, {
 						handle = clHandle,
 						distance = distance,
@@ -313,7 +320,7 @@ function UpdateUi(fullControls, anyUrl)
 		usablePhonographs = json.encode(usablePhonographs),
 		presets = json.encode(Config.Presets),
 		anyUrl = anyUrl,
-		maxDistance = Config.MaxDistance,
+		maxDistance = Config.maxDistance,
 		fullControls = fullControls,
 		baseVolume = BaseVolume
 	})
@@ -404,6 +411,68 @@ end
 
 function tovector3(t)
 	return vector3(t.x, t.y, t.z)
+end
+
+local function getHandleModel(handle)
+	if NetworkDoesNetworkIdExist(handle) then
+		return GetEntityModel(NetToObj(handle))
+	else
+		return GetEntityModel(handle)
+	end
+end
+
+local function getObjectModelAndRenderTarget(handle)
+	local object
+
+	if type(handle) == "vector3" then
+		object = GetLocalPhonograph(handle, GetEntityCoords(PlayerPedId()))
+	elseif NetworkDoesNetworkIdExist(handle) then
+		object = NetToObj(handle)
+	else
+		return
+	end
+
+	local model = GetEntityModel(object)
+
+	if not model then
+		return
+	end
+
+	if Config.models[model] then
+		return object, model, Config.models[model].renderTarget
+	end
+end
+
+local function sendMessage(handle, coords, data)
+	local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
+
+	if not duiBrowser then
+		local object, model, renderTarget = getObjectModelAndRenderTarget(coords or handle)
+
+		if not object then
+			return
+		end
+
+		local ped, listenPos, viewerPos, viewerFov = GetListenerAndViewerInfo()
+
+		if #(viewerPos - GetEntityCoords(object)) > Config.maxDistance then
+			return
+		end
+
+		if renderTarget then
+			if DuiBrowser:doesBrowserExistForRenderTarget(renderTarget) then
+				--return
+			end
+
+			duiBrowser = DuiBrowser:new(data.handle, model, renderTarget)
+		end
+	end
+
+	if duiBrowser then
+		duiBrowser:sendMessage(data)
+	else
+		SendNUIMessage(data)
+	end
 end
 
 RegisterCommand('phono', function(source, args, raw)
@@ -608,7 +677,7 @@ AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 end)
 
 AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
-	SendNUIMessage({
+	sendMessage(handle, coords, {
 		type = 'init',
 		handle = handle,
 		url = url,
@@ -627,17 +696,23 @@ AddEventHandler('phonograph:start', function(handle, url, title, volume, offset,
 end)
 
 AddEventHandler('phonograph:play', function(handle)
-	SendNUIMessage({
+	sendMessage(handle, nil, {
 		type = 'play',
 		handle = handle
 	})
 end)
 
 AddEventHandler('phonograph:stop', function(handle)
-	SendNUIMessage({
-		type = 'stop',
-		handle = handle
-	})
+	local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
+
+	if duiBrowser then
+		duiBrowser:delete()
+	else
+		SendNUIMessage({
+			type = 'stop',
+			handle = handle
+		})
+	end
 end)
 
 AddEventHandler('phonograph:showControls', function()
@@ -662,6 +737,13 @@ end)
 
 AddEventHandler('phonograph:init', function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
 	StartPhonograph(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
+end)
+
+AddEventHandler('phonograph:setModel', function(model, label, renderTarget)
+	Config.models[model] = {
+		label = label,
+		renderTarget = renderTarget
+	}
 end)
 
 AddEventHandler('onResourceStop', function(resource)
@@ -704,6 +786,7 @@ Citizen.CreateThread(function()
 		local ped, listenPos, viewerPos, viewerFov = GetListenerAndViewerInfo()
 
 		local canWait = true
+		local duiToDraw = {}
 
 		for handle, info in pairs(Phonographs) do
 			local object
@@ -714,10 +797,13 @@ Citizen.CreateThread(function()
 				object = NetToObj(handle)
 			end
 
+			local data
+			local distance
+
 			if object and object > 0 then
 				local phonoPos = GetEntityCoords(object)
 
-				local distance = #(listenPos - phonoPos)
+				distance = #(listenPos - phonoPos)
 
 				local camDistance
 				local onScreen, screenX, screenY = GetScreenCoordFromWorldCoord(phonoPos.x, phonoPos.y, phonoPos.z + 0.8)
@@ -728,7 +814,7 @@ Citizen.CreateThread(function()
 					camDistance = -1
 				end
 
-				SendNUIMessage({
+				data = {
 					type = 'update',
 					handle = handle,
 					url = info.url,
@@ -750,12 +836,30 @@ Citizen.CreateThread(function()
 					fov = viewerFov,
 					screenX = screenX,
 					screenY = screenY,
-					maxDistance = Config.MaxDistance
-				})
+					maxDistance = Config.maxDistance
+				}
 
-				canWait = false
+				if distance < Config.maxDistance then
+					canWait = false
+				end
+
+				local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
+
+				if duiBrowser then
+					if distance < Config.maxDistance then
+						if not duiToDraw[duiBrowser.renderTarget] then
+							duiToDraw[duiBrowser.renderTarget] = {}
+						end
+						table.insert(duiToDraw[duiBrowser.renderTarget], {
+							duiBrowser = duiBrowser,
+							distance = distance
+						})
+					end
+				end
 			else
-				SendNUIMessage({
+				distance = -1
+
+				data = {
 					type = 'update',
 					handle = handle,
 					url = info.url,
@@ -771,15 +875,31 @@ Citizen.CreateThread(function()
 					videoSize = info.videoSize,
 					paused = info.paused,
 					coords = json.encode(info.coords),
-					distance = -1,
+					distance = distance,
 					sameRoom = false,
 					camDistance = -1,
 					fov = viewerFov,
 					screenX = 0,
 					screenY = 0,
-					maxDistance = Config.MaxDistance
-				})
+					maxDistance = Config.maxDistance
+				}
 			end
+
+			if distance < Config.maxDistance then
+				sendMessage(handle, info.coords, data)
+			end
+		end
+
+		for renderTarget, items in pairs(duiToDraw) do
+			table.sort(items, function(a, b)
+				return a.distance < b.distance
+			end)
+
+			for i = 2, #items do
+				items[i].duiBrowser:disableRenderTarget()
+			end
+
+			items[1].duiBrowser:draw()
 		end
 
 		Citizen.Wait(canWait and 1000 or 0)

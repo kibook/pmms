@@ -20,4 +20,7 @@ files {
 
 ui_page 'ui/index.html'
 
-client_script 'client.lua'
+client_scripts {
+	'dui.lua',
+	'client.lua'
+}

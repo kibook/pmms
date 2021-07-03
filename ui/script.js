@@ -193,7 +193,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 
 				var duration;
 
-				if (media.duration == NaN || media.duration == Infinity || media.hlsPlayer || (media.duration == 0 && media.youTubeApi)) {
+				if (media.duration == NaN || media.duration == Infinity || media.duration == 0 || media.hlsPlayer) {
 					offset = 0;
 					duration = false;
 					loop = false;
@@ -229,6 +229,8 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 				});
 
 				media.phono.initialized = true;
+
+				media.play();
 			});
 
 			media.addEventListener('playing', () => {

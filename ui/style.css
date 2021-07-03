@@ -1,8 +1,3 @@
-@font-face {
-	font-family: 'Chinese Rocks';
-	src: url('chineserocks.ttf');
-}
-
 * {
 	font-family: inherit;
 	font-size: inherit;
@@ -26,7 +21,6 @@ button {
 	background-color: rgba(0, 0, 0, 0.5);
 	color: white;
 	border: solid 1px white;
-	font-family: "Chinese Rocks";
 	font-size: 2vh;
 }
 

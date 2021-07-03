@@ -462,11 +462,11 @@ local function sendMessage(handle, coords, data)
 		end
 
 		if renderTarget then
-			if DuiBrowser:doesBrowserExistForRenderTarget(renderTarget) then
-				--return
-			end
-
 			duiBrowser = DuiBrowser:new(data.handle, model, renderTarget)
+
+			if not duiBrowser then
+				return
+			end
 		end
 	end
 

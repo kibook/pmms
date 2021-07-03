@@ -14,6 +14,7 @@ end
 
 DuiBrowser = Class()
 
+DuiBrowser.initQueue = {}
 DuiBrowser.pool = {}
 DuiBrowser.renderTargets = {}
 
@@ -34,18 +35,22 @@ function DuiBrowser:createNamedRendertargetForModel(model, name)
 end
 
 function DuiBrowser:waitForConnection()
-	self.initDone = false
+	DuiBrowser.initQueue[self.phonographHandle] = false
 
 	local timeWaited = 0
 
-	while not self.initDone and timeWaited < 1000 do
+	while not DuiBrowser.initQueue[self.phonographHandle] and timeWaited < 5000 do
 		self:sendMessage({type = "DuiBrowser:init", handle = self.phonographHandle})
 		Citizen.Wait(100)
 		timeWaited = timeWaited + 100
 	end
 
-	if not self.initDone then
+	if DuiBrowser.initQueue[self.phonographHandle] then
+		DuiBrowser.initQueue[self.phonographHandle] = nil
+		return true
+	else
 		print("Failed to connect to " .. Config.dui.url)
+		return false
 	end
 end
 
@@ -85,18 +90,21 @@ function DuiBrowser:new(phonographHandle, model, renderTarget)
 	self.renderTarget = renderTarget
 	self.drawSprite = true
 
-	DuiBrowser.pool[phonographHandle] = self
+	if self:waitForConnection() then
+		DuiBrowser.pool[phonographHandle] = self
 
-	if not DuiBrowser.renderTargets[renderTarget] then
-		DuiBrowser.renderTargets[renderTarget] = {
-			disabled = false,
-			browsers = {}
-		}
+		if not DuiBrowser.renderTargets[renderTarget] then
+			DuiBrowser.renderTargets[renderTarget] = {
+				disabled = false,
+				browsers = {}
+			}
+		end
+
+		return self
+	else
+		DuiBrowser.pool[phonographHandle] = nil
+		DestroyDui(self.duiObject)
 	end
-
-	self:waitForConnection()
-
-	return self
 end
 
 local foo = false
@@ -170,6 +178,6 @@ function DuiBrowser:delete()
 end
 
 RegisterNUICallback("DuiBrowser:initDone", function(data, cb)
-	DuiBrowser.pool[data.handle].initDone = true
+	DuiBrowser.initQueue[data.handle] = true
 	cb({})
 end)

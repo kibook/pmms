@@ -130,6 +130,7 @@ option {
 
 #url-container input {
 	width: 100%;
+	min-width: 15vw;
 }
 
 #offset-container, #loop-container, #filter-container, #locked-container, #video-container, #muted-container {

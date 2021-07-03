@@ -912,6 +912,7 @@ function updateUi(data) {
 		presetSelect.disabled = false;
 		offsetInput.disabled = false;
 		loopCheckbox.disabled = false;
+		mutedInput.disabled = false;
 
 		if (presetSelect.value == '' && urlInput.value == '') {
 			playButton.disabled = true;

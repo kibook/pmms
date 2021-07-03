@@ -707,7 +707,7 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 
 		var queueHeadDiv = document.createElement('div');
 		queueHeadDiv.className = 'queue-head';
-		queueHeadDiv.innerHTML = '<div>Queue</div><div><i class="fas fa-volume-off"></i></div><div><i class="fas fa-clock"></i></div><div><i class="fas fa-filter"></i></div><div><i class="fas fa-video"></i></div><div><i class="fas fa-user"></i></div><div></div>';
+		queueHeadDiv.innerHTML = '<div>Queue</div><div><i class="fas fa-clock"></i></div><div><i class="fas fa-filter"></i></div><div><i class="fas fa-video"></i></div><div><i class="fas fa-user"></i></div><div></div>';
 
 		var queueBodyDiv = document.createElement('div');
 		queueBodyDiv.className = 'queue-body';

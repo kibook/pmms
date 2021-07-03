@@ -45,7 +45,7 @@ function DuiBrowser:waitForConnection()
 	end
 
 	if not self.initDone then
-		print("Failed to connect to ")
+		print("Failed to connect to " .. Config.dui.url)
 	end
 end
 

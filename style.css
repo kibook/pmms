@@ -1,0 +1,21 @@
+html, body {
+	padding: 0;
+	margin: 0;
+	background: #000;
+}
+
+#loading img {
+	position: absolute;
+	width: 100vw;
+	height: 100vh;
+}
+
+mediaelementwrapper > iframe, mediaelementwrapper > video {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	padding: 0;
+	margin: 0;
+}

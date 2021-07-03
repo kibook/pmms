@@ -386,7 +386,7 @@ window.addEventListener('message', event => {
 });
 
 window.addEventListener('load', () => {
-	sendMessage('startup', {}).then(resp => resp.json()).then(resp => {
+	sendMessage('duiStartup', {}).then(resp => resp.json()).then(resp => {
 		isRDR = resp.isRDR;
 	});
 });

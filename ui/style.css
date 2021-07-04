@@ -123,7 +123,7 @@ option {
 
 #start-phonograph {
 	display: grid;
-	grid-template-columns: auto auto auto repeat(7, max-content) auto;
+	grid-template-columns: auto auto auto repeat(8, max-content) auto;
 	grid-gap: 0.25vh 0.25vw;
 	padding: 0.5vh 0;
 }
@@ -133,7 +133,7 @@ option {
 	min-width: 15vw;
 }
 
-#offset-container, #loop-container, #filter-container, #locked-container, #video-container, #muted-container {
+#offset-container, #loop-container, #filter-container, #locked-container, #video-container, #muted-container, #attenuation-container {
 	white-space: nowrap;
 }
 

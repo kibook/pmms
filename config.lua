@@ -6,6 +6,12 @@ Config.isRDR = not TerraingridActivate
 -- Max distance at which to interact with phonographs with the /phono command.
 Config.maxDistance = 40.0
 
+-- Default sound attenuation factor when in the same room
+Config.defaultMinAttenuation = 4.0
+
+-- Default sound attenuation factor when in a different room
+Config.defaultMaxAttenuation = 6.0
+
 -- Object models that media can be played on.
 --
 -- Optional properties:

@@ -120,7 +120,7 @@ function GetClosestPhonograph()
 	return GetClosestPhonographObject(GetEntityCoords(PlayerPedId()), Config.maxDistance)
 end
 
-function StartPhonograph(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
+function StartPhonograph(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 	volume = Clamp(volume, 0, 100, 50)
 
 	if not offset then
@@ -128,18 +128,18 @@ function StartPhonograph(handle, url, volume, offset, loop, filter, locked, vide
 	end
 
 	if NetworkDoesNetworkIdExist(handle) then
-		TriggerServerEvent('phonograph:start', handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, false)
+		TriggerServerEvent('phonograph:start', handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, false)
 	else
 		if not coords then
 			coords = GetEntityCoords(handle)
 		end
 
-		TriggerServerEvent('phonograph:start', nil, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
+		TriggerServerEvent('phonograph:start', nil, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 	end
 end
 
-function StartClosestPhonograph(url, volume, offset, loop, filter, locked, video, videoSize, muted)
-	StartPhonograph(GetHandle(GetClosestPhonograph()), url, volume, offset, loop, filter, locked, video, videoSize, muted, false, false)
+function StartClosestPhonograph(url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation)
+	StartPhonograph(GetHandle(GetClosestPhonograph()), url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, false, false)
 end
 
 function PausePhonograph(handle)
@@ -457,21 +457,15 @@ local function sendMessage(handle, coords, data)
 	if not duiBrowser then
 		local object, model, renderTarget = getObjectModelAndRenderTarget(coords or handle)
 
-		if not object then
-			return
-		end
+		if object and model and renderTarget then
+			local ped, listenPos, viewerPos, viewerFov = GetListenerAndViewerInfo()
 
-		local ped, listenPos, viewerPos, viewerFov = GetListenerAndViewerInfo()
+			if #(viewerPos - GetEntityCoords(object)) < Config.maxDistance then
+				duiBrowser = DuiBrowser:new(data.handle, model, renderTarget)
 
-		if #(viewerPos - GetEntityCoords(object)) > Config.maxDistance then
-			return
-		end
-
-		if renderTarget then
-			duiBrowser = DuiBrowser:new(data.handle, model, renderTarget)
-
-			if not duiBrowser then
-				return
+				if not duiBrowser then
+					return
+				end
 			end
 		end
 	end
@@ -485,11 +479,19 @@ end
 
 RegisterNUICallback('startup', function(data, cb)
 	LoadSettings()
-	cb({isRDR = Config.isRDR})
+	cb {
+		isRDR = Config.isRDR,
+		defaultMinAttenuation = Config.defaultMinAttenuation,
+		defaultMaxAttenuation = Config.defaultMaxAttenuation
+	}
 end)
 
 RegisterNUICallback("duiStartup", function(data, cb)
-	cb({isRDR = Config.isRDR})
+	cb {
+		isRDR = Config.isRDR,
+		defaultMinAttenuation = Config.defaultMinAttenuation,
+		defaultMaxAttenuation = Config.defaultMaxAttenuation
+	}
 end)
 
 RegisterNUICallback('init', function(data, cb)
@@ -509,6 +511,7 @@ RegisterNUICallback('init', function(data, cb)
 			data.video,
 			data.videoSize,
 			data.muted,
+			data.attenuation,
 			data.queue,
 			coords and tovector3(coords))
 	end
@@ -526,7 +529,7 @@ RegisterNUICallback('playError', function(data, cb)
 end)
 
 RegisterNUICallback('play', function(data, cb)
-	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, false, false)
+	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, false, false)
 	cb({})
 end)
 
@@ -641,7 +644,7 @@ AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
 	end
 end)
 
-AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
+AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 	sendMessage(handle, coords, {
 		type = 'init',
 		handle = handle,
@@ -655,6 +658,7 @@ AddEventHandler('phonograph:start', function(handle, url, title, volume, offset,
 		video = video,
 		videoSize = videoSize,
 		muted = muted,
+		attenuation = attenuation,
 		queue = queue,
 		coords = json.encode(coords)
 	})
@@ -700,8 +704,8 @@ AddEventHandler('phonograph:error', function(message)
 	print(message)
 end)
 
-AddEventHandler('phonograph:init', function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
-	StartPhonograph(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
+AddEventHandler('phonograph:init', function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+	StartPhonograph(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 end)
 
 AddEventHandler('phonograph:setModel', function(model, label, renderTarget)
@@ -725,8 +729,8 @@ AddEventHandler('phonograph:reset', function()
 	syncIsEnabled = true
 end)
 
-AddEventHandler("phonograph:startClosestPhonograph", function(url, offset, loop, filter, locked, video, videoSize, muted)
-	StartClosestPhonograph(url, 100, offset, loop, filter, locked, video, videoSize, muted)
+AddEventHandler("phonograph:startClosestPhonograph", function(url, offset, loop, filter, locked, video, videoSize, muted, attenuation)
+	StartClosestPhonograph(url, 100, offset, loop, filter, locked, video, videoSize, muted, attenuation)
 end)
 
 AddEventHandler("phonograph:pauseClosestPhonograph", function()
@@ -845,6 +849,7 @@ Citizen.CreateThread(function()
 					title = info.title,
 					volume = math.floor(info.volume * (BaseVolume / 100)),
 					muted = info.muted,
+					attenuation = info.attenuation,
 					offset = info.offset,
 					duration = info.duration,
 					loop = info.loop,
@@ -890,6 +895,7 @@ Citizen.CreateThread(function()
 					title = info.title,
 					volume = 0,
 					muted = true,
+					attenuation = info.attenuation,
 					offset = info.offset,
 					duration = info.duration,
 					loop = info.loop,
@@ -909,9 +915,7 @@ Citizen.CreateThread(function()
 				}
 			end
 
-			if distance < Config.maxDistance then
-				sendMessage(handle, info.coords, data)
-			end
+			sendMessage(handle, info.coords, data)
 		end
 
 		for renderTarget, items in pairs(duiToDraw) do

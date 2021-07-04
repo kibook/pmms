@@ -1,12 +1,11 @@
-const minAttenuationFactor = 4.0;
-const maxAttenuationFactor = 6.0;
-
 const minVolumeFactor = 1.0;
 const maxVolumeFactor = 4.0;
 
 const maxTimeDifference = 2;
 
 var isRDR = true;
+var defaultMinAttenuation = 4.0;
+var defaultMaxAttenuation = 6.0;
 
 function sendMessage(name, params) {
 	return fetch('https://' + GetParentResourceName() + '/' + name, {
@@ -140,7 +139,7 @@ function hideLoadingIcon() {
 	document.getElementById('loading').style.display = 'none';
 }
 
-function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords) {
+function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords) {
 	var player = document.createElement('video');
 	player.id = id;
 	player.src = url;
@@ -161,7 +160,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 
 			media.phono = {};
 			media.phono.initialized = false;
-			media.phono.attenuationFactor = maxAttenuationFactor;
+			media.phono.attenuationFactor = attenuation.max;
 			media.phono.volumeFactor = maxVolumeFactor;
 
 			media.volume = 0;
@@ -224,6 +223,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					video: video,
 					videoSize: videoSize,
 					muted: muted,
+					attenuation: attenuation,
 					queue: queue,
 					coords: coords,
 				});
@@ -249,13 +249,13 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 	});
 }
 
-function getPlayer(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords) {
+function getPlayer(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords) {
 	var id = 'player_' + handle.toString(16);
 
 	var player = document.getElementById(id);
 
 	if (!player && url) {
-		player = initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords);
+		player = initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords);
 	}
 
 	return player;
@@ -280,9 +280,9 @@ function init(data) {
 	var offset = parseTimecode(data.offset);
 
 	if (data.title) {
-		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.queue, data.coords);
+		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.queue, data.coords);
 	} else{
-		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.queue, data.coords);
+		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.queue, data.coords);
 	}
 }
 
@@ -332,7 +332,7 @@ function calculateFocalLength(fov) {
 }
 
 function update(data) {
-	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.queue, data.coords);
+	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.queue, data.coords);
 
 	if (player) {
 		if (data.paused || data.distance < 0) {
@@ -341,10 +341,10 @@ function update(data) {
 			}
 		} else {
 			if (data.sameRoom) {
-				setAttenuationFactor(player, minAttenuationFactor);
+				setAttenuationFactor(player, data.attenuation.min);
 				setVolumeFactor(player, minVolumeFactor);
 			} else {
-				setAttenuationFactor(player, maxAttenuationFactor);
+				setAttenuationFactor(player, data.attenuation.max);
 				setVolumeFactor(player, maxVolumeFactor);
 			}
 
@@ -964,6 +964,8 @@ function startPhonograph() {
 	var videoCheckbox = document.getElementById('video');
 	var videoSizeInput = document.getElementById('video-size');
 	var mutedInput = document.getElementById('muted');
+	var minAttenuationInput = document.getElementById('min-attenuation');
+	var maxAttenuationInput = document.getElementById('max-attenuation');
 
 	var handle = parseInt(handleInput.value);
 
@@ -981,9 +983,19 @@ function startPhonograph() {
 	var video = videoCheckbox.checked;
 	var videoSize = parseInt(videoSizeInput.value);
 	var muted = mutedInput.checked;
+	var minAttenuation = parseFloat(minAttenuationInput.value);
+	var maxAttenuation = parseFloat(maxAttenuationInput.value);
 
 	if (isNaN(videoSize)) {
 		videoSize = 50;
+	}
+
+	if (isNaN(minAttenuation)) {
+		minAttenuation = defaultMinAttenuation;
+	}
+
+	if (isNaN(maxAttenuation)) {
+		maxAttenuation = defaultMaxAttenuation;
 	}
 
 	sendMessage('play', {
@@ -996,7 +1008,11 @@ function startPhonograph() {
 		locked: locked,
 		video: video,
 		videoSize: videoSize,
-		muted: muted
+		muted: muted,
+		attenuation: {
+			min: minAttenuation,
+			max: maxAttenuation
+		}
 	});
 }
 
@@ -1032,6 +1048,11 @@ window.addEventListener('message', event => {
 window.addEventListener('load', () => {
 	sendMessage('startup', {}).then(resp => resp.json()).then(resp => {
 		isRDR = resp.isRDR;
+		defaultMinAttenuation = resp.defaultMinAttenuation;
+		defaultMaxAttenuation = resp.defaultMaxAttenuation;
+
+		document.getElementById('min-attenuation').value = defaultMinAttenuation;
+		document.getElementById('max-attenuation').value = defaultMaxAttenuation;
 	});
 
 	document.getElementById('close-ui').addEventListener('click', function(event) {

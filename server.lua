@@ -50,10 +50,13 @@ function RemoveFromQueue(handle, index)
 	table.remove(Phonographs[handle].queue, index)
 end
 
-function AddPhonograph(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, queue, coords)
+function AddPhonograph(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 	if Phonographs[handle] then
 		return
 	end
+
+	attenuation.min = Clamp(attenuation.min, 1.0, 10.0, defaultMinAttenuation)
+	attenuation.max = Clamp(attenuation.max, 1.0, 10.0, defaultMaxAttenuation)
 
 	Phonographs[handle] = {
 		url = url,
@@ -66,10 +69,11 @@ function AddPhonograph(handle, url, title, volume, offset, duration, loop, filte
 		filter = filter,
 		locked = locked,
 		video = video,
-		videoSize = Clamp(videoSize, 10, 100, 50),
+		videoSize = Clamp(videoSize, 10, 100, Config.defaultVideoSize),
 		coords = coords,
 		paused = false,
 		muted = muted,
+		attenuation = attenuation,
 		queue = queue or {}
 	}
 
@@ -110,6 +114,7 @@ function PlayNextInQueue(handle)
 					next.video,
 					phono.videoSize,
 					phono.muted,
+					phono.attenuation,
 					phono.queue,
 					phono.coords)
 			end)
@@ -167,7 +172,7 @@ function ResolvePreset(url, title, filter, video)
 	end
 end
 
-function StartPhonographByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted)
+function StartPhonographByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation)
 	local resolved = ResolvePreset(url, title, filter, video)
 
 	AddPhonograph(netId,
@@ -182,13 +187,14 @@ function StartPhonographByNetworkId(netId, url, title, volume, offset, duration,
 		resolved.video,
 		videoSize,
 		muted,
+		attenuation,
 		false,
 		false)
 
 	return netId
 end
 
-function StartPhonographByCoords(x, y, z, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted)
+function StartPhonographByCoords(x, y, z, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation)
 	local coords = vector3(x, y, z)
 	local handle = GetHandleFromCoords(coords)
 
@@ -206,6 +212,7 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, duration, 
 		resolved.video,
 		videoSize,
 		muted,
+		attenuation,
 		false,
 		coords)
 
@@ -233,7 +240,8 @@ function StartDefaultPhonographs()
 				phonograph.locked,
 				phonograph.video,
 				phonograph.videoSize,
-				phonograph.muted)
+				phonograph.muted,
+				phonograph.attenuation)
 		end
 	end
 end
@@ -310,7 +318,8 @@ function CopyPhonograph(oldHandle, newHandle, newCoords)
 			Phonographs[oldHandle].locked,
 			Phonographs[oldHandle].video,
 			Phonographs[oldHandle].videoSize,
-			Phonographs[oldHandle].muted)
+			Phonographs[oldHandle].muted,
+			Phonographs[oldHandle].attenuation)
 	elseif newCoords then
 		StartPhonographByCoords(
 			newCoords.x,
@@ -326,7 +335,8 @@ function CopyPhonograph(oldHandle, newHandle, newCoords)
 			Phonographs[oldHandle].locked,
 			Phonographs[oldHandle].video,
 			Phonographs[oldHandle].videoSize,
-			Phonographs[oldHandle].muted)
+			Phonographs[oldHandle].muted,
+			Phonographs[oldHandle].attenuation)
 	end
 end
 
@@ -343,7 +353,7 @@ exports('unlock', UnlockPhonograph)
 exports('mute', MutePhonograph)
 exports('unmute', UnmutePhonograph)
 
-AddEventHandler('phonograph:start', function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, queue, coords)
+AddEventHandler('phonograph:start', function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 	if coords then
 		handle = GetHandleFromCoords(coords)
 	end
@@ -387,6 +397,7 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, loop, 
 				Config.Presets[url].video or false,
 				videoSize,
 				muted,
+				attenuation,
 				queue,
 				coords)
 		elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then
@@ -402,6 +413,7 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, loop, 
 				video,
 				videoSize,
 				muted,
+				attenuation,
 				queue,
 				coords)
 		else
@@ -410,7 +422,7 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, loop, 
 	end
 end)
 
-AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, queue, coords)
+AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 	if Phonographs[handle] then
 		return
 	end
@@ -425,7 +437,7 @@ AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, 
 		return
 	end
 
-	AddPhonograph(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, queue, coords)
+	AddPhonograph(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 end)
 
 AddEventHandler('phonograph:pause', function(handle)
@@ -595,7 +607,7 @@ AddEventHandler('phonograph:setVideoSize', function(handle, size)
 		return
 	end
 
-	Phonographs[handle].videoSize = Clamp(size, 10, 100, 50)
+	Phonographs[handle].videoSize = Clamp(size, 10, 100, Config.defaultVideoSize)
 end)
 
 AddEventHandler('phonograph:mute', function(handle)
@@ -718,10 +730,17 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "play", funct
 		local filter = args[4] ~= "0"
 		local locked = args[5] == "1"
 		local video = args[6] == "1"
-		local videoSize = tonumber(args[7]) or 50
+		local videoSize = tonumber(args[7]) or Config.defaultVideoSize
 		local muted = args[8] == "1"
+		local minAttenuation = tonumber(args[9]) or Config.defaultMinAttenuation
+		local maxAttenuation = tonumber(args[10]) or Config.defaultMaxAttenuation
 
-		TriggerClientEvent("phonograph:startClosestPhonograph", source, url, offset, loop, filter, locked, video, videoSize, muted)
+		local attenuation = {
+			min = minAttenuation,
+			max = maxAttenuation
+		}
+
+		TriggerClientEvent("phonograph:startClosestPhonograph", source, url, offset, loop, filter, locked, video, videoSize, muted, attenuation)
 	else
 		TriggerClientEvent("phonograph:pauseClosestPhonograph", source)
 	end
@@ -779,6 +798,8 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 				info.locked and "locked" or "unlocked",
 				info.video and "video" or "audio",
 				info.muted and "muted" or "unmuted",
+				info.attenuation.min,
+				info.attenuation.max,
 				info.paused and "paused" or "playing"))
 		end
 	elseif args[1] == "lock" then

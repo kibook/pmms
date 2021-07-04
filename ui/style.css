@@ -113,12 +113,13 @@ option {
 	transform: translate(-50%, -50%);
 	color: #fff;
 	background-color: rgba(0, 0, 0, 0.5);
-	padding: 0.5vh 0.5vw;
+	padding: 0 0.5vw;
 	flex-flow: column;
 	min-width: 25vw;
 	max-height: 90vh;
 	max-width: 90vw;
 	overflow: hidden;
+	border-radius: 10px;
 }
 
 #start-media-player {
@@ -241,8 +242,12 @@ option {
 
 #advanced-settings {
 	display: grid;
-	grid-template-columns: repeat(4, max-content);
+	grid-template-columns: repeat(5, max-content);
 	grid-gap: 0.5vh 0.5vw;
+}
+
+#drag-top, #drag-bottom {
+	height: 1vh;
 }
 
 mediaelementwrapper > iframe {

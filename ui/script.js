@@ -1053,6 +1053,38 @@ function startMediaPlayer() {
 	});
 }
 
+function makeElementDraggable(element, dragPoint) {
+	var pos1 = 0;
+	var pos2 = 0;
+	var pos3 = 0;
+	var pos4 = 0;
+
+	dragPoint.onmousedown = startDraggingElement;
+
+	function startDraggingElement(e) {
+		e.preventDefault();
+		pos3 = e.clientX;
+		pos4 = e.clientY;
+		document.onmouseup = stopDraggingElement;
+		document.onmousemove = dragElement;
+	}
+
+	function dragElement(e) {
+		e.preventDefault();
+		pos1 = pos3 - e.clientX;
+		pos2 = pos4 - e.clientY;
+		pos3 = e.clientX;
+		pos4 = e.clientY;
+		element.style.top  = (element.offsetTop  - pos2) + "px";
+		element.style.left = (element.offsetLeft - pos1) + "px";
+	}
+
+	function stopDraggingElement() {
+		document.onmouseup = null;
+		document.onmousemove = null;
+	}
+}
+
 window.addEventListener('message', event => {
 	switch (event.data.type) {
 		case 'init':
@@ -1092,6 +1124,10 @@ window.addEventListener('load', () => {
 		document.getElementById('max-attenuation').value = defaultMaxAttenuation;
 	});
 
+	var ui = document.getElementById('ui');
+	makeElementDraggable(ui, document.getElementById('drag-top'));
+	makeElementDraggable(ui, document.getElementById('drag-bottom'));
+
 	document.getElementById('close-ui').addEventListener('click', function(event) {
 		hideUi();
 		sendMessage('closeUi', {});
@@ -1124,10 +1160,15 @@ window.addEventListener('load', () => {
 		}
 	});
 
-	document.getElementById('revert-settings').addEventListener('click', function(event) {
+	document.getElementById('revert-settings').addEventListener('click', event => {
 		document.getElementById('offset').value = '00:00:00';
 		document.getElementById('min-attenuation').value = defaultMinAttenuation;
 		document.getElementById('max-attenuation').value = defaultMaxAttenuation;
 		document.getElementById('volume').value = 100;
+	});
+
+	document.getElementById('restore-ui-position').addEventListener('click', event => {
+		ui.style.top = '50vh';
+		ui.style.left = '50vw';
 	});
 });

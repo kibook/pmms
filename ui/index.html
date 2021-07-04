@@ -8,6 +8,7 @@
 	</head>
 	<body>
 		<div id="ui">
+			<div id="drag-top"></div>
 			<div id="loading">
 				<img src="loading.svg">
 			</div>
@@ -67,6 +68,9 @@
 				<button id="revert-settings">
 					<i class="fas fa-undo"></i>
 				</button>
+				<button id="restore-ui-position">
+					<i class="fas fa-window-restore"></i>
+				</button>
 			</div>
 			<div id="base-volume-container">
 				<i class="fas fa-volume-off"></i>
@@ -74,6 +78,7 @@
 				<input id="set-base-volume" type="range" min="0" max="100" step="1" value="100">
 			</div>
 			<button id="close-ui">Close</button>
+			<div id="drag-bottom"></div>
 		</div>
 		<div id="status" style="display: none;"></div>
 	</body>

@@ -1,6 +1,6 @@
 # FiveM/RedM synchronized music player
 
-Allows players to play music from objects such as phonographs or radios.
+Allows players to play music from objects such as phonographs, radios or TVs.
 
 # Features
 
@@ -29,15 +29,21 @@ Allows players to play music from objects such as phonographs or radios.
 
 # Commands
 
-| Command                                                                          | Description                                     |
-|----------------------------------------------------------------------------------|-------------------------------------------------|
-| `/phono`                                                                         | Open the phonograph control panel.              |
-| `/phono play [url] [time] [loop] [filter] [lock] [video] [size] [mute]`          | Play music on the nearest phonograph.           |
-| `/phono pause`                                                                   | Pause playback on the nearest phonograph.       |
-| `/phono stop`                                                                    | Stop playback on the nearest phonograph.        |
-| `/phono status`                                                                  | Show the status of the nearest phonograph.      |
-| `/phono songs`                                                                   | Show preset song selection.                     |
-| `/phonovol [volume]`                                                             | Set a personal base volume for all phonographs. |
+> **Note**
+> 
+> The command names can be customized. These are the defaults.
+
+| Command                                                                          | Description                                       |
+|----------------------------------------------------------------------------------|---------------------------------------------------|
+| `/phono`                                                                         | Open the media player control panel.              |
+| `/phono_play [url] [time] [loop] [filter] [lock] [video] [size] [mute]`          | Play music on the nearest media player.           |
+| `/phono_pause`                                                                   | Pause playback on the nearest media player.       |
+| `/phono_stop`                                                                    | Stop playback on the nearest media player.        |
+| `/phono_status`                                                                  | Show the status of the nearest media player.      |
+| `/phono_presets`                                                                 | List presets.                                     |
+| `/phono_vol [volume]`                                                            | Set a personal base volume for all media players. |
+| `/phono_ctl`                                                                     | Advanced media player control.                    |
+| `/phono_add`                                                                     | Add or modify a media player model preset.        |
 
 # Exports
 

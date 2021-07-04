@@ -8,7 +8,7 @@ var defaultMinAttenuation = 4.0;
 var defaultMaxAttenuation = 6.0;
 
 function sendMessage(name, params) {
-	return fetch('https://phonograph/' + name, {
+	return fetch('https://pmms/' + name, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'

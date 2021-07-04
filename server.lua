@@ -55,8 +55,15 @@ local function addMediaPlayer(handle, url, title, volume, offset, duration, loop
 		return
 	end
 
-	attenuation.min = Clamp(attenuation.min, 1.0, 10.0, defaultMinAttenuation)
-	attenuation.max = Clamp(attenuation.max, 1.0, 10.0, defaultMaxAttenuation)
+	if attenuation then
+		attenuation.min = Clamp(attenuation.min, 1.0, 10.0, defaultMinAttenuation)
+		attenuation.max = Clamp(attenuation.max, 1.0, 10.0, defaultMaxAttenuation)
+	else
+		attenuation = {
+			min = defaultMinAttenuation,
+			max = defaultMaxAttenuation
+		}
+	end
 
 	mediaPlayers[handle] = {
 		url = url,

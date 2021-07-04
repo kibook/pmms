@@ -159,6 +159,12 @@ option {
 	white-space: nowrap;
 }
 
+.active-media-player-title {
+	display: grid;
+	grid-template-columns: max-content auto;
+	grid-gap: 0.25vh 0.25vw;
+}
+
 .active-media-player-controls {
 	text-align: right;
 }

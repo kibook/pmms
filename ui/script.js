@@ -462,6 +462,21 @@ function timeToString(time) {
 	return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
+function copyToClipboard(text) {
+	var e = document.createElement('textarea');
+	e.textContent = text;
+	document.body.appendChild(e);
+
+	var selection = document.getSelection();
+	selection.removeAllRanges();
+
+	e.select();
+	document.execCommand('copy');
+
+	selection.removeAllRanges();
+	e.remove();
+}
+
 function createActiveMediaPlayerDiv(mediaPlayer, fullControls, includeQueue) {
 	var player = getPlayer(mediaPlayer.handle);
 
@@ -491,7 +506,19 @@ function createActiveMediaPlayerDiv(mediaPlayer, fullControls, includeQueue) {
 
 	var titleDiv = document.createElement('div');
 	titleDiv.className = 'active-media-player-title';
-	titleDiv.innerHTML = mediaPlayer.info.title.substring(0, 47);
+
+	var titleSpan = document.createElement('span');
+	titleSpan.innerHTML = mediaPlayer.info.title.substring(0, 47);
+
+	var urlCopyButton = document.createElement('button');
+	urlCopyButton.className = 'control-button';
+	urlCopyButton.innerHTML = '<i class="fas fa-link"></i>';
+	urlCopyButton.addEventListener('click', event => {
+		copyToClipboard(mediaPlayer.info.url);
+	});
+
+	titleDiv.appendChild(titleSpan);
+	titleDiv.appendChild(urlCopyButton);
 
 	var timeDiv = document.createElement('div');
 	timeDiv.className = 'active-media-player-time';

@@ -121,7 +121,7 @@ option {
 	overflow: hidden;
 }
 
-#start-phonograph {
+#start-media-player {
 	display: grid;
 	grid-template-columns: auto auto auto repeat(8, max-content) auto;
 	grid-gap: 0.25vh 0.25vw;
@@ -137,33 +137,33 @@ option {
 	white-space: nowrap;
 }
 
-#active-phonographs-container {
+#active-media-players-container {
 	overflow-y: auto;
 }
 
-#active-phonographs {
+#active-media-players {
 	display: grid;
 	grid-template-columns: repeat(5, max-content) auto;
 	grid-gap: 1vh 1vw;
 }
 
-.active-phonograph {
+.active-media-player {
 	display: contents;
 }
 
-.active-phonograph-main {
+.active-media-player-main {
 	display: contents;
 }
 
-.active-phonograph-handle, .active-phonograph-distance, .active-phonograph-time, .active-phonograph-video-size, .active-phonograph-controls {
+.active-media-player-handle, .active-media-player-distance, .active-media-player-time, .active-media-player-video-size, .active-media-player-controls {
 	white-space: nowrap;
 }
 
-.active-phonograph-controls {
+.active-media-player-controls {
 	text-align: right;
 }
 
-.active-phonograph-queue {
+.active-media-player-queue {
 	grid-column: 2 / 8;
 	display: grid;
 	grid-template-columns: repeat(6, max-content);
@@ -191,7 +191,7 @@ option {
 	height: 2.5vh;
 }
 
-.active-phonograph-time span, .active-phonograph-video-size span {
+.active-media-player-time span, .active-media-player-video-size span {
 	padding: 0 0.25vw;
 }
 
@@ -229,7 +229,7 @@ option {
 	font-family: Helvetica, FontAwesome;
 }
 
-#usable-phonographs {
+#usable-media-players {
 	font-family: Helvetica, FontAwesome;
 }
 

@@ -158,10 +158,10 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 		success: function(media, domNode) {
 			media.className = 'player';
 
-			media.phono = {};
-			media.phono.initialized = false;
-			media.phono.attenuationFactor = attenuation.max;
-			media.phono.volumeFactor = maxVolumeFactor;
+			media.pmms = {};
+			media.pmms.initialized = false;
+			media.pmms.attenuationFactor = attenuation.max;
+			media.pmms.volumeFactor = maxVolumeFactor;
 
 			media.volume = 0;
 
@@ -178,13 +178,13 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					url: url
 				});
 
-				if (!media.phono.initialized) {
+				if (!media.pmms.initialized) {
 					media.remove();
 				}
 			});
 
 			media.addEventListener('canplay', () => {
-				if (media.phono.initialized) {
+				if (media.pmms.initialized) {
 					return;
 				}
 
@@ -228,19 +228,19 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					coords: coords,
 				});
 
-				media.phono.initialized = true;
+				media.pmms.initialized = true;
 
 				media.play();
 			});
 
 			media.addEventListener('playing', () => {
-				if (filter && !media.phono.filterAdded) {
+				if (filter && !media.pmms.filterAdded) {
 					if (isRDR) {
 						applyPhonographFilter(media);
 					} else {
 						applyRadioFilter(media);
 					}
-					media.phono.filterAdded = true;
+					media.pmms.filterAdded = true;
 				}
 			});
 
@@ -310,18 +310,18 @@ function stop(handle) {
 }
 
 function setAttenuationFactor(player, target) {
-	if (player.phono.attenuationFactor > target) {
-		player.phono.attenuationFactor -= 0.1;
+	if (player.pmms.attenuationFactor > target) {
+		player.pmms.attenuationFactor -= 0.1;
 	} else {
-		player.phono.attenuationFactor += 0.1;
+		player.pmms.attenuationFactor += 0.1;
 	}
 }
 
 function setVolumeFactor(player, target) {
-	if (player.phono.volumeFactor > target) {
-		player.phono.volumeFactor -= 0.1;
+	if (player.pmms.volumeFactor > target) {
+		player.pmms.volumeFactor -= 0.1;
 	} else {
-		player.phono.volumeFactor += 0.1;
+		player.pmms.volumeFactor += 0.1;
 	}
 }
 
@@ -354,7 +354,7 @@ function update(data) {
 				if (data.muted) {
 					volume = 0;
 				} else {
-					volume = (((100 - data.distance * player.phono.attenuationFactor) / 100) / player.phono.volumeFactor) * (data.volume / 100);
+					volume = (((100 - data.distance * player.pmms.attenuationFactor) / 100) / player.pmms.volumeFactor) * (data.volume / 100);
 				}
 
 				if (volume > 0) {
@@ -437,7 +437,7 @@ function unmute(handle) {
 }
 
 function copy(oldHandle) {
-	var handleInput = document.getElementById('usable-phonographs');
+	var handleInput = document.getElementById('usable-media-players');
 
 	var newHandle = parseInt(handleInput.value);
 
@@ -462,45 +462,45 @@ function timeToString(time) {
 	return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
-function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
-	var player = getPlayer(phonograph.handle);
+function createActiveMediaPlayerDiv(mediaPlayer, fullControls, includeQueue) {
+	var player = getPlayer(mediaPlayer.handle);
 
 	var div = document.createElement('div');
-	div.className = 'active-phonograph';
+	div.className = 'active-media-player';
 
 	var mainDiv = document.createElement('div');
-	mainDiv.className = 'active-phonograph-main';
+	mainDiv.className = 'active-media-player-main';
 
 	var handleDiv = document.createElement('div');
-	handleDiv.className = 'active-phonograph-handle';
+	handleDiv.className = 'active-media-player-handle';
 
-	if (phonograph.label) {
-		handleDiv.innerHTML = phonograph.label;
+	if (mediaPlayer.label) {
+		handleDiv.innerHTML = mediaPlayer.label;
 	} else {
-		handleDiv.innerHTML = phonograph.handle.toString(16);
+		handleDiv.innerHTML = mediaPlayer.handle.toString(16);
 	}
 
 	var distanceDiv = document.createElement('div');
-	distanceDiv.className = 'active-phonograph-distance';
+	distanceDiv.className = 'active-media-player-distance';
 
-	if (phonograph.distance >= 0) {
-		distanceDiv.innerHTML = Math.floor(phonograph.distance) + 'm';
+	if (mediaPlayer.distance >= 0) {
+		distanceDiv.innerHTML = Math.floor(mediaPlayer.distance) + 'm';
 	} else {
 		distanceDiv.innerHTML = '-';
 	}
 
 	var titleDiv = document.createElement('div');
-	titleDiv.className = 'active-phonograph-title';
-	titleDiv.innerHTML = phonograph.info.title.substring(0, 47);
+	titleDiv.className = 'active-media-player-title';
+	titleDiv.innerHTML = mediaPlayer.info.title.substring(0, 47);
 
 	var timeDiv = document.createElement('div');
-	timeDiv.className = 'active-phonograph-time';
+	timeDiv.className = 'active-media-player-time';
 
 	var timeSpan = document.createElement('span');
-	if (phonograph.info.duration) {
-		timeSpan.innerHTML = timeToString(phonograph.info.offset) + '/' + timeToString(phonograph.info.duration);
+	if (mediaPlayer.info.duration) {
+		timeSpan.innerHTML = timeToString(mediaPlayer.info.offset) + '/' + timeToString(mediaPlayer.info.duration);
 	} else {
-		timeSpan.innerHTML = timeToString(phonograph.info.offset);
+		timeSpan.innerHTML = timeToString(mediaPlayer.info.offset);
 	}
 
 	var seekBackwardButton = document.createElement('button');
@@ -508,7 +508,7 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 	seekBackwardButton.innerHTML = '<i class="fas fa-backward"></i>';
 	seekBackwardButton.addEventListener('click', event => {
 		sendMessage('seekBackward', {
-			handle: phonograph.handle
+			handle: mediaPlayer.handle
 		});
 	});
 
@@ -517,24 +517,24 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 	seekForwardButton.innerHTML = '<i class="fas fa-forward"></i>';
 	seekForwardButton.addEventListener('click', event => {
 		sendMessage('seekForward', {
-			handle: phonograph.handle
+			handle: mediaPlayer.handle
 		});
 	});
 
 	var nextButton = document.createElement('button');
 	nextButton.className = 'control-button';
 	nextButton.innerHTML = '<i class="fas fa-step-forward"></i>';
-	if (phonograph.info.queue.length < 1) {
+	if (mediaPlayer.info.queue.length < 1) {
 		nextButton.disabled = true;
 	} else {
 		nextButton.addEventListener('click', event => {
 			sendMessage('next', {
-				handle: phonograph.handle
+				handle: mediaPlayer.handle
 			});
 		});
 	}
 
-	if ((phonograph.info.locked && !fullControls) || !phonograph.info.duration) {
+	if ((mediaPlayer.info.locked && !fullControls) || !mediaPlayer.info.duration) {
 		seekBackwardButton.disabled = true;
 		seekForwardButton.disabled = true;
 	}
@@ -545,26 +545,26 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 	timeDiv.appendChild(nextButton);
 
 	var videoSizeDiv = document.createElement('div');
-	videoSizeDiv.className = 'active-phonograph-video-size';
-	if (phonograph.info.video && player && player.videoTracks && player.videoTracks.length > 0) {
+	videoSizeDiv.className = 'active-media-player-video-size';
+	if (mediaPlayer.info.video && player && player.videoTracks && player.videoTracks.length > 0) {
 		var videoSizeDecreaseButton = document.createElement('button');
 		videoSizeDecreaseButton.className = 'control-button';
 		videoSizeDecreaseButton.innerHTML = '<i class="fas fa-minus"></i>';
 		videoSizeDecreaseButton.addEventListener('click', event => {
 			sendMessage('decreaseVideoSize', {
-				handle: phonograph.handle
+				handle: mediaPlayer.handle
 			});
 		});
 
 		var videoSizeSpan = document.createElement('span');
-		videoSizeSpan.innerHTML = phonograph.info.videoSize;
+		videoSizeSpan.innerHTML = mediaPlayer.info.videoSize;
 
 		var videoSizeIncreaseButton = document.createElement('button');
 		videoSizeIncreaseButton.className = 'control-button';
 		videoSizeIncreaseButton.innerHTML = '<i class="fas fa-plus"></i>';
 		videoSizeIncreaseButton.addEventListener('click', event => {
 			sendMessage('increaseVideoSize', {
-				handle: phonograph.handle
+				handle: mediaPlayer.handle
 			});
 		});
 
@@ -574,19 +574,19 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 	}
 
 	var controlsDiv = document.createElement('div');
-	controlsDiv.className = 'active-phonograph-controls';
+	controlsDiv.className = 'active-media-player-controls';
 
 	var lockedButton = document.createElement('button');
 	lockedButton.className = 'control-button';
-	if (phonograph.info.locked) {
+	if (mediaPlayer.info.locked) {
 		lockedButton.innerHTML = '<i class="fas fa-lock"></i>';
 		lockedButton.addEventListener('click', event => {
-			unlock(phonograph.handle);
+			unlock(mediaPlayer.handle);
 		});
 	} else {
 		lockedButton.innerHTML = '<i class="fas fa-unlock"></i>';
 		lockedButton.addEventListener('click', event => {
-			lock(phonograph.handle);
+			lock(mediaPlayer.handle);
 		});
 	}
 	if (!fullControls) {
@@ -597,76 +597,76 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 	copyButton.className = 'control-button';
 	copyButton.innerHTML = '<i class="fas fa-clone"></i>';
 	copyButton.addEventListener('click', event => {
-		copy(phonograph.handle);
+		copy(mediaPlayer.handle);
 	});
-	if (phonograph.info.locked && !fullControls) {
+	if (mediaPlayer.info.locked && !fullControls) {
 		copyButton.disabled = true;
 	}
 
 	var loopButton = document.createElement('button');
 	loopButton.className = 'control-button';
-	if (phonograph.info.loop) {
+	if (mediaPlayer.info.loop) {
 		loopButton.innerHTML = '<i class="fas fa-retweet"></i>';
 	} else {
 		loopButton.innerHTML = '<i class="fas fa-arrow-right"></i>';
 	}
 	loopButton.addEventListener('click', event => {
-		setLoop(phonograph.handle, !phonograph.info.loop);
+		setLoop(mediaPlayer.handle, !mediaPlayer.info.loop);
 	});
-	if ((phonograph.info.locked && !fullControls) || !phonograph.info.duration) {
+	if ((mediaPlayer.info.locked && !fullControls) || !mediaPlayer.info.duration) {
 		loopButton.disabled = true;
 	}
 
 	var videoButton = document.createElement('button');
 	videoButton.className = 'control-button';
 	if (player && player.videoTracks && player.videoTracks.length > 0) {
-		if (phonograph.info.video) {
+		if (mediaPlayer.info.video) {
 			videoButton.innerHTML = '<i class="fas fa-video"></i>';
 			videoButton.addEventListener('click', event => {
-				disableVideo(phonograph.handle);
+				disableVideo(mediaPlayer.handle);
 			});
 		} else {
 			videoButton.innerHTML = '<i class="fas fa-video-slash"></i>';
 			videoButton.addEventListener('click', event => {
-				enableVideo(phonograph.handle);
+				enableVideo(mediaPlayer.handle);
 			});
 		}
 	} else {
 		videoButton.innerHTML = '<i class="fas fa-video-slash"></i>';
 		videoButton.disabled = true;
 	}
-	if (phonograph.info.locked && !fullControls) {
+	if (mediaPlayer.info.locked && !fullControls) {
 		videoButton.disabled = true;
 	}
 
 	var muteButton = document.createElement('button');
 	muteButton.className = 'control-button';
-	if (phonograph.info.muted) {
+	if (mediaPlayer.info.muted) {
 		muteButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
 		muteButton.addEventListener('click', event => {
-			unmute(phonograph.handle);
+			unmute(mediaPlayer.handle);
 		});
 	} else {
 		muteButton.innerHTML = '<i class="fas fa-volume-off"></i>';
 		muteButton.addEventListener('click', event => {
-			mute(phonograph.handle);
+			mute(mediaPlayer.handle);
 		});
 	}
-	if (phonograph.info.locked && !fullControls) {
+	if (mediaPlayer.info.locked && !fullControls) {
 		muteButton.disabled = true;
 	}
 
 	var pauseResumeButton = document.createElement('button');
 	pauseResumeButton.className = 'control-button';
-	if (phonograph.info.paused) {
+	if (mediaPlayer.info.paused) {
 		pauseResumeButton.innerHTML = '<i class="fas fa-play"></i>';
 	} else {
 		pauseResumeButton.innerHTML = '<i class="fas fa-pause"></i>';
 	}
 	pauseResumeButton.addEventListener('click', event => {
-		pause(phonograph.handle);
+		pause(mediaPlayer.handle);
 	});
-	if ((phonograph.info.locked && !fullControls) || !phonograph.info.duration) {
+	if ((mediaPlayer.info.locked && !fullControls) || !mediaPlayer.info.duration) {
 		pauseResumeButton.disabled = true;
 	}
 
@@ -675,10 +675,10 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 	stopButton.innerHTML = '<i class="fas fa-stop"></i>';
 	stopButton.addEventListener('click', event => {
 		sendMessage('stop', {
-			handle: phonograph.handle
+			handle: mediaPlayer.handle
 		});
 	});
-	if (phonograph.info.locked && !fullControls) {
+	if (mediaPlayer.info.locked && !fullControls) {
 		stopButton.disabled = true;
 	}
 
@@ -699,9 +699,9 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 
 	div.appendChild(mainDiv);
 
-	if (includeQueue && phonograph.info.queue.length > 0) {
+	if (includeQueue && mediaPlayer.info.queue.length > 0) {
 		var queueDiv = document.createElement('div');
-		queueDiv.className = 'active-phonograph-queue';
+		queueDiv.className = 'active-media-player-queue';
 
 		var queueHeadDiv = document.createElement('div');
 		queueHeadDiv.className = 'queue-head';
@@ -710,8 +710,8 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 		var queueBodyDiv = document.createElement('div');
 		queueBodyDiv.className = 'queue-body';
 
-		for (let i = 0; i < phonograph.info.queue.length; ++i) {
-			var entry = phonograph.info.queue[i];
+		for (let i = 0; i < mediaPlayer.info.queue.length; ++i) {
+			var entry = mediaPlayer.info.queue[i];
 
 			var urlDiv = document.createElement('div');
 			urlDiv.innerHTML = entry.url.substring(0, 40);
@@ -733,7 +733,7 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 			deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
 			deleteButton.addEventListener('click', event => {
 				sendMessage('removeFromQueue', {
-					handle: phonograph.handle,
+					handle: mediaPlayer.handle,
 					index: i + 1
 				});
 			});
@@ -756,24 +756,24 @@ function createActivePhonographDiv(phonograph, fullControls, includeQueue) {
 }
 
 function updateUi(data) {
-	var activePhonographs = JSON.parse(data.activePhonographs);
+	var activeMediaPlayers = JSON.parse(data.activeMediaPlayers);
 
-	var activePhonographsDiv = document.getElementById('active-phonographs');
+	var activeMediaPlayersDiv = document.getElementById('active-media-players');
 	var queuesDiv = document.getElementById('queues');
-	activePhonographsDiv.innerHTML = '';
-	activePhonographs.forEach(phonograph => {
-		var div = createActivePhonographDiv(phonograph, data.fullControls, true);
+	activeMediaPlayersDiv.innerHTML = '';
+	activeMediaPlayers.forEach(mediaPlayer => {
+		var div = createActiveMediaPlayerDiv(mediaPlayer, data.fullControls, true);
 
 		if (div) {
-			activePhonographsDiv.appendChild(div);
+			activeMediaPlayersDiv.appendChild(div);
 		}
 	});
 
 	var statusDiv = document.getElementById('status');
 	statusDiv.innerHTML = '';
-	for (i = 0; i < activePhonographs.length; ++i) {
-		if (activePhonographs[i].distance >= 0 && activePhonographs[i].distance <= data.maxDistance) {
-			var div = createActivePhonographDiv(activePhonographs[i], data.fullControls, false);
+	for (i = 0; i < activeMediaPlayers.length; ++i) {
+		if (activeMediaPlayers[i].distance >= 0 && activeMediaPlayers[i].distance <= data.maxDistance) {
+			var div = createActiveMediaPlayerDiv(activeMediaPlayers[i], data.fullControls, false);
 
 			if (div) {
 				statusDiv.appendChild(div);
@@ -782,10 +782,10 @@ function updateUi(data) {
 		}
 	}
 
-	var usablePhonographs = JSON.parse(data.usablePhonographs);
+	var usableMediaPlayers = JSON.parse(data.usableMediaPlayers);
 	var presets = JSON.parse(data.presets);
 
-	var usablePhonographsSelect = document.getElementById('usable-phonographs');
+	var usableMediaPlayersSelect = document.getElementById('usable-media-players');
 	var presetSelect = document.getElementById('preset');
 	var urlInput = document.getElementById('url');
 	var offsetInput = document.getElementById('offset');
@@ -797,10 +797,10 @@ function updateUi(data) {
 	var mutedInput = document.getElementById('muted');
 	var playButton = document.getElementById('play-button');
 
-	var usablePhonographsValue = usablePhonographsSelect.value;
+	var usableMediaPlayersValue = usableMediaPlayersSelect.value;
 	var presetValue = presetSelect.value;
 
-	usablePhonographsSelect.innerHTML = '';
+	usableMediaPlayersSelect.innerHTML = '';
 
 	var presetKeys = Object.keys(presets).sort();
 
@@ -841,8 +841,8 @@ function updateUi(data) {
 		presetSelect.style.display = 'none';
 	}
 
-	if (usablePhonographs.length == 0) {
-		usablePhonographsSelect.disabled = true;
+	if (usableMediaPlayers.length == 0) {
+		usableMediaPlayersSelect.disabled = true;
 		presetSelect.disabled = true;
 		urlInput.disabled = true;
 		offsetInput.disabled = true;
@@ -854,28 +854,28 @@ function updateUi(data) {
 		mutedInput.disabled = true;
 		playButton.disabled = true;
 	} else {
-		usablePhonographs.forEach(phonograph => {
+		usableMediaPlayers.forEach(mediaPlayer => {
 			var option = document.createElement('option');
 
-			option.value = phonograph.handle;
+			option.value = mediaPlayer.handle;
 
-			if (phonograph.active) {
+			if (mediaPlayer.active) {
 				option.innerHTML = '&#xf144; ';
 			} else {
 				option.innerHTML = '';
 			}
 
-			if (phonograph.label) {
-				option.innerHTML += phonograph.label + ' (' + Math.floor(phonograph.distance) + 'm)';
+			if (mediaPlayer.label) {
+				option.innerHTML += mediaPlayer.label + ' (' + Math.floor(mediaPlayer.distance) + 'm)';
 			} else {
-				option.innerHTML += phonograph.handle.toString(16) + ' (' + Math.floor(phonograph.distance) + 'm)';
+				option.innerHTML += mediaPlayer.handle.toString(16) + ' (' + Math.floor(mediaPlayer.distance) + 'm)';
 			}
 
-			if (phonograph.handle == usablePhonographsValue) {
+			if (mediaPlayer.handle == usableMediaPlayersValue) {
 				option.selected = true;
 			}
 
-			usablePhonographsSelect.appendChild(option);
+			usableMediaPlayersSelect.appendChild(option);
 		});
 
 		if (presetSelect.value == '') {
@@ -904,7 +904,7 @@ function updateUi(data) {
 			lockedCheckbox.disabled = true;
 		}
 
-		usablePhonographsSelect.disabled = false;
+		usableMediaPlayersSelect.disabled = false;
 		presetSelect.disabled = false;
 		offsetInput.disabled = false;
 		loopCheckbox.disabled = false;
@@ -953,8 +953,8 @@ function toggleStatus() {
 	}
 }
 
-function startPhonograph() {
-	var handleInput = document.getElementById('usable-phonographs');
+function startMediaPlayer() {
+	var handleInput = document.getElementById('usable-media-players');
 	var presetSelect = document.getElementById('preset');
 	var urlInput = document.getElementById('url');
 	var offsetInput = document.getElementById('offset');
@@ -1061,13 +1061,13 @@ window.addEventListener('load', () => {
 	});
 
 	document.getElementById('play-button').addEventListener('click', function(event) {
-		startPhonograph();
+		startMediaPlayer();
 	});
 
-	document.getElementById('start-phonograph').addEventListener('keyup', function(event) {
+	document.getElementById('start-media-player').addEventListener('keyup', function(event) {
 		if (event.keyCode == 13) {
 			event.preventDefault();
-			startPhonograph();
+			startMediaPlayer();
 		}
 	});
 

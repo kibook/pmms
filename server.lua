@@ -1,32 +1,32 @@
-local Phonographs = {}
-local RestrictedHandles = {}
-local SyncQueue = {}
+local mediaPlayers = {}
+local restrictedHandles = {}
+local syncQueue = {}
 
-RegisterNetEvent('phonograph:start')
-RegisterNetEvent('phonograph:init')
-RegisterNetEvent('phonograph:pause')
-RegisterNetEvent('phonograph:stop')
-RegisterNetEvent('phonograph:showControls')
-RegisterNetEvent('phonograph:toggleStatus')
-RegisterNetEvent('phonograph:setVolume')
-RegisterNetEvent('phonograph:setStartTime')
-RegisterNetEvent('phonograph:lock')
-RegisterNetEvent('phonograph:unlock')
-RegisterNetEvent('phonograph:enableVideo')
-RegisterNetEvent('phonograph:disableVideo')
-RegisterNetEvent('phonograph:setVideoSize')
-RegisterNetEvent('phonograph:mute')
-RegisterNetEvent('phonograph:unmute')
-RegisterNetEvent('phonograph:copy')
-RegisterNetEvent('phonograph:setLoop')
-RegisterNetEvent('phonograph:next')
-RegisterNetEvent('phonograph:removeFromQueue')
+RegisterNetEvent("pmms:start")
+RegisterNetEvent("pmms:init")
+RegisterNetEvent("pmms:pause")
+RegisterNetEvent("pmms:stop")
+RegisterNetEvent("pmms:showControls")
+RegisterNetEvent("pmms:toggleStatus")
+RegisterNetEvent("pmms:setVolume")
+RegisterNetEvent("pmms:setStartTime")
+RegisterNetEvent("pmms:lock")
+RegisterNetEvent("pmms:unlock")
+RegisterNetEvent("pmms:enableVideo")
+RegisterNetEvent("pmms:disableVideo")
+RegisterNetEvent("pmms:setVideoSize")
+RegisterNetEvent("pmms:mute")
+RegisterNetEvent("pmms:unmute")
+RegisterNetEvent("pmms:copy")
+RegisterNetEvent("pmms:setLoop")
+RegisterNetEvent("pmms:next")
+RegisterNetEvent("pmms:removeFromQueue")
 
-function Enqueue(queue, cb)
+local function enqueue(queue, cb)
 	table.insert(queue, 1, cb)
 end
 
-function Dequeue(queue)
+local function dequeue(queue)
 	local cb = table.remove(queue)
 
 	if cb then
@@ -34,8 +34,8 @@ function Dequeue(queue)
 	end
 end
 
-function AddToQueue(handle, source, url, volume, offset, filter, video)
-	table.insert(Phonographs[handle].queue, {
+local function addToQueue(handle, source, url, volume, offset, filter, video)
+	table.insert(mediaPlayers[handle].queue, {
 		source = source,
 		name = GetPlayerName(source),
 		url = url,
@@ -46,19 +46,19 @@ function AddToQueue(handle, source, url, volume, offset, filter, video)
 	})
 end
 
-function RemoveFromQueue(handle, index)
-	table.remove(Phonographs[handle].queue, index)
+local function removeFromQueue(handle, index)
+	table.remove(mediaPlayers[handle].queue, index)
 end
 
-function AddPhonograph(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
-	if Phonographs[handle] then
+local function addMediaPlayer(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+	if mediaPlayers[handle] then
 		return
 	end
 
 	attenuation.min = Clamp(attenuation.min, 1.0, 10.0, defaultMinAttenuation)
 	attenuation.max = Clamp(attenuation.max, 1.0, 10.0, defaultMaxAttenuation)
 
-	Phonographs[handle] = {
+	mediaPlayers[handle] = {
 		url = url,
 		title = title or url,
 		volume = Clamp(volume, 0, 100, 50),
@@ -77,18 +77,18 @@ function AddPhonograph(handle, url, title, volume, offset, duration, loop, filte
 		queue = queue or {}
 	}
 
-	Enqueue(SyncQueue, function()
-		TriggerClientEvent('phonograph:play', -1, handle)
+	enqueue(syncQueue, function()
+		TriggerClientEvent("pmms:play", -1, handle)
 	end)
 end
 
-function PlayNextInQueue(handle)
-	local phono = Phonographs[handle]
+local function playNextInQueue(handle)
+	local mediaPlayer = mediaPlayers[handle]
 
-	RemovePhonograph(handle)
+	removeMediaPlayer(handle)
 
-	while #phono.queue > 0 do
-		local next = table.remove(phono.queue, 1)
+	while #mediaPlayer.queue > 0 do
+		local next = table.remove(mediaPlayer.queue, 1)
 
 		local client
 
@@ -99,24 +99,24 @@ function PlayNextInQueue(handle)
 		end
 
 		if client then
-			RestrictedHandles[handle] = client
+			restrictedHandles[handle] = client
 
-			Enqueue(SyncQueue, function()
-				TriggerClientEvent('phonograph:init',
+			enqueue(syncQueue, function()
+				TriggerClientEvent("pmms:init",
 					client,
 					handle,
 					next.url,
 					next.volume,
 					next.offset,
-					phono.loop,
+					mediaPlayer.loop,
 					next.filter,
-					phono.locked,
+					mediaPlayer.locked,
 					next.video,
-					phono.videoSize,
-					phono.muted,
-					phono.attenuation,
-					phono.queue,
-					phono.coords)
+					mediaPlayer.videoSize,
+					mediaPlayer.muted,
+					mediaPlayer.attenuation,
+					mediaPlayer.queue,
+					mediaPlayer.coords)
 			end)
 
 			break
@@ -124,44 +124,44 @@ function PlayNextInQueue(handle)
 	end
 end
 
-function RemovePhonograph(handle)
-	Phonographs[handle] = nil
+local function removeMediaPlayer(handle)
+	mediaPlayers[handle] = nil
 
-	Enqueue(SyncQueue, function()
-		TriggerClientEvent('phonograph:stop', -1, handle)
+	enqueue(syncQueue, function()
+		TriggerClientEvent("pmms:stop", -1, handle)
 	end)
 end
 
-function PausePhonograph(handle)
-	if not Phonographs[handle] then
+local function pauseMediaPlayer(handle)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if Phonographs[handle].paused then
-		Phonographs[handle].startTime = Phonographs[handle].startTime + (os.time() - Phonographs[handle].paused)
-		Phonographs[handle].paused = false
+	if mediaPlayers[handle].paused then
+		mediaPlayers[handle].startTime = mediaPlayers[handle].startTime + (os.time() - mediaPlayers[handle].paused)
+		mediaPlayers[handle].paused = false
 	else
-		Phonographs[handle].paused = os.time()
+		mediaPlayers[handle].paused = os.time()
 	end
 end
 
-function GetRandomPreset()
+local function getRandomPreset()
 	local presets = {}
 
-	for preset, info in pairs(Config.Presets) do
+	for preset, info in pairs(Config.presets) do
 		table.insert(presets, preset)
 	end
 
-	return #presets > 0 and presets[math.random(#presets)] or ''
+	return #presets > 0 and presets[math.random(#presets)] or ""
 end
 
-function ResolvePreset(url, title, filter, video)
-	if url == 'random' then
-		url = GetRandomPreset()
+local function resolvePreset(url, title, filter, video)
+	if url == "random" then
+		url = getRandomPreset()
 	end
 
-	if Config.Presets[url] then
-		return Config.Presets[url]
+	if Config.presets[url] then
+		return Config.presets[url]
 	else
 		return {
 			url = url,
@@ -172,10 +172,10 @@ function ResolvePreset(url, title, filter, video)
 	end
 end
 
-function StartPhonographByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation)
-	local resolved = ResolvePreset(url, title, filter, video)
+local function startMediaPlayerByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation)
+	local resolved = resolvePreset(url, title, filter, video)
 
-	AddPhonograph(netId,
+	addMediaPlayer(netId,
 		resolved.url,
 		resolved.title,
 		volume,
@@ -194,13 +194,13 @@ function StartPhonographByNetworkId(netId, url, title, volume, offset, duration,
 	return netId
 end
 
-function StartPhonographByCoords(x, y, z, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation)
+local function startMediaPlayerByCoords(x, y, z, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation)
 	local coords = vector3(x, y, z)
 	local handle = GetHandleFromCoords(coords)
 
-	local resolved = ResolvePreset(url, title, filter, video)
+	local resolved = resolvePreset(url, title, filter, video)
 
-	AddPhonograph(handle,
+	addMediaPlayer(handle,
 		resolved.url,
 		resolved.title,
 		volume,
@@ -219,68 +219,68 @@ function StartPhonographByCoords(x, y, z, url, title, volume, offset, duration, 
 	return handle
 end
 
-function ErrorMessage(player, message)
-	TriggerClientEvent('phonograph:error', player, message)
+local function errorMessage(player, message)
+	TriggerClientEvent("pmms:error", player, message)
 end
 
-function StartDefaultPhonographs()
-	for _, phonograph in ipairs(Config.DefaultPhonographs) do
-		if phonograph.url then
-			StartPhonographByCoords(
-				phonograph.position.x,
-				phonograph.position.y,
-				phonograph.position.z,
-				phonograph.url,
-				phonograph.title,
-				phonograph.volume,
-				phonograph.offset,
-				phonograph.duration,
-				phonograph.loop,
-				phonograph.filter,
-				phonograph.locked,
-				phonograph.video,
-				phonograph.videoSize,
-				phonograph.muted,
-				phonograph.attenuation)
+local function startDefaultMediaPlayers()
+	for _, mediaPlayer in ipairs(Config.defaultMediaPlayers) do
+		if mediaPlayer.url then
+			startMediaPlayerByCoords(
+				mediaPlayer.position.x,
+				mediaPlayer.position.y,
+				mediaPlayer.position.z,
+				mediaPlayer.url,
+				mediaPlayer.title,
+				mediaPlayer.volume,
+				mediaPlayer.offset,
+				mediaPlayer.duration,
+				mediaPlayer.loop,
+				mediaPlayer.filter,
+				mediaPlayer.locked,
+				mediaPlayer.video,
+				mediaPlayer.videoSize,
+				mediaPlayer.muted,
+				mediaPlayer.attenuation)
 		end
 	end
 end
 
-function ResetPlaytime(handle)
-	Phonographs[handle].offset = 0
-	Phonographs[handle].startTime = os.time()
+local function resetPlaytime(handle)
+	mediaPlayers[handle].offset = 0
+	mediaPlayers[handle].startTime = os.time()
 end
 
-function SyncPhonographs()
-	for handle, phono in pairs(Phonographs) do
-		if not phono.paused then
-			phono.offset = os.time() - phono.startTime
+local function syncMediaPlayers()
+	for handle, info in pairs(mediaPlayers) do
+		if not info.paused then
+			info.offset = os.time() - info.startTime
 
-			if phono.duration and phono.offset >= phono.duration then
-				if phono.loop then
-					ResetPlaytime(handle)
-				elseif #phono.queue > 0 then
-					PlayNextInQueue(handle)
+			if info.duration and info.offset >= info.duration then
+				if info.loop then
+					resetPlaytime(handle)
+				elseif #info.queue > 0 then
+					playNextInQueue(handle)
 				else
-					RemovePhonograph(handle)
+					removeMediaPlayer(handle)
 				end
 			end
 		end
 	end
 
 	for _, playerId in ipairs(GetPlayers()) do
-		TriggerClientEvent('phonograph:sync', playerId,
-			Phonographs,
-			IsPlayerAceAllowed(playerId, 'phonograph.manage'),
-			IsPlayerAceAllowed(playerId, 'phonograph.anyUrl'))
+		TriggerClientEvent("pmms:sync", playerId,
+			mediaPlayers,
+			IsPlayerAceAllowed(playerId, "pmms.manage"),
+			IsPlayerAceAllowed(playerId, "pmms.anyUrl"))
 	end
 
-	Dequeue(SyncQueue)
+	dequeue(syncQueue)
 end
 
-function IsLockedDefaultPhonograph(handle)
-	for _, phonograph in ipairs(Config.DefaultPhonographs) do
-		if handle == GetHandleFromCoords(phonograph.position) and phonograph.locked then
+local function isLockedDefaultMediaPlayer(handle)
+	for _, mediaPlayer in ipairs(Config.defaultMediaPlayers) do
+		if handle == GetHandleFromCoords(mediaPlayer.position) and mediaPlayer.locked then
 			return true
 		end
 	end
@@ -288,120 +288,120 @@ function IsLockedDefaultPhonograph(handle)
 	return false
 end
 
-function LockPhonograph(handle)
-	Phonographs[handle].locked = true
+local function lockMediaPlayer(handle)
+	mediaPlayers[handle].locked = true
 end
 
-function UnlockPhonograph(handle)
-	Phonographs[handle].locked = false
+local function unlockMediaPlayer(handle)
+	mediaPlayers[handle].locked = false
 end
 
-function MutePhonograph(handle)
-	Phonographs[handle].muted = true
+local function muteMediaPlayer(handle)
+	mediaPlayers[handle].muted = true
 end
 
-function UnmutePhonograph(handle)
-	Phonographs[handle].muted = false
+local function unmuteMediaPlayer(handle)
+	mediaPlayers[handle].muted = false
 end
 
-function CopyPhonograph(oldHandle, newHandle, newCoords)
+local function copyMediaPlayer(oldHandle, newHandle, newCoords)
 	if newHandle then
-		StartPhonographByNetworkId(
+		startMediaPlayerByNetworkId(
 			newHandle,
-			Phonographs[oldHandle].url,
-			Phonographs[oldHandle].title,
-			Phonographs[oldHandle].volume,
-			Phonographs[oldHandle].offset,
-			Phonographs[oldHandle].duration,
-			Phonographs[oldHandle].loop,
-			Phonographs[oldHandle].filter,
-			Phonographs[oldHandle].locked,
-			Phonographs[oldHandle].video,
-			Phonographs[oldHandle].videoSize,
-			Phonographs[oldHandle].muted,
-			Phonographs[oldHandle].attenuation)
+			mediaPlayers[oldHandle].url,
+			mediaPlayers[oldHandle].title,
+			mediaPlayers[oldHandle].volume,
+			mediaPlayers[oldHandle].offset,
+			mediaPlayers[oldHandle].duration,
+			mediaPlayers[oldHandle].loop,
+			mediaPlayers[oldHandle].filter,
+			mediaPlayers[oldHandle].locked,
+			mediaPlayers[oldHandle].video,
+			mediaPlayers[oldHandle].videoSize,
+			mediaPlayers[oldHandle].muted,
+			mediaPlayers[oldHandle].attenuation)
 	elseif newCoords then
-		StartPhonographByCoords(
+		startMediaPlayerByCoords(
 			newCoords.x,
 			newCoords.y,
 			newCoords.z,
-			Phonographs[oldHandle].url,
-			Phonographs[oldHandle].title,
-			Phonographs[oldHandle].volume,
-			Phonographs[oldHandle].offset,
-			Phonographs[oldHandle].duration,
-			Phonographs[oldHandle].loop,
-			Phonographs[oldHandle].filter,
-			Phonographs[oldHandle].locked,
-			Phonographs[oldHandle].video,
-			Phonographs[oldHandle].videoSize,
-			Phonographs[oldHandle].muted,
-			Phonographs[oldHandle].attenuation)
+			mediaPlayers[oldHandle].url,
+			mediaPlayers[oldHandle].title,
+			mediaPlayers[oldHandle].volume,
+			mediaPlayers[oldHandle].offset,
+			mediaPlayers[oldHandle].duration,
+			mediaPlayers[oldHandle].loop,
+			mediaPlayers[oldHandle].filter,
+			mediaPlayers[oldHandle].locked,
+			mediaPlayers[oldHandle].video,
+			mediaPlayers[oldHandle].videoSize,
+			mediaPlayers[oldHandle].muted,
+			mediaPlayers[oldHandle].attenuation)
 	end
 end
 
-function SetPhonographLoop(handle, loop)
-	Phonographs[handle].loop = loop
+local function setMediaPlayerLoop(handle, loop)
+	mediaPlayers[handle].loop = loop
 end
 
-exports('startByNetworkId', StartPhonographByNetworkId)
-exports('startByCoords', StartPhonographByCoords)
-exports('stop', RemovePhonograph)
-exports('pause', PausePhonograph)
-exports('lock', LockPhonograph)
-exports('unlock', UnlockPhonograph)
-exports('mute', MutePhonograph)
-exports('unmute', UnmutePhonograph)
+exports("startByNetworkId", startMediaPlayerByNetworkId)
+exports("startByCoords", startMediaPlayerByCoords)
+exports("stop", removeMediaPlayer)
+exports("pause", pauseMediaPlayer)
+exports("lock", lockMediaPlayer)
+exports("unlock", unlockMediaPlayer)
+exports("mute", muteMediaPlayer)
+exports("unmute", unmuteMediaPlayer)
 
-AddEventHandler('phonograph:start', function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+AddEventHandler("pmms:start", function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 	if coords then
 		handle = GetHandleFromCoords(coords)
 	end
 
-	if RestrictedHandles[handle] then
-		if RestrictedHandles[handle] ~= source then
-			ErrorMessage(source, 'This player is busy')
+	if restrictedHandles[handle] then
+		if restrictedHandles[handle] ~= source then
+			errorMessage(source, "This player is busy")
 			return
 		end
 
-		RestrictedHandles[handle] = nil
+		restrictedHandles[handle] = nil
 	end
 
-	if Phonographs[handle] then
-		AddToQueue(handle, source, url, volume, offset, filter, video)
+	if mediaPlayers[handle] then
+		addToQueue(handle, source, url, volume, offset, filter, video)
 	else
-		if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-			ErrorMessage(source, 'You do not have permission to play a song on a phonograph')
+		if not IsPlayerAceAllowed(source, "pmms.interact") then
+			errorMessage(source, "You do not have permission to play a song on a media player")
 			return
 		end
 
-		if (locked or IsLockedDefaultPhonograph(handle)) and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-			ErrorMessage(source, 'You do not have permission to play a song on a locked phonograph')
+		if (locked or isLockedDefaultMediaPlayer(handle)) and not IsPlayerAceAllowed(source, "pmms.manage") then
+			errorMessage(source, "You do not have permission to play a song on a locked media player")
 			return
 		end
 
-		if url == 'random' then
-			url = GetRandomPreset()
+		if url == "random" then
+			url = getRandomPreset()
 		end
 
-		if Config.Presets[url] then
-			TriggerClientEvent('phonograph:start', source,
+		if Config.presets[url] then
+			TriggerClientEvent("pmms:start", source,
 				handle,
-				Config.Presets[url].url,
-				Config.Presets[url].title,
+				Config.presets[url].url,
+				Config.presets[url].title,
 				volume,
 				offset,
 				loop,
-				Config.Presets[url].filter or false,
+				Config.presets[url].filter or false,
 				locked,
-				Config.Presets[url].video or false,
+				Config.presets[url].video or false,
 				videoSize,
 				muted,
 				attenuation,
 				queue,
 				coords)
-		elseif IsPlayerAceAllowed(source, 'phonograph.anyUrl') then
-			TriggerClientEvent('phonograph:start', source,
+		elseif IsPlayerAceAllowed(source, "pmms.anyUrl") then
+			TriggerClientEvent("pmms:start", source,
 				handle,
 				url,
 				false,
@@ -417,317 +417,317 @@ AddEventHandler('phonograph:start', function(handle, url, volume, offset, loop, 
 				queue,
 				coords)
 		else
-			ErrorMessage(source, 'You must select from one of the pre-defined songs (/phono songs)')
+			errorMessage(source, "You must select from one of the pre-defined songs (" .. Config.commandPrefix .. Config.commandSeparator .. "presets)")
 		end
 	end
 end)
 
-AddEventHandler('phonograph:init', function(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
-	if Phonographs[handle] then
+AddEventHandler("pmms:init", function(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+	if mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to play a song on a phonograph')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to play a song on a media player")
 		return
 	end
 
-	if (locked or IsLockedDefaultPhonograph(handle)) and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to play a song on a locked phonographs')
+	if (locked or isLockedDefaultMediaPlayer(handle)) and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to play a song on a locked media players")
 		return
 	end
 
-	AddPhonograph(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+	addMediaPlayer(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 end)
 
-AddEventHandler('phonograph:pause', function(handle)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:pause", function(handle)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not Phonographs[handle].duration then
-		ErrorMessage(source, 'You cannot pause live streams.')
+	if not mediaPlayers[handle].duration then
+		errorMessage(source, "You cannot pause live streams.")
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to pause or resume phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to pause or resume media players")
 		return
 	end
 
-	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to pause or resume locked phonographs')
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to pause or resume locked media players")
 		return
 	end
 
-	PausePhonograph(handle)
+	pauseMediaPlayer(handle)
 end)
 
-AddEventHandler('phonograph:stop', function(handle)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:stop", function(handle)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to stop phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to stop media players")
 		return
 	end
 
-	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to stop locked phonographs')
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to stop locked media players")
 		return
 	end
 
-	RemovePhonograph(handle)
+	removeMediaPlayer(handle)
 end)
 
-AddEventHandler('phonograph:showControls', function()
-	TriggerClientEvent('phonograph:showControls', source)
+AddEventHandler("pmms:showControls", function()
+	TriggerClientEvent("pmms:showControls", source)
 end)
 
-AddEventHandler('phonograph:toggleStatus', function()
-	TriggerClientEvent('phonograph:toggleStatus', source)
+AddEventHandler("pmms:toggleStatus", function()
+	TriggerClientEvent("pmms:toggleStatus", source)
 end)
 
-AddEventHandler('phonograph:setVolume', function(handle, volume)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:setVolume", function(handle, volume)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to change the volume of phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to change the volume of media players")
 		return
 	end
 
-	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to change the volume of locked phonographs')
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to change the volume of locked media players")
 		return
 	end
 
-	Phonographs[handle].volume = Clamp(volume, 0, 100, 50)
+	mediaPlayers[handle].volume = Clamp(volume, 0, 100, 50)
 end)
 
-AddEventHandler('phonograph:setStartTime', function(handle, time)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:setStartTime", function(handle, time)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not Phonographs[handle].duration then
-		ErrorMessage(source, 'You cannot seek on live streams')
+	if not mediaPlayers[handle].duration then
+		errorMessage(source, "You cannot seek on live streams")
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to seek on phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to seek on media players")
 		return
 	end
 
-	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to seek on locked phonographs')
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to seek on locked media players")
 		return
 	end
 
-	Phonographs[handle].startTime = time
+	mediaPlayers[handle].startTime = time
 end)
 
-AddEventHandler('phonograph:lock', function(handle)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:lock", function(handle)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to lock a phonograph')
+	if not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to lock a media player")
 		return
 	end
 
-	LockPhonograph(handle)
+	lockMediaPlayer(handle)
 end)
 
-AddEventHandler('phonograph:unlock', function(handle)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:unlock", function(handle)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to unlock a phonograph')
+	if not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to unlock a media player")
 		return
 	end
 
-	UnlockPhonograph(handle)
+	unlockMediaPlayer(handle)
 end)
 
-AddEventHandler('phonograph:enableVideo', function(handle)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:enableVideo", function(handle)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to enable video on phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to enable video on media players")
 		return
 	end
 
-	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to enable video on locked phonographs')
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to enable video on locked media players")
 		return
 	end
 
-	Phonographs[handle].video = true
+	mediaPlayers[handle].video = true
 end)
 
-AddEventHandler('phonograph:disableVideo', function(handle)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:disableVideo", function(handle)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to disable video on phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to disable video on media players")
 		return
 	end
 
-	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to disable video on locked phonographs')
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to disable video on locked media players")
 		return
 	end
 
-	Phonographs[handle].video = false
+	mediaPlayers[handle].video = false
 end)
 
-AddEventHandler('phonograph:setVideoSize', function(handle, size)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:setVideoSize", function(handle, size)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to change video size on phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to change video size on media players")
 		return
 	end
 
-	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to change video size on locked phonographs')
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to change video size on locked media players")
 		return
 	end
 
-	Phonographs[handle].videoSize = Clamp(size, 10, 100, Config.defaultVideoSize)
+	mediaPlayers[handle].videoSize = Clamp(size, 10, 100, 50)
 end)
 
-AddEventHandler('phonograph:mute', function(handle)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:mute", function(handle)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to mute phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to mute media players")
 		return
 	end
 
-	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to mute locked phonographs')
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to mute locked media players")
 		return
 	end
 
-	MutePhonograph(handle)
+	muteMediaPlayer(handle)
 end)
 
-AddEventHandler('phonograph:unmute', function(handle)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:unmute", function(handle)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to mute phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to mute media players")
 		return
 	end
 
-	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to mute locked phonographs')
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to mute locked media players")
 		return
 	end
 
-	UnmutePhonograph(handle)
+	unmuteMediaPlayer(handle)
 end)
 
-AddEventHandler('phonograph:copy', function(oldHandle, newHandle, newCoords)
-	if not Phonographs[oldHandle] then
+AddEventHandler("pmms:copy", function(oldHandle, newHandle, newCoords)
+	if not mediaPlayers[oldHandle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to copy phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to copy media players")
 		return
 	end
 
-	if Phonographs[oldHandle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to copy locked phonographs')
+	if mediaPlayers[oldHandle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to copy locked media players")
 		return
 	end
 
-	CopyPhonograph(oldHandle, newHandle, newCoords)
+	copyMediaPlayer(oldHandle, newHandle, newCoords)
 end)
 
-AddEventHandler('phonograph:setLoop', function(handle, loop)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:setLoop", function(handle, loop)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to change loop settings on phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to change loop settings on media players")
 		return
 	end
 
-	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to change loop settings on locked phonographs')
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to change loop settings on locked media players")
 		return
 	end
 
-	SetPhonographLoop(handle, loop)
+	setMediaPlayerLoop(handle, loop)
 end)
 
-AddEventHandler('phonograph:next', function(handle)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:next", function(handle)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to skip forward on phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to skip forward on media players")
 		return
 	end
 
-	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to skip forward on locked phonographs')
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to skip forward on locked media players")
 		return
 	end
 
-	PlayNextInQueue(handle)
+	playNextInQueue(handle)
 end)
 
-AddEventHandler('phonograph:removeFromQueue', function(handle, id)
-	if not Phonographs[handle] then
+AddEventHandler("pmms:removeFromQueue", function(handle, id)
+	if not mediaPlayers[handle] then
 		return
 	end
 
-	if not IsPlayerAceAllowed(source, 'phonograph.interact') then
-		ErrorMessage(source, 'You do not have permission to remove an item from the queue of phonographs')
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to remove an item from the queue of media players")
 		return
 	end
 
-	if Phonographs[handle].locked and not IsPlayerAceAllowed(source, 'phonograph.manage') then
-		ErrorMessage(source, 'You do not have permission to remove an item from the queue of locked phonographs')
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to remove an item from the queue of locked media players")
 		return
 	end
 
-	RemoveFromQueue(handle, id)
+	removeFromQueue(handle, id)
 end)
 
 RegisterCommand(Config.commandPrefix, function(source, args, raw)
-	TriggerClientEvent('phonograph:showControls', source)
+	TriggerClientEvent("pmms:showControls", source)
 end, true)
 
 RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "play", function(source, args, raw)
 	if #args > 0 then
 		local url = args[1]
-		local offset = args[2]
+		local filter = args[2] ~= "0"
 		local loop = args[3] == "1"
-		local filter = args[4] ~= "0"
+		local offset = args[4]
 		local locked = args[5] == "1"
 		local video = args[6] == "1"
 		local videoSize = tonumber(args[7]) or Config.defaultVideoSize
@@ -740,36 +740,36 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "play", funct
 			max = maxAttenuation
 		}
 
-		TriggerClientEvent("phonograph:startClosestPhonograph", source, url, offset, loop, filter, locked, video, videoSize, muted, attenuation)
+		TriggerClientEvent("pmms:startClosestMediaPlayer", source, url, offset, loop, filter, locked, video, videoSize, muted, attenuation)
 	else
-		TriggerClientEvent("phonograph:pauseClosestPhonograph", source)
+		TriggerClientEvent("pmms:pauseClosestMediaPlayer", source)
 	end
 end, true)
 
 RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "pause", function(source, args, raw)
-	TriggerClientEvent("phonograph:pauseClosestPhonograph", source)
+	TriggerClientEvent("pmms:pauseClosestMediaPlayer", source)
 end, true)
 
 RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "stop", function(source, args, raw)
-	TriggerClientEvent("phonograph:stopClosestPhonograph", source)
+	TriggerClientEvent("pmms:stopClosestMediaPlayer", source)
 end, true)
 
 RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "status", function(source, args, raw)
-	TriggerClientEvent("phonograph:toggleStatus", source)
+	TriggerClientEvent("pmms:toggleStatus", source)
 end, true)
 
 RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "presets", function(source, args, raw)
-	TriggerClientEvent("phonograph:listPresets", source)
+	TriggerClientEvent("pmms:listPresets", source)
 end, true)
 
 RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "vol", function(source, args, raw)
 	if #args < 1 then
-		TriggerClientEvent("phonograph:showBaseVolume", source)
+		TriggerClientEvent("pmms:showBaseVolume", source)
 	else
 		local volume = tonumber(args[1])
 
 		if volume then
-			TriggerClientEvent("phonograph:setBaseVolume", source, volume)
+			TriggerClientEvent("pmms:setBaseVolume", source, volume)
 		end
 	end
 end, true)
@@ -787,7 +787,7 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl pause <handle>")
 		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl stop <handle>")
 	elseif args[1] == "list" then
-		for handle, info in pairs(Phonographs) do
+		for handle, info in pairs(mediaPlayers) do
 			print(string.format("[%x] %s %d %d/%s %s %s %s %s",
 				handle,
 				info.title,
@@ -803,21 +803,21 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 				info.paused and "paused" or "playing"))
 		end
 	elseif args[1] == "lock" then
-		LockPhonograph(tonumber(args[2], 16))
+		lockMediaPlayer(tonumber(args[2], 16))
 	elseif args[1] == "unlock" then
-		UnlockPhonograph(tonumber(args[2], 16))
+		unlockMediaPlayer(tonumber(args[2], 16))
 	elseif args[1] == "mute" then
-		MutePhonograph(tonumber(args[2], 16))
+		muteMediaPlayer(tonumber(args[2], 16))
 	elseif args[1] == "unmute" then
-		UnmutePhonograph(tonumber(args[2], 16))
+		unmuteMediaPlayer(tonumber(args[2], 16))
 	elseif args[1] == "next" then
-		PlayNextInQueue(tonumber(args[2], 16))
+		playNextInQueue(tonumber(args[2], 16))
 	elseif args[1] == "pause" then
-		PausePhonograph(tonumber(args[2], 16))
+		pauseMediaPlayer(tonumber(args[2], 16))
 	elseif args[1] == "stop" then
-		RemovePhonograph(tonumber(args[2], 16))
+		removeMediaPlayer(tonumber(args[2], 16))
 	elseif args[1] == "loop" then
-		SetPhonographLoop(tonumber(args[2], 16), args[3] == "on")
+		setMediaPlayerLoop(tonumber(args[2], 16), args[3] == "on")
 	end
 end, true)
 
@@ -826,18 +826,18 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "add", functi
 	local label = args[2]
 	local renderTarget = args[3]
 
-	TriggerClientEvent("phonograph:setModel", source, GetHashKey(model), label, renderTarget)
+	TriggerClientEvent("pmms:setModel", source, GetHashKey(model), label, renderTarget)
 end, true)
 
 RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "fix", function(source, args, raw)
-	TriggerClientEvent("phonograph:reset", source)
+	TriggerClientEvent("pmms:reset", source)
 end, true)
 
 Citizen.CreateThread(function()
-	StartDefaultPhonographs()
+	startDefaultMediaPlayers()
 
 	while true do
 		Citizen.Wait(500)
-		SyncPhonographs()
+		syncMediaPlayers()
 	end
 end)

@@ -35,18 +35,18 @@ function DuiBrowser:createNamedRendertargetForModel(model, name)
 end
 
 function DuiBrowser:waitForConnection()
-	DuiBrowser.initQueue[self.phonographHandle] = false
+	DuiBrowser.initQueue[self.mediaPlayerHandle] = false
 
 	local timeWaited = 0
 
-	while not DuiBrowser.initQueue[self.phonographHandle] and timeWaited < 5000 do
-		self:sendMessage({type = "DuiBrowser:init", handle = self.phonographHandle})
+	while not DuiBrowser.initQueue[self.mediaPlayerHandle] and timeWaited < 5000 do
+		self:sendMessage({type = "DuiBrowser:init", handle = self.mediaPlayerHandle})
 		Citizen.Wait(100)
 		timeWaited = timeWaited + 100
 	end
 
-	if DuiBrowser.initQueue[self.phonographHandle] then
-		DuiBrowser.initQueue[self.phonographHandle] = nil
+	if DuiBrowser.initQueue[self.mediaPlayerHandle] then
+		DuiBrowser.initQueue[self.mediaPlayerHandle] = nil
 		return true
 	else
 		print("Failed to connect to " .. Config.dui.url)
@@ -76,13 +76,13 @@ function DuiBrowser:disableRenderTarget()
 	DuiBrowser.renderTargets[self.renderTarget].browsers[self] = nil
 end
 
-function DuiBrowser:new(phonographHandle, model, renderTarget)
+function DuiBrowser:new(mediaPlayerHandle, model, renderTarget)
 	local self = Class.new(self)
 
-	self.phonographHandle = phonographHandle
+	self.mediaPlayerHandle = mediaPlayerHandle
 	self.duiObject = CreateDui(Config.dui.url, Config.dui.screenWidth, Config.dui.screenHeight)
 	self.handle = GetDuiHandle(self.duiObject)
-	self.txdName = "phono_txd_" .. tostring(phonographHandle)
+	self.txdName = "pmms_txd_" .. tostring(mediaPlayerHandle)
 	self.txnName = "video"
 	self.txd = CreateRuntimeTxd(self.txdName)
 	self.txn = CreateRuntimeTextureFromDuiHandle(self.txd, self.txnName, self.handle)
@@ -91,7 +91,7 @@ function DuiBrowser:new(phonographHandle, model, renderTarget)
 	self.drawSprite = true
 
 	if self:waitForConnection() then
-		DuiBrowser.pool[phonographHandle] = self
+		DuiBrowser.pool[mediaPlayerHandle] = self
 
 		if not DuiBrowser.renderTargets[renderTarget] then
 			DuiBrowser.renderTargets[renderTarget] = {
@@ -102,7 +102,7 @@ function DuiBrowser:new(phonographHandle, model, renderTarget)
 
 		return self
 	else
-		DuiBrowser.pool[phonographHandle] = nil
+		DuiBrowser.pool[mediaPlayerHandle] = nil
 		DestroyDui(self.duiObject)
 	end
 end
@@ -168,7 +168,7 @@ function DuiBrowser:delete()
 	Citizen.Wait(50)
 	DuiBrowser.renderTargets[self.renderTarget].disabled = false
 
-	DuiBrowser.pool[self.phonographHandle] = nil
+	DuiBrowser.pool[self.mediaPlayerHandle] = nil
 
 	DestroyDui(self.duiObject)
 

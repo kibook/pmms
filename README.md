@@ -1,6 +1,6 @@
-# FiveM/RedM synchronized music player
+# pmms - FiveM/RedM synchronized media player
 
-Allows players to play music from objects such as phonographs, radios or TVs.
+pmms (Poodle's MultiMedia System) allows players to play music/video from objects such as phonographs, radios or TVs.
 
 # Features
 
@@ -12,7 +12,7 @@ Allows players to play music from objects such as phonographs, radios or TVs.
 
 - Dynamic sound attenuation based on whether the player and object are in the same interior room.
 
-- Optional phonograph/radio filter can be applied to any audio.
+- Optional immersive filter can be applied to any audio.
 
 - Play video on a TV screen with DUI (FiveM only), or on a screen displayed above the object.
 
@@ -35,15 +35,15 @@ Allows players to play music from objects such as phonographs, radios or TVs.
 
 | Command                                                                          | Description                                       |
 |----------------------------------------------------------------------------------|---------------------------------------------------|
-| `/phono`                                                                         | Open the media player control panel.              |
-| `/phono_play [url] [time] [loop] [filter] [lock] [video] [size] [mute]`          | Play music on the nearest media player.           |
-| `/phono_pause`                                                                   | Pause playback on the nearest media player.       |
-| `/phono_stop`                                                                    | Stop playback on the nearest media player.        |
-| `/phono_status`                                                                  | Show the status of the nearest media player.      |
-| `/phono_presets`                                                                 | List presets.                                     |
-| `/phono_vol [volume]`                                                            | Set a personal base volume for all media players. |
-| `/phono_ctl`                                                                     | Advanced media player control.                    |
-| `/phono_add`                                                                     | Add or modify a media player model preset.        |
+| `/pmms`                                                                         | Open the media player control panel.              |
+| `/pmms_play [url] [time] [loop] [filter] [lock] [video] [size] [mute]`          | Play music/video on the nearest media player.     |
+| `/pmms_pause`                                                                   | Pause playback on the nearest media player.       |
+| `/pmms_stop`                                                                    | Stop playback on the nearest media player.        |
+| `/pmms_status`                                                                  | Show the status of the nearest media player.      |
+| `/pmms_presets`                                                                 | List presets.                                     |
+| `/pmms_vol [volume]`                                                            | Set a personal base volume for all media players. |
+| `/pmms_ctl`                                                                     | Advanced media player control.                    |
+| `/pmms_add`                                                                     | Add or modify a media player model preset.        |
 
 # Exports
 
@@ -52,63 +52,63 @@ Allows players to play music from objects such as phonographs, radios or TVs.
 ### startByNetworkId
 
 ```lua
-handle = exports.phonograph:startByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted)
+handle = exports.pmms:startByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted)
 ```
 
-Starts playing something on a networked phonograph object, using its network ID.
+Starts playing something on a networked media player object, using its network ID.
 
 ### startByCoords
 
 ```lua
-handle = exports.phonograph:startByCoords(x, y, z, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted)
+handle = exports.pmms:startByCoords(x, y, z, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted)
 ```
 
-Starts playing something on a non-networked phonograph object, using its coordinates on the world map.
+Starts playing something on a non-networked media player object, using its coordinates on the world map.
 
 ### stop
 
 ```lua
-exports.phonograph:stop(handle)
+exports.pmms:stop(handle)
 ```
 
-Stops a phonograph and removes its handle.
+Stops a media player and removes its handle.
 
 ### pause
 
 ```lua
-exports.phonograph:pause(handle)
+exports.pmms:pause(handle)
 ```
 
-Pause or resume a phonograph temporarily.
+Pause or resume a media player.
 
 ### lock
 
 ```lua
-exports.phonograph:lock(handle)
+exports.pmms:lock(handle)
 ```
 
-Locks an active phonograph so that only privileged users can interact with it.
+Locks an active media player so that only privileged users can interact with it.
 
 ### unlock
 
 ```lua
-exports.phonograph:unlock(handle)
+exports.pmms:unlock(handle)
 ```
 
-Unlocks an active phonograph so anyone can interact with it.
+Unlocks an active media player so anyone can interact with it.
 
 ### mute
 
 ```lua
-exports.phonograph:mute(handle)
+exports.pmms:mute(handle)
 ```
 
-Mutes an active phonograph.
+Mutes an active media player.
 
 ### unmute
 
 ```lua
-exports.phonograph:unmute(handle)
+exports.pmms:unmute(handle)
 ```
 
-Unmutes an active phonograph.
+Unmutes an active media player.

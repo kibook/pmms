@@ -1,28 +1,28 @@
-local Phonographs = {}
-local LocalPhonographs = {}
-local PhonographLabels = {}
+local mediaPlayers = {}
+local localMediaPlayers = {}
+local mediaPlayerLabels = {}
 
-local BaseVolume = 50
-local StatusIsShown = false
-local UiIsOpen = false
+local baseVolume = 50
+local statusIsShown = false
+local uiIsOpen = false
 local syncIsEnabled = true
 
-RegisterNetEvent('phonograph:sync')
-RegisterNetEvent('phonograph:start')
-RegisterNetEvent('phonograph:play')
-RegisterNetEvent('phonograph:stop')
-RegisterNetEvent('phonograph:showControls')
-RegisterNetEvent('phonograph:toggleStatus')
-RegisterNetEvent('phonograph:error')
-RegisterNetEvent('phonograph:init')
-RegisterNetEvent('phonograph:setModel')
-RegisterNetEvent('phonograph:reset')
-RegisterNetEvent("phonograph:startClosestPhonograph")
-RegisterNetEvent("phonograph:pauseClosestPhonograph")
-RegisterNetEvent("phonograph:stopClosestPhonograph")
-RegisterNetEvent("phonograph:listPresets")
-RegisterNetEvent("phonograph:setBaseVolume")
-RegisterNetEvent("phonograph:showBaseVolume")
+RegisterNetEvent("pmms:sync")
+RegisterNetEvent("pmms:start")
+RegisterNetEvent("pmms:play")
+RegisterNetEvent("pmms:stop")
+RegisterNetEvent("pmms:showControls")
+RegisterNetEvent("pmms:toggleStatus")
+RegisterNetEvent("pmms:error")
+RegisterNetEvent("pmms:init")
+RegisterNetEvent("pmms:setModel")
+RegisterNetEvent("pmms:reset")
+RegisterNetEvent("pmms:startClosestMediaPlayer")
+RegisterNetEvent("pmms:pauseClosestMediaPlayer")
+RegisterNetEvent("pmms:stopClosestMediaPlayer")
+RegisterNetEvent("pmms:listPresets")
+RegisterNetEvent("pmms:setBaseVolume")
+RegisterNetEvent("pmms:showBaseVolume")
 
 local entityEnumerator = {
 	__gc = function(enum)
@@ -34,7 +34,7 @@ local entityEnumerator = {
 	end
 }
 
-function EnumerateEntities(firstFunc, nextFunc, endFunc)
+local function enumerateEntities(firstFunc, nextFunc, endFunc)
 	return coroutine.wrap(function()
 		local iter, id = firstFunc()
 
@@ -57,45 +57,45 @@ function EnumerateEntities(firstFunc, nextFunc, endFunc)
 	end)
 end
 
-function EnumerateObjects()
-	return EnumerateEntities(FindFirstObject, FindNextObject, EndFindObject)
+local function enumerateObjects()
+	return enumerateEntities(FindFirstObject, FindNextObject, EndFindObject)
 end
 
-function IsPhonograph(object)
+local function isMediaPlayer(object)
 	return Config.models[GetEntityModel(object)] ~= nil
 end
 
-function GetHandle(object)
+local function getHandle(object)
 	return NetworkGetEntityIsNetworked(object) and ObjToNet(object) or object
 end
 
-function FindHandle(object)
+local function findHandle(object)
 	if NetworkGetEntityIsNetworked(object) then
 		local netId = ObjToNet(object)
 
-		if Phonographs[netId] then
+		if mediaPlayers[netId] then
 			return netId
 		end
 	end
 
 	local handle = GetHandleFromCoords(GetEntityCoords(object))
 
-	if Phonographs[handle] then
+	if mediaPlayers[handle] then
 		return handle
 	end
 
 	return nil
 end
 
-function ForEachPhonograph(func)
-	for object in EnumerateObjects() do
-		if IsPhonograph(object) then
+local function forEachMediaPlayer(func)
+	for object in enumerateObjects() do
+		if isMediaPlayer(object) then
 			func(object)
 		end
 	end
 end
 
-function GetClosestPhonographObject(centre, radius, listenerPos)
+local function getClosestMediaPlayerObject(centre, radius, listenerPos)
 	if listenerPos and #(centre - listenerPos) > Config.maxDistance then
 		return nil
 	end
@@ -103,7 +103,7 @@ function GetClosestPhonographObject(centre, radius, listenerPos)
 	local min
 	local closest
 
-	ForEachPhonograph(function(object)
+	forEachMediaPlayer(function(object)
 		local coords = GetEntityCoords(object)
 		local distance = #(centre - coords)
 
@@ -116,49 +116,49 @@ function GetClosestPhonographObject(centre, radius, listenerPos)
 	return closest
 end
 
-function GetClosestPhonograph()
-	return GetClosestPhonographObject(GetEntityCoords(PlayerPedId()), Config.maxDistance)
+local function getClosestMediaPlayer()
+	return getClosestMediaPlayerObject(GetEntityCoords(PlayerPedId()), Config.maxDistance)
 end
 
-function StartPhonograph(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+local function startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 	volume = Clamp(volume, 0, 100, 50)
 
 	if not offset then
-		offset = '0'
+		offset = "0"
 	end
 
 	if NetworkDoesNetworkIdExist(handle) then
-		TriggerServerEvent('phonograph:start', handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, false)
+		TriggerServerEvent("pmms:start", handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, false)
 	else
 		if not coords then
 			coords = GetEntityCoords(handle)
 		end
 
-		TriggerServerEvent('phonograph:start', nil, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+		TriggerServerEvent("pmms:start", nil, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 	end
 end
 
-function StartClosestPhonograph(url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation)
-	StartPhonograph(GetHandle(GetClosestPhonograph()), url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, false, false)
+local function startClosestMediaPlayer(url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation)
+	startMediaPlayer(getHandle(getClosestMediaPlayer()), url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, false, false)
 end
 
-function PausePhonograph(handle)
-	TriggerServerEvent('phonograph:pause', handle)
+local function pauseMediaPlayer(handle)
+	TriggerServerEvent("pmms:pause", handle)
 end
 
-function PauseClosestPhonograph()
-	PausePhonograph(FindHandle(GetClosestPhonograph()))
+local function pauseClosestMediaPlayer()
+	pauseMediaPlayer(findHandle(getClosestMediaPlayer()))
 end
 
-function StopPhonograph(handle)
-	TriggerServerEvent('phonograph:stop', handle)
+local function stopMediaPlayer(handle)
+	TriggerServerEvent("pmms:stop", handle)
 end
 
-function StopClosestPhonograph()
-	StopPhonograph(FindHandle(GetClosestPhonograph()))
+local function stopClosestMediaPlayer()
+	stopMediaPlayer(findHandle(getClosestMediaPlayer()))
 end
 
-function GetListenerAndViewerInfo()
+local function getListenerAndViewerInfo()
 	local cam = GetRenderingCam()
 	local ped = PlayerPedId()
 
@@ -183,7 +183,7 @@ function GetListenerAndViewerInfo()
 	return ped, listenerCoords, viewerCoords, viewerFov
 end
 
-function SortByDistance(a, b)
+local function sortByDistance(a, b)
 	if a.distance < 0 then
 		return false
 	elseif b.distance < 0 then
@@ -193,7 +193,7 @@ function SortByDistance(a, b)
 	end
 end
 
-function IsInSameRoom(entity1, entity2)
+local function isInSameRoom(entity1, entity2)
 	local interior1 = GetInteriorFromEntity(entity1)
 	local interior2 = GetInteriorFromEntity(entity2)
 
@@ -211,42 +211,42 @@ function IsInSameRoom(entity1, entity2)
 	return true
 end
 
-function ListPresets()
+local function listPresets()
 	local presets = {}
 
-	for preset, info in pairs(Config.Presets) do
+	for preset, info in pairs(Config.presets) do
 		table.insert(presets, preset)
 	end
 
 	if #presets == 0 then
-		TriggerEvent('chat:addMessage', {
+		TriggerEvent("chat:addMessage", {
 			color = {255, 255, 128},
-			args = {'No presets available'}
+			args = {"No presets available"}
 		})
 	else
 		table.sort(presets)
 
 		for _, preset in ipairs(presets) do
-			TriggerEvent('chat:addMessage', {
-				args = {preset, Config.Presets[preset].title}
+			TriggerEvent("chat:addMessage", {
+				args = {preset, Config.presets[preset].title}
 			})
 		end
 	end
 end
 
-function GetLocalPhonograph(coords, listenerPos)
+local function getLocalMediaPlayer(coords, listenerPos)
 	local handle = GetHandleFromCoords(coords)
 
-	if not (LocalPhonographs[handle] and DoesEntityExist(LocalPhonographs[handle])) then
-		LocalPhonographs[handle] = GetClosestPhonographObject(coords, 1.0, listenerPos)
+	if not (localMediaPlayers[handle] and DoesEntityExist(localMediaPlayers[handle])) then
+		localMediaPlayers[handle] = getClosestMediaPlayerObject(coords, 1.0, listenerPos)
 	end
 
-	return LocalPhonographs[handle]
+	return localMediaPlayers[handle]
 end
 
 local function getObjectLabel(handle, object)
-	if PhonographLabels[handle] then
-		return PhonographLabels[handle]
+	if mediaPlayerLabels[handle] then
+		return mediaPlayerLabels[handle]
 	else
 		local model = GetEntityModel(object)
 
@@ -258,26 +258,26 @@ local function getObjectLabel(handle, object)
 	end
 end
 
-function UpdateUi(fullControls, anyUrl)
+local function updateUi(fullControls, anyUrl)
 	local pos = GetEntityCoords(PlayerPedId())
 
-	local activePhonographs = {}
+	local activeMediaPlayers = {}
 
-	for handle, info in pairs(Phonographs) do
+	for handle, info in pairs(mediaPlayers) do
 		local object
 
 		if info.coords then
-			object = GetLocalPhonograph(info.coords, pos)
+			object = getLocalMediaPlayer(info.coords, pos)
 		elseif NetworkDoesNetworkIdExist(handle) then
 			object = NetToObj(handle)
 		end
 
 		if object and object > 0 then
-			local phonoPos = GetEntityCoords(object)
-			local distance = #(pos - phonoPos)
+			local mediaPos = GetEntityCoords(object)
+			local distance = #(pos - mediaPos)
 
 			if fullControls or distance <= Config.maxDistance then
-				table.insert(activePhonographs, {
+				table.insert(activeMediaPlayers, {
 					handle = handle,
 					info = info,
 					distance = distance,
@@ -286,7 +286,7 @@ function UpdateUi(fullControls, anyUrl)
 			end
 		else
 			if fullControls then
-				table.insert(activePhonographs, {
+				table.insert(activeMediaPlayers, {
 					handle = handle,
 					info = info,
 					distance = -1
@@ -295,47 +295,47 @@ function UpdateUi(fullControls, anyUrl)
 		end
 	end
 
-	table.sort(activePhonographs, SortByDistance)
+	table.sort(activeMediaPlayers, sortByDistance)
 
-	local usablePhonographs = {}
+	local usableMediaPlayers = {}
 
-	if UiIsOpen then
-		ForEachPhonograph(function(object)
-			local phonoPos = GetEntityCoords(object)
-			local clHandle = GetHandle(object)
+	if uiIsOpen then
+		forEachMediaPlayer(function(object)
+			local mediaPos = GetEntityCoords(object)
+			local clHandle = getHandle(object)
 
 			if clHandle then
-				local svHandle = NetworkGetEntityIsNetworked(object) and ObjToNet(object) or GetHandleFromCoords(phonoPos)
-				local distance = #(pos - phonoPos)
+				local svHandle = NetworkGetEntityIsNetworked(object) and ObjToNet(object) or GetHandleFromCoords(mediaPos)
+				local distance = #(pos - mediaPos)
 
 				if fullControls or distance <= Config.maxDistance then
-					table.insert(usablePhonographs, {
+					table.insert(usableMediaPlayers, {
 						handle = clHandle,
 						distance = distance,
 						label = getObjectLabel(clHandle, object),
-						active = Phonographs[svHandle] ~= nil
+						active = mediaPlayers[svHandle] ~= nil
 					})
 				end
 			end
 		end)
 
-		table.sort(usablePhonographs, SortByDistance)
+		table.sort(usableMediaPlayers, sortByDistance)
 	end
 
 	SendNUIMessage({
-		type = 'updateUi',
-		activePhonographs = json.encode(activePhonographs),
-		usablePhonographs = json.encode(usablePhonographs),
-		presets = json.encode(Config.Presets),
+		type = "updateUi",
+		activeMediaPlayers = json.encode(activeMediaPlayers),
+		usableMediaPlayers = json.encode(usableMediaPlayers),
+		presets = json.encode(Config.presets),
 		anyUrl = anyUrl,
 		maxDistance = Config.maxDistance,
 		fullControls = fullControls,
-		baseVolume = BaseVolume
+		baseVolume = baseVolume
 	})
 end
 
-function CreatePhonograph(phonograph)
-	local model = phonograph.model or Config.defaultModel
+local function createMediaPlayer(mediaPlayer)
+	local model = mediaPlayer.model or Config.defaultModel
 
 	RequestModel(model)
 
@@ -343,64 +343,64 @@ function CreatePhonograph(phonograph)
 		Citizen.Wait(0)
 	end
 
-	phonograph.handle = CreateObjectNoOffset(model, phonograph.position, false, false, false, false)
+	mediaPlayer.handle = CreateObjectNoOffset(model, mediaPlayer.position, false, false, false, false)
 
 	SetModelAsNoLongerNeeded(model)
 
-	SetEntityRotation(phonograph.handle, phonograph.rotation, 2)
+	SetEntityRotation(mediaPlayer.handle, mediaPlayer.rotation, 2)
 
-	if phonograph.invisible then
-		SetEntityVisible(phonograph.handle, false)
-		SetEntityCollision(phonograph.handle, false, false)
+	if mediaPlayer.invisible then
+		SetEntityVisible(mediaPlayer.handle, false)
+		SetEntityCollision(mediaPlayer.handle, false, false)
 	end
 
-	PhonographLabels[phonograph.handle] = phonograph.label
+	mediaPlayerLabels[mediaPlayer.handle] = mediaPlayer.label
 end
 
-function SetPhonographVolume(handle, volume)
-	TriggerServerEvent('phonograph:setVolume', handle, volume)
+local function setMediaPlayerVolume(handle, volume)
+	TriggerServerEvent("pmms:setVolume", handle, volume)
 end
 
-function SetPhonographStartTime(handle, time)
-	TriggerServerEvent('phonograph:setStartTime', handle, time)
+local function setMediaPlayerStartTime(handle, time)
+	TriggerServerEvent("pmms:setStartTime", handle, time)
 end
 
-function LockPhonograph(handle)
-	TriggerServerEvent('phonograph:lock', handle)
+local function lockMediaPlayer(handle)
+	TriggerServerEvent("pmms:lock", handle)
 end
 
-function UnlockPhonograph(handle)
-	TriggerServerEvent('phonograph:unlock', handle)
+local function unlockMediaPlayer(handle)
+	TriggerServerEvent("pmms:unlock", handle)
 end
 
-function SetBaseVolume(volume)
-	BaseVolume = Clamp(volume, 0, 100, 100)
-	SetResourceKvp('baseVolume', tostring(BaseVolume))
+local function setBaseVolume(volume)
+	baseVolume = Clamp(volume, 0, 100, 100)
+	SetResourceKvp("baseVolume", tostring(baseVolume))
 end
 
-function LoadSettings()
-	local volume = GetResourceKvpString('baseVolume')
+local function loadSettings()
+	local volume = GetResourceKvpString("baseVolume")
 
 	if volume then
-		BaseVolume = tonumber(volume)
+		baseVolume = tonumber(volume)
 	end
 
-	local showStatus = GetResourceKvpInt('showStatus')
+	local showStatus = GetResourceKvpInt("showStatus")
 
 	if showStatus == 1 then
-		TriggerEvent('phonograph:toggleStatus')
+		TriggerEvent("pmms:toggleStatus")
 	end
 end
 
-function EnableVideo(handle)
-	TriggerServerEvent('phonograph:enableVideo', handle)
+local function enableVideo(handle)
+	TriggerServerEvent("pmms:enableVideo", handle)
 end
 
-function DisableVideo(handle)
-	TriggerServerEvent('phonograph:disableVideo', handle)
+local function disableVideo(handle)
+	TriggerServerEvent("pmms:disableVideo", handle)
 end
 
-function IsPauseMenuOrMapActive()
+local function isPauseMenuOrMapActive()
 	if Config.isRDR then
 		return IsPauseMenuActive() or IsAppActive(`MAP`) ~= 0
 	else
@@ -408,16 +408,16 @@ function IsPauseMenuOrMapActive()
 	end
 end
 
-function CopyPhonograph(oldHandle, newHandle)
+local function copyMediaPlayer(oldHandle, newHandle)
 	if NetworkDoesNetworkIdExist(newHandle) then
-		TriggerServerEvent('phonograph:copy', oldHandle, newHandle)
+		TriggerServerEvent("pmms:copy", oldHandle, newHandle)
 	else
 		local coords = GetEntityCoords(newHandle)
-		TriggerServerEvent('phonograph:copy', oldHandle, false, coords)
+		TriggerServerEvent("pmms:copy", oldHandle, false, coords)
 	end
 end
 
-function tovector3(t)
+local function tovector3(t)
 	return vector3(t.x, t.y, t.z)
 end
 
@@ -433,7 +433,7 @@ local function getObjectModelAndRenderTarget(handle)
 	local object
 
 	if type(handle) == "vector3" then
-		object = GetLocalPhonograph(handle, GetEntityCoords(PlayerPedId()))
+		object = getLocalMediaPlayer(handle, GetEntityCoords(PlayerPedId()))
 	elseif NetworkDoesNetworkIdExist(handle) then
 		object = NetToObj(handle)
 	else
@@ -458,7 +458,7 @@ local function sendMessage(handle, coords, data)
 		local object, model, renderTarget = getObjectModelAndRenderTarget(coords or handle)
 
 		if object and model and renderTarget then
-			local ped, listenPos, viewerPos, viewerFov = GetListenerAndViewerInfo()
+			local ped, listenPos, viewerPos, viewerFov = getListenerAndViewerInfo()
 
 			if #(viewerPos - GetEntityCoords(object)) < Config.maxDistance then
 				duiBrowser = DuiBrowser:new(data.handle, model, renderTarget)
@@ -477,8 +477,8 @@ local function sendMessage(handle, coords, data)
 	end
 end
 
-RegisterNUICallback('startup', function(data, cb)
-	LoadSettings()
+RegisterNUICallback("startup", function(data, cb)
+	loadSettings()
 	cb {
 		isRDR = Config.isRDR,
 		defaultMinAttenuation = Config.defaultMinAttenuation,
@@ -494,11 +494,11 @@ RegisterNUICallback("duiStartup", function(data, cb)
 	}
 end)
 
-RegisterNUICallback('init', function(data, cb)
+RegisterNUICallback("init", function(data, cb)
 	if NetworkDoesNetworkIdExist(data.handle) or data.coords then
 		local coords = json.decode(data.coords)
 
-		TriggerServerEvent('phonograph:init',
+		TriggerServerEvent("pmms:init",
 			data.handle,
 			data.url,
 			data.title,
@@ -518,135 +518,135 @@ RegisterNUICallback('init', function(data, cb)
 	cb({})
 end)
 
-RegisterNUICallback('initError', function(data, cb)
-	TriggerEvent('phonograph:error', 'Error loading ' .. data.url)
+RegisterNUICallback("initError", function(data, cb)
+	TriggerEvent("pmms:error", "Error loading " .. data.url)
 	cb({})
 end)
 
-RegisterNUICallback('playError', function(data, cb)
-	TriggerEvent('phonograph:error', 'Error playing ' .. data.url)
+RegisterNUICallback("playError", function(data, cb)
+	TriggerEvent("pmms:error", "Error playing " .. data.url)
 	cb({})
 end)
 
-RegisterNUICallback('play', function(data, cb)
-	StartPhonograph(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, false, false)
+RegisterNUICallback("play", function(data, cb)
+	startMediaPlayer(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, false, false)
 	cb({})
 end)
 
-RegisterNUICallback('pause', function(data, cb)
-	TriggerServerEvent('phonograph:pause', data.handle)
+RegisterNUICallback("pause", function(data, cb)
+	TriggerServerEvent("pmms:pause", data.handle)
 	cb({})
 end)
 
-RegisterNUICallback('stop', function(data, cb)
-	StopPhonograph(data.handle, true)
+RegisterNUICallback("stop", function(data, cb)
+	stopMediaPlayer(data.handle, true)
 	cb({})
 end)
 
-RegisterNUICallback('closeUi', function(data, cb)
+RegisterNUICallback("closeUi", function(data, cb)
 	SetNuiFocus(false, false)
-	UiIsOpen = false
+	uiIsOpen = false
 	cb({})
 end)
 
-RegisterNUICallback('volumeDown', function(data, cb)
-	SetPhonographVolume(data.handle, Phonographs[data.handle].volume - 5)
+RegisterNUICallback("volumeDown", function(data, cb)
+	setMediaPlayerVolume(data.handle, mediaPlayers[data.handle].volume - 5)
 	cb({})
 end)
 
-RegisterNUICallback('volumeUp', function(data, cb)
-	SetPhonographVolume(data.handle, Phonographs[data.handle].volume + 5)
+RegisterNUICallback("volumeUp", function(data, cb)
+	setMediaPlayerVolume(data.handle, mediaPlayers[data.handle].volume + 5)
 	cb({})
 end)
 
-RegisterNUICallback('seekBackward', function(data, cb)
-	SetPhonographStartTime(data.handle, Phonographs[data.handle].startTime + 10)
+RegisterNUICallback("seekBackward", function(data, cb)
+	setMediaPlayerStartTime(data.handle, mediaPlayers[data.handle].startTime + 10)
 	cb({})
 end)
 
-RegisterNUICallback('seekForward', function(data, cb)
-	SetPhonographStartTime(data.handle, Phonographs[data.handle].startTime - 10)
+RegisterNUICallback("seekForward", function(data, cb)
+	setMediaPlayerStartTime(data.handle, mediaPlayers[data.handle].startTime - 10)
 	cb({})
 end)
 
-RegisterNUICallback('lock', function(data, cb)
-	LockPhonograph(data.handle)
+RegisterNUICallback("lock", function(data, cb)
+	lockMediaPlayer(data.handle)
 	cb({})
 end)
 
-RegisterNUICallback('unlock', function(data, cb)
-	UnlockPhonograph(data.handle)
+RegisterNUICallback("unlock", function(data, cb)
+	unlockMediaPlayer(data.handle)
 	cb({})
 end)
 
-RegisterNUICallback('setBaseVolume', function(data, cb)
-	SetBaseVolume(data.volume)
+RegisterNUICallback("setBaseVolume", function(data, cb)
+	setBaseVolume(data.volume)
 	cb({})
 end)
 
-RegisterNUICallback('enableVideo', function(data, cb)
-	EnableVideo(data.handle)
+RegisterNUICallback("enableVideo", function(data, cb)
+	enableVideo(data.handle)
 	cb({})
 end)
 
-RegisterNUICallback('disableVideo', function(data, cb)
-	DisableVideo(data.handle)
+RegisterNUICallback("disableVideo", function(data, cb)
+	disableVideo(data.handle)
 	cb({})
 end)
 
-RegisterNUICallback('decreaseVideoSize', function(data, cb)
-	TriggerServerEvent('phonograph:setVideoSize', data.handle, Phonographs[data.handle].videoSize - 10)
+RegisterNUICallback("decreaseVideoSize", function(data, cb)
+	TriggerServerEvent("pmms:setVideoSize", data.handle, mediaPlayers[data.handle].videoSize - 10)
 	cb({})
 end)
 
-RegisterNUICallback('increaseVideoSize', function(data, cb)
-	TriggerServerEvent('phonograph:setVideoSize', data.handle, Phonographs[data.handle].videoSize + 10)
+RegisterNUICallback("increaseVideoSize", function(data, cb)
+	TriggerServerEvent("pmms:setVideoSize", data.handle, mediaPlayers[data.handle].videoSize + 10)
 	cb({})
 end)
 
-RegisterNUICallback('mute', function(data, cb)
-	TriggerServerEvent('phonograph:mute', data.handle)
+RegisterNUICallback("mute", function(data, cb)
+	TriggerServerEvent("pmms:mute", data.handle)
 	cb({})
 end)
 
-RegisterNUICallback('unmute', function(data, cb)
-	TriggerServerEvent('phonograph:unmute', data.handle)
+RegisterNUICallback("unmute", function(data, cb)
+	TriggerServerEvent("pmms:unmute", data.handle)
 	cb({})
 end)
 
-RegisterNUICallback('copy', function(data, cb)
-	CopyPhonograph(data.oldHandle, data.newHandle)
+RegisterNUICallback("copy", function(data, cb)
+	copyMediaPlayer(data.oldHandle, data.newHandle)
 	cb({})
 end)
 
-RegisterNUICallback('setLoop', function(data, cb)
-	TriggerServerEvent('phonograph:setLoop', data.handle, data.loop)
+RegisterNUICallback("setLoop", function(data, cb)
+	TriggerServerEvent("pmms:setLoop", data.handle, data.loop)
 	cb({})
 end)
 
-RegisterNUICallback('next', function(data, cb)
-	TriggerServerEvent('phonograph:next', data.handle)
+RegisterNUICallback("next", function(data, cb)
+	TriggerServerEvent("pmms:next", data.handle)
 	cb({})
 end)
 
-RegisterNUICallback('removeFromQueue', function(data, cb)
-	TriggerServerEvent('phonograph:removeFromQueue', data.handle, data.index)
+RegisterNUICallback("removeFromQueue", function(data, cb)
+	TriggerServerEvent("pmms:removeFromQueue", data.handle, data.index)
 	cb({})
 end)
 
-AddEventHandler('phonograph:sync', function(phonographs, fullControls, anyUrl)
+AddEventHandler("pmms:sync", function(players, fullControls, anyUrl)
 	if syncIsEnabled then
-		Phonographs = phonographs
+		mediaPlayers = players
 
-		if UiIsOpen or StatusIsShown then
-			UpdateUi(fullControls, anyUrl)
+		if uiIsOpen or statusIsShown then
+			updateUi(fullControls, anyUrl)
 		end
 	end
 end)
 
-AddEventHandler('phonograph:start', function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+AddEventHandler("pmms:start", function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 	sendMessage(handle, coords, {
-		type = 'init',
+		type = "init",
 		handle = handle,
 		url = url,
 		title = title,
@@ -664,110 +664,110 @@ AddEventHandler('phonograph:start', function(handle, url, title, volume, offset,
 	})
 end)
 
-AddEventHandler('phonograph:play', function(handle)
+AddEventHandler("pmms:play", function(handle)
 	sendMessage(handle, nil, {
-		type = 'play',
+		type = "play",
 		handle = handle
 	})
 end)
 
-AddEventHandler('phonograph:stop', function(handle)
+AddEventHandler("pmms:stop", function(handle)
 	local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
 
 	if duiBrowser then
 		duiBrowser:delete()
 	else
 		SendNUIMessage({
-			type = 'stop',
+			type = "stop",
 			handle = handle
 		})
 	end
 end)
 
-AddEventHandler('phonograph:showControls', function()
+AddEventHandler("pmms:showControls", function()
 	SendNUIMessage({
-		type = 'showUi'
+		type = "showUi"
 	})
 	SetNuiFocus(true, true)
-	UiIsOpen = true
+	uiIsOpen = true
 end)
 
-AddEventHandler('phonograph:toggleStatus', function()
+AddEventHandler("pmms:toggleStatus", function()
 	SendNUIMessage({
-		type = 'toggleStatus'
+		type = "toggleStatus"
 	})
-	StatusIsShown = not StatusIsShown
-	SetResourceKvpInt('showStatus', StatusIsShown and 1 or 0)
+	statusIsShown = not statusIsShown
+	SetResourceKvpInt("showStatus", statusIsShown and 1 or 0)
 end)
 
-AddEventHandler('phonograph:error', function(message)
+AddEventHandler("pmms:error", function(message)
 	print(message)
 end)
 
-AddEventHandler('phonograph:init', function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
-	StartPhonograph(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+AddEventHandler("pmms:init", function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+	startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
 end)
 
-AddEventHandler('phonograph:setModel', function(model, label, renderTarget)
+AddEventHandler("pmms:setModel", function(model, label, renderTarget)
 	Config.models[model] = {
 		label = label,
 		renderTarget = renderTarget
 	}
 end)
 
-AddEventHandler('phonograph:reset', function()
+AddEventHandler("pmms:reset", function()
 	print("Resetting...")
 
 	syncIsEnabled = false
 
-	Phonographs = {}
-	LocalPhonographs = {}
-	PhonographLabels = {}
+	mediaPlayers = {}
+	localMediaPlayers = {}
+	mediaPlayerLabels = {}
 
 	DuiBrowser:resetPool()
 
 	syncIsEnabled = true
 end)
 
-AddEventHandler("phonograph:startClosestPhonograph", function(url, offset, loop, filter, locked, video, videoSize, muted, attenuation)
-	StartClosestPhonograph(url, 100, offset, loop, filter, locked, video, videoSize, muted, attenuation)
+AddEventHandler("pmms:startClosestMediaPlayer", function(url, offset, loop, filter, locked, video, videoSize, muted, attenuation)
+	startClosestMediaPlayer(url, 100, offset, loop, filter, locked, video, videoSize, muted, attenuation)
 end)
 
-AddEventHandler("phonograph:pauseClosestPhonograph", function()
-	PauseClosestPhonograph()
+AddEventHandler("pmms:pauseClosestMediaPlayer", function()
+	pauseClosestMediaPlayer()
 end)
 
-AddEventHandler("phonograph:stopClosestPhonograph", function()
-	StopClosestPhonograph()
+AddEventHandler("pmms:stopClosestMediaPlayer", function()
+	stopClosestMediaPlayer()
 end)
 
-AddEventHandler("phonograph:listPresets", function()
-	ListPresets()
+AddEventHandler("pmms:listPresets", function()
+	listPresets()
 end)
 
-AddEventHandler("phonograph:showBaseVolume", function()
-	TriggerEvent('chat:addMessage', {
+AddEventHandler("pmms:showBaseVolume", function()
+	TriggerEvent("chat:addMessage", {
 		color = {255, 255, 128},
-		args = {'Volume', BaseVolume}
+		args = {"Volume", baseVolume}
 	})
 end)
 
-AddEventHandler("phonograph:setBaseVolume", function(volume)
-	SetBaseVolume(volume)
+AddEventHandler("pmms:setBaseVolume", function(volume)
+	setBaseVolume(volume)
 end)
 
-AddEventHandler('onResourceStop', function(resource)
+AddEventHandler("onResourceStop", function(resource)
 	if GetCurrentResourceName() ~= resource then
 		return
 	end
 
-	for _, defaultPhonograph in ipairs(Config.DefaultPhonographs) do
-		if defaultPhonograph.handle then
-			DeleteEntity(defaultPhonograph.handle)
+	for _, mediaPlayer in ipairs(Config.defaultMediaPlayers) do
+		if mediaPlayer.handle then
+			DeleteEntity(mediaPlayer.handle)
 		end
 	end
 
-	if UiIsOpen then
+	if uiIsOpen then
 		SetNuiFocus(false, false)
 	end
 end)
@@ -777,9 +777,9 @@ Citizen.CreateThread(function()
 
 	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "play", "Play something on the closest media player.", {
 		{name = "url", help = "URL or preset name of music to play. Use \"random\" to play a random preset."},
-		{name = "time", help = "Time to start playing at. Specify in seconds (e.g., 120) or hh:mm:ss (e.g., 00:02:00)."},
-		{name = "loop", help = "0 = play once, 1 = loop"},
 		{name = "filter", help = "0 = no filter, 1 = add immersive filter"},
+		{name = "loop", help = "0 = play once, 1 = loop"},
+		{name = "time", help = "Time to start playing at. Specify in seconds (e.g., 120) or hh:mm:ss (e.g., 00:02:00)."},
 		{name = "lock", help = "0 = unlocked, 1 = locked"},
 		{name = "video", help = "0 = hide video, 1 = show video"},
 		{name = "size", help = "Video size"},
@@ -811,16 +811,16 @@ end)
 
 Citizen.CreateThread(function()
 	while true do
-		local ped, listenPos, viewerPos, viewerFov = GetListenerAndViewerInfo()
+		local ped, listenPos, viewerPos, viewerFov = getListenerAndViewerInfo()
 
 		local canWait = true
 		local duiToDraw = {}
 
-		for handle, info in pairs(Phonographs) do
+		for handle, info in pairs(mediaPlayers) do
 			local object
 
 			if info.coords then
-				object = GetLocalPhonograph(info.coords, listenPos)
+				object = getLocalMediaPlayer(info.coords, listenPos)
 			elseif NetworkDoesNetworkIdExist(handle) then
 				object = NetToObj(handle)
 			end
@@ -829,25 +829,25 @@ Citizen.CreateThread(function()
 			local distance
 
 			if object and object > 0 then
-				local phonoPos = GetEntityCoords(object)
+				local mediaPos = GetEntityCoords(object)
 
-				distance = #(listenPos - phonoPos)
+				distance = #(listenPos - mediaPos)
 
 				local camDistance
-				local onScreen, screenX, screenY = GetScreenCoordFromWorldCoord(phonoPos.x, phonoPos.y, phonoPos.z + 0.8)
+				local onScreen, screenX, screenY = GetScreenCoordFromWorldCoord(mediaPos.x, mediaPos.y, mediaPos.z + 0.8)
 
-				if onScreen and not IsPauseMenuOrMapActive() then
-					camDistance = #(viewerPos - phonoPos)
+				if onScreen and not isPauseMenuOrMapActive() then
+					camDistance = #(viewerPos - mediaPos)
 				else
 					camDistance = -1
 				end
 
 				data = {
-					type = 'update',
+					type = "update",
 					handle = handle,
 					url = info.url,
 					title = info.title,
-					volume = math.floor(info.volume * (BaseVolume / 100)),
+					volume = math.floor(info.volume * (baseVolume / 100)),
 					muted = info.muted,
 					attenuation = info.attenuation,
 					offset = info.offset,
@@ -860,7 +860,7 @@ Citizen.CreateThread(function()
 					paused = info.paused,
 					coords = json.encode(info.coords),
 					distance = distance,
-					sameRoom = IsInSameRoom(ped, object),
+					sameRoom = isInSameRoom(ped, object),
 					camDistance = camDistance,
 					fov = viewerFov,
 					screenX = screenX,
@@ -889,7 +889,7 @@ Citizen.CreateThread(function()
 				distance = -1
 
 				data = {
-					type = 'update',
+					type = "update",
 					handle = handle,
 					url = info.url,
 					title = info.title,
@@ -938,18 +938,18 @@ Citizen.CreateThread(function()
 	while true do
 		local myPos = GetEntityCoords(PlayerPedId())
 
-		for _, phonograph in ipairs(Config.DefaultPhonographs) do
-			if phonograph.spawn then
-				local nearby = #(myPos - phonograph.position) <= Config.DefaultPhonographSpawnDistance
+		for _, mediaPlayer in ipairs(Config.defaultMediaPlayers) do
+			if mediaPlayer.spawn then
+				local nearby = #(myPos - mediaPlayer.position) <= Config.defaultMediaPlayerSpawnDistance
 
-				if phonograph.handle and not DoesEntityExist(phonograph.handle) then
-					phonograph.handle = nil
+				if mediaPlayer.handle and not DoesEntityExist(mediaPlayer.handle) then
+					mediaPlayer.handle = nil
 				end
 
-				if nearby and not phonograph.handle then
-					CreatePhonograph(phonograph)
-				elseif not nearby and phonograph.handle then
-					DeleteObject(phonograph.handle)
+				if nearby and not mediaPlayer.handle then
+					createMediaPlayer(mediaPlayer)
+				elseif not nearby and mediaPlayer.handle then
+					DeleteObject(mediaPlayer.handle)
 				end
 			end
 		end

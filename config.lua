@@ -3,7 +3,7 @@ Config = {}
 -- Whether the game is RDR2 or GTA V
 Config.isRDR = not TerraingridActivate
 
--- Max distance at which to interact with phonographs with the /phono command.
+-- Max distance at which to interact with media players.
 Config.maxDistance = 40.0
 
 -- Default sound attenuation factor when in the same room
@@ -409,7 +409,7 @@ Config.models = {
 	},
 }
 
--- The default model to use for default phonographs if none is specified.
+-- The default model to use for default media players if none is specified.
 Config.defaultModel = Config.isRDR and `p_phonograph01x` or `prop_boombox_01`
 
 -- Pre-defined music URLs.
@@ -425,49 +425,49 @@ Config.defaultModel = Config.isRDR and `p_phonograph01x` or `prop_boombox_01`
 -- 	The title displayed for the music.
 --
 -- filter
--- 	Whether to apply the phonograph filter.
+-- 	Whether to apply the immersive filter.
 --
 -- video
 -- 	If true and the media specified is a video, the video will be displayed
--- 	above the phonograph.
+-- 	above the object.
 --
-Config.Presets = {
+Config.presets = {
 	--['1'] = {url = 'https://example.com/example.ogg', title = 'Example Preset', filter = true, video = false}
 }
 
--- These phonographs will be automatically spawned and start playing when the
--- resource starts.
+-- These media player objects will be automatically spawned and start playing
+-- when the resource starts.
 --
 -- Mandatory properties:
 --
 -- position
--- 	A vector3 giving the position of the phonograph.
+-- 	A vector3 giving the position of the object.
 --
 -- Optional properties:
 --
 -- label
--- 	A name to use for the phonograph in the UI instead of the handle.
+-- 	A name to use for the media player in the UI instead of the handle.
 --
 -- spawn
--- 	If true, a new phonograph will be spawned. The model, pitch, roll and yaw
+-- 	If true, a new object will be spawned. The model, pitch, roll and yaw
 -- 	properties must be given.
 --
--- 	If false or omitted, an existing phonograph is expected to exist at the
+-- 	If false or omitted, an existing object is expected to exist at the
 -- 	x, y and z specified.
 --
 -- model
---  The object model to use for the phonograph, if one is to be spawned.
+--  The object model to use for the media player, if one is to be spawned.
 --
 -- rotation
---  A vector3 giving the rotation of the phonograph, if one is to be spawned.
+--  A vector3 giving the rotation of the object, if one is to be spawned.
 --
 -- invisible
--- 	If true, the phonograph will be made invisible.
+-- 	If true, the object will be made invisible.
 --
 -- url
--- 	The URL or preset name of music to start playing on this phonograph
+-- 	The URL or preset name of music to start playing on this media player
 -- 	when the resource starts. 'random' can be used to select a random
--- 	preset. If this is omitted, nothing will be played on the phonograph
+-- 	preset. If this is omitted, nothing will be played on the media player
 -- 	automatically.
 --
 -- title
@@ -484,27 +484,27 @@ Config.Presets = {
 -- 	Whether or not to loop playback of the music.
 --
 -- filter
--- 	Whether to apply the phonograph filter to the music when using a URL.
+-- 	Whether to apply the immersive filter to the music when using a URL.
 -- 	If a preset is specified, the filter setting of the preset will be used
 -- 	instead.
 --
 -- locked
--- 	If true, the phonograph can only be controlled by players with the
--- 	phonograph.manage ace.
+-- 	If true, the media player can only be controlled by players with the
+-- 	pmms.manage ace.
 --
 -- video
 -- 	If true and the media specified is a video, the video will be displayed
--- 	above the phonograph. If a preset is specified, the video setting of
--- 	the preset will be used instead.
+-- 	above the object. If a preset is specified, the video setting of the
+-- 	preset will be used instead.
 --
 -- videoSize
--- 	The default size of the video screen above the phonograph.
+-- 	The default size of the video screen above the object.
 --
-Config.DefaultPhonographs = {
+Config.defaultMediaPlayers = {
 	--[[
 	{
 		position = vector3(2071.527, -850.825, 43.399),
-		label = "Example Phonograph",
+		label = "Example Media Player",
 		spawn = true,
 		model = `p_phonograph01x`,
 		rotation = vector3(0.0, 0.0, -76.858),
@@ -522,8 +522,8 @@ Config.DefaultPhonographs = {
 	]]
 }
 
--- Distance at which default phonographs spawn/despawn
-Config.DefaultPhonographSpawnDistance = 100.0
+-- Distance at which default media player objects spawn/despawn
+Config.defaultMediaPlayerSpawnDistance = 100.0
 
 -- DUI configuration
 Config.dui = {}
@@ -531,8 +531,8 @@ Config.dui = {}
 -- The URL for the DUI server.
 --
 -- To host your own server:
--- 	git clone --branch gh-pages https://github.com/kibook/phonograph
-Config.dui.url = "https://kibook.github.io/phonograph"
+-- 	git clone --branch gh-pages https://github.com/kibook/pmms
+Config.dui.url = "https://kibook.github.io/pmms"
 
 -- The screen width of the DUI browser
 Config.dui.screenWidth = 1280
@@ -541,7 +541,7 @@ Config.dui.screenWidth = 1280
 Config.dui.screenHeight = 720
 
 -- Prefix for commands
-Config.commandPrefix = "phono"
+Config.commandPrefix = "pmms"
 
 -- Separator between prefix and command name
 Config.commandSeparator = "_"

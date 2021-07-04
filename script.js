@@ -1,12 +1,11 @@
-const minAttenuationFactor = 4.0;
-const maxAttenuationFactor = 6.0;
-
 const minVolumeFactor = 1.0;
 const maxVolumeFactor = 4.0;
 
 const maxTimeDifference = 2;
 
 var isRDR = true;
+var defaultMinAttenuation = 4.0;
+var defaultMaxAttenuation = 6.0;
 
 function sendMessage(name, params) {
 	return fetch('https://phonograph/' + name, {
@@ -140,7 +139,7 @@ function hideLoadingIcon() {
 	document.getElementById('loading').style.display = 'none';
 }
 
-function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, muted, queue, coords) {
+function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, muted, attenuation, queue, coords) {
 	var player = document.createElement('video');
 	player.id = id;
 	player.src = url;
@@ -161,7 +160,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 
 			media.phono = {};
 			media.phono.initialized = false;
-			media.phono.attenuationFactor = maxAttenuationFactor;
+			media.phono.attenuationFactor = attenuation.max;
 			media.phono.volumeFactor = maxVolumeFactor;
 
 			media.volume = 0;
@@ -218,6 +217,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					video: true,
 					videoSize: 50,
 					muted: muted,
+					attenuation: attenuation,
 					queue: queue,
 					coords: coords,
 				});
@@ -243,13 +243,13 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 	});
 }
 
-function getPlayer(handle, url, title, volume, offset, loop, filter, locked, muted, queue, coords) {
+function getPlayer(handle, url, title, volume, offset, loop, filter, locked, muted, attenuation, queue, coords) {
 	var id = 'player_' + handle.toString(16);
 
 	var player = document.getElementById(id);
 
 	if (!player && url) {
-		player = initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, muted, queue, coords);
+		player = initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, muted, attenuation, queue, coords);
 	}
 
 	return player;
@@ -274,9 +274,9 @@ function init(data) {
 	var offset = parseTimecode(data.offset);
 
 	if (data.title) {
-		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.loop, data.filter, data.locked, data.muted, data.queue, data.coords);
+		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.loop, data.filter, data.locked, data.muted, data.attenuation, data.queue, data.coords);
 	} else{
-		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.loop, data.filter, data.locked, data.muted, data.queue, data.coords);
+		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.loop, data.filter, data.locked, data.muted, data.attenuation, data.queue, data.coords);
 	}
 }
 
@@ -314,7 +314,7 @@ function setVolumeFactor(player, target) {
 }
 
 function update(data) {
-	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.muted, data.queue, data.coords);
+	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.muted, data.attenuation, data.queue, data.coords);
 
 	if (player) {
 		if (data.paused || data.distance < 0) {
@@ -323,10 +323,10 @@ function update(data) {
 			}
 		} else {
 			if (data.sameRoom) {
-				setAttenuationFactor(player, minAttenuationFactor);
+				setAttenuationFactor(player, data.attenuation.min);
 				setVolumeFactor(player, minVolumeFactor);
 			} else {
-				setAttenuationFactor(player, maxAttenuationFactor);
+				setAttenuationFactor(player, data.attenuation.max);
 				setVolumeFactor(player, maxVolumeFactor);
 			}
 
@@ -384,5 +384,7 @@ window.addEventListener('message', event => {
 window.addEventListener('load', () => {
 	sendMessage('duiStartup', {}).then(resp => resp.json()).then(resp => {
 		isRDR = resp.isRDR;
+		defaultMinAttenuation = resp.defaultMinAttenuation;
+		defaultMaxAttenuation = resp.defaultMaxAttenuation;
 	});
 });

@@ -82,6 +82,14 @@ local function addMediaPlayer(handle, url, title, volume, offset, duration, loop
 	end)
 end
 
+local function removeMediaPlayer(handle)
+	mediaPlayers[handle] = nil
+
+	enqueue(syncQueue, function()
+		TriggerClientEvent("pmms:stop", -1, handle)
+	end)
+end
+
 local function playNextInQueue(handle)
 	local mediaPlayer = mediaPlayers[handle]
 
@@ -122,14 +130,6 @@ local function playNextInQueue(handle)
 			break
 		end
 	end
-end
-
-local function removeMediaPlayer(handle)
-	mediaPlayers[handle] = nil
-
-	enqueue(syncQueue, function()
-		TriggerClientEvent("pmms:stop", -1, handle)
-	end)
 end
 
 local function pauseMediaPlayer(handle)

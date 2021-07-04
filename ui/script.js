@@ -815,6 +815,7 @@ function updateUi(data) {
 	var usableMediaPlayersSelect = document.getElementById('usable-media-players');
 	var presetSelect = document.getElementById('preset');
 	var urlInput = document.getElementById('url');
+	var volumeInput = document.getElementById('volume');
 	var offsetInput = document.getElementById('offset');
 	var loopCheckbox = document.getElementById('loop');
 	var filterCheckbox = document.getElementById('filter');
@@ -863,15 +864,17 @@ function updateUi(data) {
 			presetSelect.appendChild(option);
 		});
 
-		presetSelect.style.display = 'block';
+		presetSelect.style.visibility = 'visibile';
 	} else {
-		presetSelect.style.display = 'none';
+		presetSelect.style.visibility = 'hidden';
+		presetSelect.style.width = 0;
 	}
 
 	if (usableMediaPlayers.length == 0) {
 		usableMediaPlayersSelect.disabled = true;
 		presetSelect.disabled = true;
 		urlInput.disabled = true;
+		volumeInput.disabled = true;
 		offsetInput.disabled = true;
 		loopCheckbox.disabled = true;
 		filterCheckbox.disabled = true;
@@ -933,6 +936,7 @@ function updateUi(data) {
 
 		usableMediaPlayersSelect.disabled = false;
 		presetSelect.disabled = false;
+		volumeInput.disabled = false;
 		offsetInput.disabled = false;
 		loopCheckbox.disabled = false;
 		mutedInput.disabled = false;
@@ -984,6 +988,7 @@ function startMediaPlayer() {
 	var handleInput = document.getElementById('usable-media-players');
 	var presetSelect = document.getElementById('preset');
 	var urlInput = document.getElementById('url');
+	var volumeInput = document.getElementById('volume');
 	var offsetInput = document.getElementById('offset');
 	var loopCheckbox = document.getElementById('loop');
 	var filterCheckbox = document.getElementById('filter');
@@ -1003,6 +1008,7 @@ function startMediaPlayer() {
 		url = presetSelect.value;
 	}
 
+	var volume = parseInt(volumeInput.value);
 	var offset = offsetInput.value;
 	var loop = loopCheckbox.checked;
 	var filter = filterCheckbox.checked;
@@ -1012,6 +1018,10 @@ function startMediaPlayer() {
 	var muted = mutedInput.checked;
 	var minAttenuation = parseFloat(minAttenuationInput.value);
 	var maxAttenuation = parseFloat(maxAttenuationInput.value);
+
+	if (isNaN(volume)) {
+		volume = 100;
+	}
 
 	if (isNaN(videoSize)) {
 		videoSize = 50;
@@ -1028,7 +1038,7 @@ function startMediaPlayer() {
 	sendMessage('play', {
 		handle: handle,
 		url: url,
-		volume: 100,
+		volume: volume,
 		offset: offset,
 		loop: loop,
 		filter: filter,
@@ -1102,5 +1112,22 @@ window.addEventListener('load', () => {
 		sendMessage('setBaseVolume', {
 			volume: parseInt(this.value)
 		});
+	});
+
+	document.getElementById('advanced-settings-button').addEventListener('click', function(event) {
+		var advancedSettings = document.getElementById('advanced-settings');
+
+		if (advancedSettings.style.display == 'grid') {
+			advancedSettings.style.display = 'none';
+		} else {
+			advancedSettings.style.display = 'grid';
+		}
+	});
+
+	document.getElementById('revert-settings').addEventListener('click', function(event) {
+		document.getElementById('offset').value = '00:00:00';
+		document.getElementById('min-attenuation').value = defaultMinAttenuation;
+		document.getElementById('max-attenuation').value = defaultMaxAttenuation;
+		document.getElementById('volume').value = 100;
 	});
 });

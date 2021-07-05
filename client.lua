@@ -95,8 +95,8 @@ local function forEachMediaPlayer(func)
 	end
 end
 
-local function getClosestMediaPlayerObject(centre, radius, listenerPos)
-	if listenerPos and #(centre - listenerPos) > Config.maxDiscoveryDistance then
+local function getClosestMediaPlayerObject(centre, radius, listenerPos, range)
+	if listenerPos and range and #(centre - listenerPos) > range then
 		return nil
 	end
 
@@ -234,11 +234,11 @@ local function listPresets()
 	end
 end
 
-local function getLocalMediaPlayer(coords, listenerPos)
+local function getLocalMediaPlayer(coords, listenerPos, range)
 	local handle = GetHandleFromCoords(coords)
 
 	if not (localMediaPlayers[handle] and DoesEntityExist(localMediaPlayers[handle])) then
-		localMediaPlayers[handle] = getClosestMediaPlayerObject(coords, 1.0, listenerPos)
+		localMediaPlayers[handle] = getClosestMediaPlayerObject(coords, 1.0, listenerPos, range)
 	end
 
 	return localMediaPlayers[handle]
@@ -267,7 +267,7 @@ local function updateUi(fullControls, anyUrl)
 		local object
 
 		if info.coords then
-			object = getLocalMediaPlayer(info.coords, pos)
+			object = getLocalMediaPlayer(info.coords, pos, info.range)
 		elseif NetworkDoesNetworkIdExist(handle) then
 			object = NetToObj(handle)
 		end
@@ -433,7 +433,7 @@ local function getObjectModelAndRenderTarget(handle)
 	local object
 
 	if type(handle) == "vector3" then
-		object = getLocalMediaPlayer(handle, GetEntityCoords(PlayerPedId()))
+		object = getLocalMediaPlayer(handle, GetEntityCoords(PlayerPedId()), Config.maxRange)
 	elseif NetworkDoesNetworkIdExist(handle) then
 		object = NetToObj(handle)
 	else
@@ -460,7 +460,7 @@ local function sendMessage(handle, coords, data)
 		if object and model and renderTarget then
 			local ped, listenPos, viewerPos, viewerFov = getListenerAndViewerInfo()
 
-			if #(viewerPos - GetEntityCoords(object)) < data.range then
+			if #(viewerPos - GetEntityCoords(object)) < (data.range or Config.maxRange) then
 				duiBrowser = DuiBrowser:new(data.handle, model, renderTarget)
 
 				if not duiBrowser then
@@ -834,7 +834,7 @@ Citizen.CreateThread(function()
 			local object
 
 			if info.coords then
-				object = getLocalMediaPlayer(info.coords, listenPos)
+				object = getLocalMediaPlayer(info.coords, listenPos, info.range)
 			elseif NetworkDoesNetworkIdExist(handle) then
 				object = NetToObj(handle)
 			end

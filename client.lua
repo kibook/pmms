@@ -1,6 +1,5 @@
 local mediaPlayers = {}
 local localMediaPlayers = {}
-local mediaPlayerLabels = {}
 
 local baseVolume = 50
 local statusIsShown = false
@@ -244,9 +243,21 @@ local function getLocalMediaPlayer(coords, listenerPos, range)
 	return localMediaPlayers[handle]
 end
 
+local function getDefaultMediaPlayerLabel(object)
+	local coords = GetEntityCoords(object)
+
+	for _, mediaPlayer in ipairs(Config.defaultMediaPlayers) do
+		if #(coords - mediaPlayer.position) < 0.001 then
+			return mediaPlayer.label
+		end
+	end
+end
+
 local function getObjectLabel(handle, object)
-	if mediaPlayerLabels[handle] then
-		return mediaPlayerLabels[handle]
+	local defaultMediaPlayerLabel = getDefaultMediaPlayerLabel(object)
+
+	if defaultMediaPlayerLabel then
+		return defaultMediaPlayerLabel
 	else
 		local model = GetEntityModel(object)
 
@@ -353,8 +364,6 @@ local function createMediaPlayer(mediaPlayer)
 		SetEntityVisible(mediaPlayer.handle, false)
 		SetEntityCollision(mediaPlayer.handle, false, false)
 	end
-
-	mediaPlayerLabels[mediaPlayer.handle] = mediaPlayer.label
 end
 
 local function setMediaPlayerVolume(handle, volume)
@@ -736,7 +745,6 @@ AddEventHandler("pmms:reset", function()
 
 	mediaPlayers = {}
 	localMediaPlayers = {}
-	mediaPlayerLabels = {}
 
 	DuiBrowser:resetPool()
 

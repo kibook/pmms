@@ -4,8 +4,6 @@ const maxVolumeFactor = 4.0;
 const maxTimeDifference = 2;
 
 var isRDR = true;
-var defaultMinAttenuation = 4.0;
-var defaultMaxAttenuation = 6.0;
 
 function sendMessage(name, params) {
 	return fetch('https://pmms/' + name, {
@@ -384,7 +382,5 @@ window.addEventListener('message', event => {
 window.addEventListener('load', () => {
 	sendMessage('duiStartup', {}).then(resp => resp.json()).then(resp => {
 		isRDR = resp.isRDR;
-		defaultMinAttenuation = resp.defaultMinAttenuation;
-		defaultMaxAttenuation = resp.defaultMaxAttenuation;
 	});
 });

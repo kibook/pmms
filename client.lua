@@ -570,6 +570,12 @@ RegisterNUICallback("seekForward", function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback("seekToTime", function(data, cb)
+	local p = mediaPlayers[data.handle]
+	setMediaPlayerStartTime(data.handle, p.startTime + (p.offset - data.offset))
+	cb({})
+end)
+
 RegisterNUICallback("lock", function(data, cb)
 	lockMediaPlayer(data.handle)
 	cb({})

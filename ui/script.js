@@ -524,12 +524,37 @@ function createActiveMediaPlayerDiv(mediaPlayer, fullControls, includeQueue) {
 	var timeDiv = document.createElement('div');
 	timeDiv.className = 'active-media-player-time';
 
+	var timeDisplayDiv = document.createElement('div');
+	timeDisplayDiv.className = 'active-media-player-time-display';
+
+	if (mediaPlayer.info.duration) {
+		var timeInput = document.createElement('input');
+		timeInput.className = 'active-media-player-time-slider';
+		timeInput.type = 'range';
+		timeInput.min = 0;
+		timeInput.max = mediaPlayer.info.duration;
+		timeInput.step = 1;
+		timeInput.value = mediaPlayer.info.offset;
+
+		timeInput.addEventListener('input', event => {
+			sendMessage('seekToTime', {
+				handle: mediaPlayer.handle,
+				offset: timeInput.value
+			});
+		});
+
+		timeDisplayDiv.appendChild(timeInput);
+	}
+
 	var timeSpan = document.createElement('span');
+	timeSpan.className = 'active-media-player-time-counter';
 	if (mediaPlayer.info.duration) {
 		timeSpan.innerHTML = timeToString(mediaPlayer.info.offset) + '/' + timeToString(mediaPlayer.info.duration);
 	} else {
 		timeSpan.innerHTML = timeToString(mediaPlayer.info.offset);
 	}
+
+	timeDisplayDiv.appendChild(timeSpan);
 
 	var seekBackwardButton = document.createElement('button');
 	seekBackwardButton.className = 'control-button';
@@ -568,7 +593,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, fullControls, includeQueue) {
 	}
 
 	timeDiv.appendChild(seekBackwardButton);
-	timeDiv.appendChild(timeSpan);
+	timeDiv.appendChild(timeDisplayDiv);
 	timeDiv.appendChild(seekForwardButton);
 	timeDiv.appendChild(nextButton);
 

@@ -156,7 +156,7 @@ option {
 	display: contents;
 }
 
-.active-media-player-handle, .active-media-player-distance, .active-media-player-time, .active-media-player-video-size, .active-media-player-controls {
+.active-media-player-handle, .active-media-player-distance, .active-media-player-video-size, .active-media-player-controls {
 	white-space: nowrap;
 }
 
@@ -164,6 +164,27 @@ option {
 	display: grid;
 	grid-template-columns: max-content auto;
 	grid-gap: 0.25vh 0.25vw;
+}
+
+.active-media-player-time {
+	display: grid;
+	grid-template-columns: repeat(4, max-content);
+	grid-gap: 0.25vh 0.25vw;
+}
+
+.active-media-player-time-display {
+	display: grid;
+	grid-template-columns: max-content;
+	grid-gap: 0.25vh 0.25vw;
+}
+
+.active-media-player-time-counter {
+	font-size: 1.5vh;
+	text-align: center;
+}
+
+.active-media-player-time-slider::-webkit-slider-thumb {
+	background: #fff !important;
 }
 
 .active-media-player-controls {
@@ -198,7 +219,7 @@ option {
 	height: 2.5vh;
 }
 
-.active-media-player-time span, .active-media-player-video-size span {
+.active-media-player-video-size span {
 	padding: 0 0.25vw;
 }
 

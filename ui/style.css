@@ -187,6 +187,10 @@ option {
 	background: #fff !important;
 }
 
+.disabled-range::-webkit-slider-thumb {
+	display: none;
+}
+
 .active-media-player-controls {
 	text-align: right;
 }

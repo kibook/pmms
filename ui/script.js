@@ -543,10 +543,11 @@ function createActiveMediaPlayerDiv(mediaPlayer, fullControls, includeQueue) {
 	var timeDisplayDiv = document.createElement('div');
 	timeDisplayDiv.className = 'active-media-player-time-display';
 
+	var timeInput = document.createElement('input');
+	timeInput.type = 'range';
+
 	if (mediaPlayer.info.duration) {
-		var timeInput = document.createElement('input');
 		timeInput.className = 'active-media-player-time-slider';
-		timeInput.type = 'range';
 		timeInput.min = 0;
 		timeInput.max = mediaPlayer.info.duration;
 		timeInput.step = 1;
@@ -558,9 +559,12 @@ function createActiveMediaPlayerDiv(mediaPlayer, fullControls, includeQueue) {
 				offset: timeInput.value
 			});
 		});
-
-		timeDisplayDiv.appendChild(timeInput);
+	} else {
+		timeInput.className = 'active-media-player-time-slider disabled-range';
+		timeInput.disabled = true;
 	}
+
+	timeDisplayDiv.appendChild(timeInput);
 
 	var timeSpan = document.createElement('span');
 	timeSpan.className = 'active-media-player-time-counter';

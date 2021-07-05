@@ -1173,4 +1173,8 @@ window.addEventListener('load', () => {
 		ui.style.top = '50vh';
 		ui.style.left = '50vw';
 	});
+
+	document.getElementById('toggle-status').addEventListener('click', event => {
+		sendMessage('toggleStatus');
+	});
 });

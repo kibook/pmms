@@ -635,6 +635,11 @@ RegisterNUICallback("removeFromQueue", function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback("toggleStatus", function(data, cb)
+	TriggerEvent("pmms:toggleStatus")
+	cb({})
+end)
+
 AddEventHandler("pmms:sync", function(players, fullControls, anyUrl)
 	if syncIsEnabled then
 		mediaPlayers = players

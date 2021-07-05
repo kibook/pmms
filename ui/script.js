@@ -6,6 +6,7 @@ const maxTimeDifference = 2;
 var isRDR = true;
 var defaultMinAttenuation = 4.0;
 var defaultMaxAttenuation = 6.0;
+var defaultVideoSize = 30;
 
 function sendMessage(name, params) {
 	return fetch('https://' + GetParentResourceName() + '/' + name, {
@@ -1024,7 +1025,7 @@ function startMediaPlayer() {
 	}
 
 	if (isNaN(videoSize)) {
-		videoSize = 50;
+		videoSize = defaultVideoSize;
 	}
 
 	if (isNaN(minAttenuation)) {
@@ -1122,6 +1123,7 @@ window.addEventListener('load', () => {
 
 		document.getElementById('min-attenuation').value = defaultMinAttenuation;
 		document.getElementById('max-attenuation').value = defaultMaxAttenuation;
+		document.getElementById('video-size').value = defaultVideoSize;
 	});
 
 	var ui = document.getElementById('ui');

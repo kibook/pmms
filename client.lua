@@ -121,7 +121,7 @@ local function getClosestMediaPlayer()
 end
 
 local function startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
-	volume = Clamp(volume, 0, 100, 50)
+	volume = Clamp(volume, 0, 100, 100)
 
 	if not offset then
 		offset = "0"
@@ -482,7 +482,8 @@ RegisterNUICallback("startup", function(data, cb)
 	cb {
 		isRDR = Config.isRDR,
 		defaultMinAttenuation = Config.defaultMinAttenuation,
-		defaultMaxAttenuation = Config.defaultMaxAttenuation
+		defaultMaxAttenuation = Config.defaultMaxAttenuation,
+		defaultVideoSize = Config.defaultVideoSize
 	}
 end)
 

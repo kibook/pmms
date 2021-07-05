@@ -68,7 +68,7 @@ local function addMediaPlayer(handle, url, title, volume, offset, duration, loop
 	mediaPlayers[handle] = {
 		url = url,
 		title = title or url,
-		volume = Clamp(volume, 0, 100, 50),
+		volume = Clamp(volume, 0, 100, 100),
 		startTime = os.time() - (offset or 0),
 		offset = 0,
 		duration = duration,
@@ -511,7 +511,7 @@ AddEventHandler("pmms:setVolume", function(handle, volume)
 		return
 	end
 
-	mediaPlayers[handle].volume = Clamp(volume, 0, 100, 50)
+	mediaPlayers[handle].volume = Clamp(volume, 0, 100, 100)
 end)
 
 AddEventHandler("pmms:setStartTime", function(handle, time)
@@ -614,7 +614,7 @@ AddEventHandler("pmms:setVideoSize", function(handle, size)
 		return
 	end
 
-	mediaPlayers[handle].videoSize = Clamp(size, 10, 100, 50)
+	mediaPlayers[handle].videoSize = Clamp(size, 10, 100, Config.defaultVideoSize)
 end)
 
 AddEventHandler("pmms:mute", function(handle)

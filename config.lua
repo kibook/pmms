@@ -12,6 +12,9 @@ Config.defaultMinAttenuation = 4.0
 -- Default sound attenuation factor when in a different room
 Config.defaultMaxAttenuation = 6.0
 
+-- Default size for the NUI video screen
+Config.defaultVideoSize = 30
+
 -- Object models that media can be played on.
 --
 -- Optional properties:

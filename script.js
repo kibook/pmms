@@ -137,7 +137,7 @@ function hideLoadingIcon() {
 	document.getElementById('loading').style.display = 'none';
 }
 
-function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, muted, attenuation, queue, coords) {
+function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, muted, attenuation, range, queue, coords) {
 	var player = document.createElement('video');
 	player.id = id;
 	player.src = url;
@@ -216,6 +216,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					videoSize: 50,
 					muted: muted,
 					attenuation: attenuation,
+					range: range,
 					queue: queue,
 					coords: coords,
 				});
@@ -241,13 +242,13 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 	});
 }
 
-function getPlayer(handle, url, title, volume, offset, loop, filter, locked, muted, attenuation, queue, coords) {
+function getPlayer(handle, url, title, volume, offset, loop, filter, locked, muted, attenuation, range, queue, coords) {
 	var id = 'player_' + handle.toString(16);
 
 	var player = document.getElementById(id);
 
 	if (!player && url) {
-		player = initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, muted, attenuation, queue, coords);
+		player = initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, muted, attenuation, range, queue, coords);
 	}
 
 	return player;
@@ -272,9 +273,9 @@ function init(data) {
 	var offset = parseTimecode(data.offset);
 
 	if (data.title) {
-		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.loop, data.filter, data.locked, data.muted, data.attenuation, data.queue, data.coords);
+		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.loop, data.filter, data.locked, data.muted, data.attenuation, data.range, data.queue, data.coords);
 	} else{
-		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.loop, data.filter, data.locked, data.muted, data.attenuation, data.queue, data.coords);
+		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.loop, data.filter, data.locked, data.muted, data.attenuation, data.range, data.queue, data.coords);
 	}
 }
 
@@ -311,11 +312,21 @@ function setVolumeFactor(player, target) {
 	}
 }
 
+function setVolume(player, target) {
+	if (Math.abs(player.volume - target) > 0.1) {
+		if (player.volume > target) {
+			player.volume -= 0.05;
+		} else{
+			player.volume += 0.05;
+		}
+	}
+}
+
 function update(data) {
-	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.muted, data.attenuation, data.queue, data.coords);
+	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.muted, data.attenuation, data.range, data.queue, data.coords);
 
 	if (player) {
-		if (data.paused || data.distance < 0) {
+		if (data.paused || data.distance < 0 || data.distance > data.range) {
 			if (!player.paused) {
 				player.pause();
 			}
@@ -338,7 +349,11 @@ function update(data) {
 				}
 
 				if (volume > 0) {
-					player.volume = volume;
+					if (data.distance > 100) {
+						setVolume(player, volume);
+					} else {
+						player.volume = volume;
+					}
 				} else {
 					player.volume = 0;
 				}

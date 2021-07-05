@@ -3,14 +3,20 @@ Config = {}
 -- Whether the game is RDR2 or GTA V
 Config.isRDR = not TerraingridActivate
 
--- Max distance at which to interact with media players.
-Config.maxDistance = 40.0
+-- Max distance at which inactive media player objects appear
+Config.maxDiscoveryDistance = 30.0
 
 -- Default sound attenuation factor when in the same room
 Config.defaultMinAttenuation = 4.0
 
 -- Default sound attenuation factor when in a different room
 Config.defaultMaxAttenuation = 6.0
+
+-- Default range where active media players are visible/audible
+Config.defaultRange = 30.0
+
+-- Maximum range that players can set
+Config.maxRange = 200.0
 
 -- Default size for the NUI video screen
 Config.defaultVideoSize = 30
@@ -526,7 +532,7 @@ Config.defaultMediaPlayers = {
 }
 
 -- Distance at which default media player objects spawn/despawn
-Config.defaultMediaPlayerSpawnDistance = 100.0
+Config.defaultMediaPlayerSpawnDistance = Config.maxRange + 10.0
 
 -- DUI configuration
 Config.dui = {}

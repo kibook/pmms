@@ -96,7 +96,7 @@ local function forEachMediaPlayer(func)
 end
 
 local function getClosestMediaPlayerObject(centre, radius, listenerPos)
-	if listenerPos and #(centre - listenerPos) > Config.maxDistance then
+	if listenerPos and #(centre - listenerPos) > Config.maxDiscoveryDistance then
 		return nil
 	end
 
@@ -117,10 +117,10 @@ local function getClosestMediaPlayerObject(centre, radius, listenerPos)
 end
 
 local function getClosestMediaPlayer()
-	return getClosestMediaPlayerObject(GetEntityCoords(PlayerPedId()), Config.maxDistance)
+	return getClosestMediaPlayerObject(GetEntityCoords(PlayerPedId()), Config.maxDiscoveryDistance)
 end
 
-local function startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+local function startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords)
 	volume = Clamp(volume, 0, 100, 100)
 
 	if not offset then
@@ -128,18 +128,18 @@ local function startMediaPlayer(handle, url, volume, offset, loop, filter, locke
 	end
 
 	if NetworkDoesNetworkIdExist(handle) then
-		TriggerServerEvent("pmms:start", handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, false)
+		TriggerServerEvent("pmms:start", handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, false)
 	else
 		if not coords then
 			coords = GetEntityCoords(handle)
 		end
 
-		TriggerServerEvent("pmms:start", nil, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+		TriggerServerEvent("pmms:start", nil, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords)
 	end
 end
 
-local function startClosestMediaPlayer(url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation)
-	startMediaPlayer(getHandle(getClosestMediaPlayer()), url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, false, false)
+local function startClosestMediaPlayer(url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range)
+	startMediaPlayer(getHandle(getClosestMediaPlayer()), url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, false, false)
 end
 
 local function pauseMediaPlayer(handle)
@@ -276,7 +276,7 @@ local function updateUi(fullControls, anyUrl)
 			local mediaPos = GetEntityCoords(object)
 			local distance = #(pos - mediaPos)
 
-			if fullControls or distance <= Config.maxDistance then
+			if fullControls or distance <= info.range then
 				table.insert(activeMediaPlayers, {
 					handle = handle,
 					info = info,
@@ -308,7 +308,7 @@ local function updateUi(fullControls, anyUrl)
 				local svHandle = NetworkGetEntityIsNetworked(object) and ObjToNet(object) or GetHandleFromCoords(mediaPos)
 				local distance = #(pos - mediaPos)
 
-				if fullControls or distance <= Config.maxDistance then
+				if fullControls or distance <= Config.maxDiscoveryDistance then
 					table.insert(usableMediaPlayers, {
 						handle = clHandle,
 						distance = distance,
@@ -328,7 +328,7 @@ local function updateUi(fullControls, anyUrl)
 		usableMediaPlayers = json.encode(usableMediaPlayers),
 		presets = json.encode(Config.presets),
 		anyUrl = anyUrl,
-		maxDistance = Config.maxDistance,
+		maxDiscoveryDistance = Config.maxDiscoveryDistance,
 		fullControls = fullControls,
 		baseVolume = baseVolume
 	})
@@ -460,7 +460,7 @@ local function sendMessage(handle, coords, data)
 		if object and model and renderTarget then
 			local ped, listenPos, viewerPos, viewerFov = getListenerAndViewerInfo()
 
-			if #(viewerPos - GetEntityCoords(object)) < Config.maxDistance then
+			if #(viewerPos - GetEntityCoords(object)) < data.range then
 				duiBrowser = DuiBrowser:new(data.handle, model, renderTarget)
 
 				if not duiBrowser then
@@ -483,15 +483,15 @@ RegisterNUICallback("startup", function(data, cb)
 		isRDR = Config.isRDR,
 		defaultMinAttenuation = Config.defaultMinAttenuation,
 		defaultMaxAttenuation = Config.defaultMaxAttenuation,
+		defaultRange = Config.defaultRange,
+		maxRange = Config.maxRange,
 		defaultVideoSize = Config.defaultVideoSize
 	}
 end)
 
 RegisterNUICallback("duiStartup", function(data, cb)
 	cb {
-		isRDR = Config.isRDR,
-		defaultMinAttenuation = Config.defaultMinAttenuation,
-		defaultMaxAttenuation = Config.defaultMaxAttenuation
+		isRDR = Config.isRDR
 	}
 end)
 
@@ -513,6 +513,7 @@ RegisterNUICallback("init", function(data, cb)
 			data.videoSize,
 			data.muted,
 			data.attenuation,
+			data.range,
 			data.queue,
 			coords and tovector3(coords))
 	end
@@ -530,7 +531,7 @@ RegisterNUICallback("playError", function(data, cb)
 end)
 
 RegisterNUICallback("play", function(data, cb)
-	startMediaPlayer(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, false, false)
+	startMediaPlayer(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.range, false, false)
 	cb({})
 end)
 
@@ -656,7 +657,7 @@ AddEventHandler("pmms:sync", function(players, fullControls, anyUrl)
 	end
 end)
 
-AddEventHandler("pmms:start", function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+AddEventHandler("pmms:start", function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords)
 	sendMessage(handle, coords, {
 		type = "init",
 		handle = handle,
@@ -671,6 +672,7 @@ AddEventHandler("pmms:start", function(handle, url, title, volume, offset, loop,
 		videoSize = videoSize,
 		muted = muted,
 		attenuation = attenuation,
+		range = range,
 		queue = queue,
 		coords = json.encode(coords)
 	})
@@ -716,8 +718,8 @@ AddEventHandler("pmms:error", function(message)
 	print(message)
 end)
 
-AddEventHandler("pmms:init", function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
-	startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, queue, coords)
+AddEventHandler("pmms:init", function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords)
+	startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords)
 end)
 
 AddEventHandler("pmms:setModel", function(model, label, renderTarget)
@@ -741,8 +743,8 @@ AddEventHandler("pmms:reset", function()
 	syncIsEnabled = true
 end)
 
-AddEventHandler("pmms:startClosestMediaPlayer", function(url, offset, loop, filter, locked, video, videoSize, muted, attenuation)
-	startClosestMediaPlayer(url, 100, offset, loop, filter, locked, video, videoSize, muted, attenuation)
+AddEventHandler("pmms:startClosestMediaPlayer", function(url, offset, loop, filter, locked, video, videoSize, muted, attenuation, range)
+	startClosestMediaPlayer(url, 100, offset, loop, filter, locked, video, videoSize, muted, attenuation, range)
 end)
 
 AddEventHandler("pmms:pauseClosestMediaPlayer", function()
@@ -862,6 +864,7 @@ Citizen.CreateThread(function()
 					volume = math.floor(info.volume * (baseVolume / 100)),
 					muted = info.muted,
 					attenuation = info.attenuation,
+					range = info.range,
 					offset = info.offset,
 					duration = info.duration,
 					loop = info.loop,
@@ -876,18 +879,17 @@ Citizen.CreateThread(function()
 					camDistance = camDistance,
 					fov = viewerFov,
 					screenX = screenX,
-					screenY = screenY,
-					maxDistance = Config.maxDistance
+					screenY = screenY
 				}
 
-				if distance < Config.maxDistance then
+				if distance < info.range then
 					canWait = false
 				end
 
 				local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
 
 				if duiBrowser then
-					if distance < Config.maxDistance then
+					if distance < info.range then
 						if not duiToDraw[duiBrowser.renderTarget] then
 							duiToDraw[duiBrowser.renderTarget] = {}
 						end
@@ -908,6 +910,7 @@ Citizen.CreateThread(function()
 					volume = 0,
 					muted = true,
 					attenuation = info.attenuation,
+					range = info.range,
 					offset = info.offset,
 					duration = info.duration,
 					loop = info.loop,
@@ -922,8 +925,7 @@ Citizen.CreateThread(function()
 					camDistance = -1,
 					fov = viewerFov,
 					screenX = 0,
-					screenY = 0,
-					maxDistance = Config.maxDistance
+					screenY = 0
 				}
 			end
 

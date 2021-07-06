@@ -20,6 +20,8 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from object
 
 - Configure default objects which are spawned and play music/video automatically.
 
+- Audio visualizations via [Wave.js](https://foobar404.github.io/Wave.js/#/).
+
 # Examples
 
 | | | |

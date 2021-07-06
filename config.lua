@@ -69,6 +69,12 @@ Config.models = {
 	[`v_res_fa_radioalrm`] = {
 		label = "Alarm Clock"
 	},
+	[`prop_mp3_dock`] = {
+		label = "MP3 Dock"
+	},
+	[`v_res_mm_audio`] = {
+		label = "MP3 Dock"
+	},
 	[`sm_prop_smug_radio_01`] = {
 		label = "Radio"
 	},

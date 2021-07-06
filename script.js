@@ -168,12 +168,17 @@ function createAudioVisualization(player, visualization) {
 	var wave = new Wave();
 
 	var options;
+
 	if (visualization) {
 		options = audioVisualizations[visualization] || {};
-		options.type = visualization;
+
+		if (options.type == undefined) {
+			options.type = visualization;
+		}
 	} else {
 		options = {type: 'cubes'}
 	}
+
 	options.skipUserEventsWatcher = true;
 	options.elementDoc = doc;
 

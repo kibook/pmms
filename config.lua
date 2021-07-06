@@ -554,3 +554,82 @@ Config.commandPrefix = "pmms"
 
 -- Separator between prefix and command name
 Config.commandSeparator = "_"
+
+-- Audio visualizations users can select from.
+--
+-- Mandatory properties:
+--
+--	name
+--		Name to display in the UI.
+--
+-- Optional properties:
+--
+-- 	stroke
+--		The thickness of the lines that are drawn. Default is 2.
+--
+--	colors
+--		A list of colours used in the visual. Any valid CSS colour is legal.
+--
+-- For more details: https://foobar404.github.io/Wave.js/#/
+Config.audioVisualizations = {
+	["bars"] = {
+		name = "Bars"
+	},
+	["bars blocks"] = {
+		name = "Blocky Bars"
+	},
+	["cubes"] = {
+		name = "Cubes"
+	},
+	["dualbars"] = {
+		name = "Dual Bars"
+	},
+	["dualbars blocks"] = {
+		name = "Blocky Dual Bars"
+	},
+	["fireworks"] = {
+		name = "Fireworks"
+	},
+	["flower"] = {
+		name = "Flower"
+	},
+	["flower blocks"] = {
+		name = "Blocky Flower"
+	},
+	["orbs"] = {
+		name = "Orbs"
+	},
+	["ring"] = {
+		name = "Ring"
+	},
+	["rings"] = {
+		name = "Rings"
+	},
+	["round wave"] = {
+		name = "Round Wave"
+	},
+	["shine"] = {
+		name = "Shine"
+	},
+	["shine rings"] = {
+		name = "Shine Rings"
+	},
+	["shockwave"] = {
+		name = "Shockwave"
+	},
+	["star"] = {
+		name = "Star"
+	},
+	["static"] = {
+		name = "Static"
+	},
+	["stitches"] = {
+		name = "Stitches"
+	},
+	["web"] = {
+		name = "Web"
+	},
+	["wave"] = {
+		name = "Wave"
+	}
+}

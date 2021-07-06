@@ -19,7 +19,8 @@ files {
 	"ui/script.js",
 	"ui/mediaelement.min.js",
 	"ui/chineserocks.ttf",
-	"ui/loading.svg"
+	"ui/loading.svg",
+	"ui/wave.js"
 }
 
 ui_page "ui/index.html"

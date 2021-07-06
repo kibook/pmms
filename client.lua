@@ -119,7 +119,7 @@ local function getClosestMediaPlayer()
 	return getClosestMediaPlayerObject(GetEntityCoords(PlayerPedId()), Config.maxDiscoveryDistance)
 end
 
-local function startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords)
+local function startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
 	volume = Clamp(volume, 0, 100, 100)
 
 	if not offset then
@@ -127,18 +127,18 @@ local function startMediaPlayer(handle, url, volume, offset, loop, filter, locke
 	end
 
 	if NetworkDoesNetworkIdExist(handle) then
-		TriggerServerEvent("pmms:start", handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, false)
+		TriggerServerEvent("pmms:start", handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, false)
 	else
 		if not coords then
 			coords = GetEntityCoords(handle)
 		end
 
-		TriggerServerEvent("pmms:start", nil, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords)
+		TriggerServerEvent("pmms:start", nil, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
 	end
 end
 
-local function startClosestMediaPlayer(url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range)
-	startMediaPlayer(getHandle(getClosestMediaPlayer()), url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, false, false)
+local function startClosestMediaPlayer(url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, visualization, range)
+	startMediaPlayer(getHandle(getClosestMediaPlayer()), url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, false, false)
 end
 
 local function pauseMediaPlayer(handle)
@@ -494,13 +494,15 @@ RegisterNUICallback("startup", function(data, cb)
 		defaultMaxAttenuation = Config.defaultMaxAttenuation,
 		defaultRange = Config.defaultRange,
 		maxRange = Config.maxRange,
-		defaultVideoSize = Config.defaultVideoSize
+		defaultVideoSize = Config.defaultVideoSize,
+		audioVisualizations = Config.audioVisualizations
 	}
 end)
 
 RegisterNUICallback("duiStartup", function(data, cb)
 	cb {
-		isRDR = Config.isRDR
+		isRDR = Config.isRDR,
+		audioVisualizations = Config.audioVisualizations
 	}
 end)
 
@@ -523,6 +525,7 @@ RegisterNUICallback("init", function(data, cb)
 			data.muted,
 			data.attenuation,
 			data.range,
+			data.visualization,
 			data.queue,
 			coords and tovector3(coords))
 	end
@@ -540,7 +543,7 @@ RegisterNUICallback("playError", function(data, cb)
 end)
 
 RegisterNUICallback("play", function(data, cb)
-	startMediaPlayer(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.range, false, false)
+	startMediaPlayer(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.range, data.visualization, false, false)
 	cb({})
 end)
 
@@ -666,7 +669,7 @@ AddEventHandler("pmms:sync", function(players, fullControls, anyUrl)
 	end
 end)
 
-AddEventHandler("pmms:start", function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords)
+AddEventHandler("pmms:start", function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
 	sendMessage(handle, coords, {
 		type = "init",
 		handle = handle,
@@ -682,6 +685,7 @@ AddEventHandler("pmms:start", function(handle, url, title, volume, offset, loop,
 		muted = muted,
 		attenuation = attenuation,
 		range = range,
+		visualization = visualization,
 		queue = queue,
 		coords = json.encode(coords)
 	})
@@ -727,8 +731,8 @@ AddEventHandler("pmms:error", function(message)
 	print(message)
 end)
 
-AddEventHandler("pmms:init", function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords)
-	startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords)
+AddEventHandler("pmms:init", function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
+	startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
 end)
 
 AddEventHandler("pmms:setModel", function(model, label, renderTarget)
@@ -751,8 +755,8 @@ AddEventHandler("pmms:reset", function()
 	syncIsEnabled = true
 end)
 
-AddEventHandler("pmms:startClosestMediaPlayer", function(url, offset, loop, filter, locked, video, videoSize, muted, attenuation, range)
-	startClosestMediaPlayer(url, 100, offset, loop, filter, locked, video, videoSize, muted, attenuation, range)
+AddEventHandler("pmms:startClosestMediaPlayer", function(url, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
+	startClosestMediaPlayer(url, 100, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
 end)
 
 AddEventHandler("pmms:pauseClosestMediaPlayer", function()
@@ -805,7 +809,11 @@ Citizen.CreateThread(function()
 		{name = "lock", help = "0 = unlocked, 1 = locked"},
 		{name = "video", help = "0 = hide video, 1 = show video"},
 		{name = "size", help = "Video size"},
-		{name = "mute", help = "0 = unmuted, 1 = muted"}
+		{name = "mute", help = "0 = unmuted, 1 = muted"},
+		{name = "min", help = "Minimum attenuation (in the same room)"},
+		{name = "max", help = "Maximum attenuation (in a different room)"},
+		{name = "range", help = "Maximum range of the media player"},
+		{name = "visualization", help = "Audio visualization type"}
 	})
 
 	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "pause", "Pause the closest media player.")
@@ -873,6 +881,7 @@ Citizen.CreateThread(function()
 					muted = info.muted,
 					attenuation = info.attenuation,
 					range = info.range,
+					visualization = info.visualization,
 					offset = info.offset,
 					duration = info.duration,
 					loop = info.loop,
@@ -919,6 +928,7 @@ Citizen.CreateThread(function()
 					muted = true,
 					attenuation = info.attenuation,
 					range = info.range,
+					visualization = info.visualization,
 					offset = info.offset,
 					duration = info.duration,
 					loop = info.loop,

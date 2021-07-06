@@ -8,6 +8,7 @@ var defaultMinAttenuation = 4.0;
 var defaultMaxAttenuation = 6.0;
 var defaultRange = 50;
 var defaultVideoSize = 30;
+var audioVisualizations = {};
 
 function sendMessage(name, params) {
 	return fetch('https://' + GetParentResourceName() + '/' + name, {
@@ -133,6 +134,56 @@ function applyRadioFilter(player) {
 	}
 }
 
+function createAudioVisualization(player, visualization) {
+        var waveCanvas = document.createElement('canvas');
+        waveCanvas.id = player.id + '_visualization';
+        waveCanvas.style.position = 'absolute';
+        waveCanvas.style.top = '0';
+        waveCanvas.style.left = '0';
+        waveCanvas.style.width = '100%';
+        waveCanvas.style.height = '100%';
+
+        player.appendChild(waveCanvas);
+
+        var html5Player;
+
+        if (player.youTubeApi) {
+                html5Player = player.youTubeApi.getIframe().contentWindow.document.querySelector('.html5-main-video');
+        } else if (player.hlsPlayer) {
+                html5Player = player.hlsPlayer.media;
+        } else if (player.originalNode) {
+                html5Player = player.originalNode;
+        } else {
+                html5Player = player;
+        }
+
+        if (!html5Player.id) {
+                html5Player.id = player.id + '_html5Player';
+        }
+
+        html5Player.style.visibility = 'hidden';
+
+		var doc = player.youTubeApi ? player.youTubeApi.getIframe().contentWindow.document : document;
+
+		if (player.youTubeApi) {
+			player.youTubeApi.getIframe().style.visibility = 'hidden';
+		}
+
+        var wave = new Wave();
+
+		var options;
+		if (visualization) {
+			options = audioVisualizations[visualization] || {};
+			options.type = visualization;
+		} else {
+			options = {type: 'cubes'}
+		}
+		options.skipUserEventsWatcher = true;
+		options.elementDoc = doc;
+
+        wave.fromElement(html5Player.id, waveCanvas.id, options);
+}
+
 function showLoadingIcon() {
 	document.getElementById('loading').style.display = 'block';
 }
@@ -141,7 +192,7 @@ function hideLoadingIcon() {
 	document.getElementById('loading').style.display = 'none';
 }
 
-function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords) {
+function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords) {
 	var player = document.createElement('video');
 	player.id = id;
 	player.src = url;
@@ -227,6 +278,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					muted: muted,
 					attenuation: attenuation,
 					range: range,
+					visualization: visualization,
 					queue: queue,
 					coords: coords,
 				});
@@ -245,6 +297,11 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					}
 					media.pmms.filterAdded = true;
 				}
+
+				if (visualization && !media.pmms.visualizationAdded) {
+					createAudioVisualization(media, visualization);
+					media.pmms.visualizationAdded = true;
+				}
 			});
 
 			media.play();
@@ -252,13 +309,13 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 	});
 }
 
-function getPlayer(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords) {
+function getPlayer(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords) {
 	var id = 'player_' + handle.toString(16);
 
 	var player = document.getElementById(id);
 
 	if (!player && url) {
-		player = initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, queue, coords);
+		player = initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords);
 	}
 
 	return player;
@@ -283,9 +340,9 @@ function init(data) {
 	var offset = parseTimecode(data.offset);
 
 	if (data.title) {
-		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.range, data.queue, data.coords);
+		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.range, data.visualization, data.queue, data.coords);
 	} else{
-		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.range, data.queue, data.coords);
+		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.range, data.visualization, data.queue, data.coords);
 	}
 }
 
@@ -345,7 +402,7 @@ function calculateFocalLength(fov) {
 }
 
 function update(data) {
-	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.range, data.queue, data.coords);
+	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.range, data.visualization, data.queue, data.coords);
 
 	if (player) {
 		if (data.paused || data.distance < 0 || data.distance > data.range) {
@@ -1045,6 +1102,7 @@ function startMediaPlayer() {
 	var minAttenuationInput = document.getElementById('min-attenuation');
 	var maxAttenuationInput = document.getElementById('max-attenuation');
 	var rangeInput = document.getElementById('range');
+	var visualizationSelect = document.getElementById('visualization');
 
 	var handle = parseInt(handleInput.value);
 
@@ -1066,6 +1124,7 @@ function startMediaPlayer() {
 	var minAttenuation = parseFloat(minAttenuationInput.value);
 	var maxAttenuation = parseFloat(maxAttenuationInput.value);
 	var range = parseFloat(rangeInput.value);
+	var visualization = visualizationSelect.value;
 
 	if (isNaN(volume)) {
 		volume = 100;
@@ -1087,6 +1146,13 @@ function startMediaPlayer() {
 		range = defaultRange;
 	}
 
+	if (visualization == '') {
+		visualization = null
+	} else {
+		video = true;
+		filter = false;
+	}
+
 	sendMessage('play', {
 		handle: handle,
 		url: url,
@@ -1102,7 +1168,8 @@ function startMediaPlayer() {
 			min: minAttenuation,
 			max: maxAttenuation
 		},
-		range: range
+		range: range,
+		visualization: visualization
 	});
 }
 
@@ -1181,6 +1248,15 @@ window.addEventListener('load', () => {
 		var rangeInput = document.getElementById('range');
 		rangeInput.value = defaultRange;
 		rangeInput.max = resp.maxRange;
+
+		var visualizationSelect = document.getElementById('visualization');
+		audioVisualizations = resp.audioVisualizations;
+		Object.keys(audioVisualizations).forEach(key => {
+			var option = document.createElement('option');
+			option.value = key;
+			option.innerHTML = audioVisualizations[key].name;
+			visualizationSelect.appendChild(option);
+		});
 	});
 
 	var ui = document.getElementById('ui');
@@ -1225,6 +1301,7 @@ window.addEventListener('load', () => {
 		document.getElementById('max-attenuation').value = defaultMaxAttenuation;
 		document.getElementById('range').value = defaultRange;
 		document.getElementById('volume').value = 100;
+		document.getElementById('visualization').value = null;
 	});
 
 	document.getElementById('restore-ui-position').addEventListener('click', event => {
@@ -1234,5 +1311,12 @@ window.addEventListener('load', () => {
 
 	document.getElementById('toggle-status').addEventListener('click', event => {
 		sendMessage('toggleStatus');
+	});
+
+	document.getElementById('visualization').addEventListener('input', function(event) {
+		if (this.value != '') {
+			document.getElementById('filter').checked = false;
+			document.getElementById('video').checked = true;
+		}
 	});
 });

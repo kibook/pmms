@@ -36,7 +36,7 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from object
 | Command                                                                            | Description                                       |
 |------------------------------------------------------------------------------------|---------------------------------------------------|
 | `/pmms`                                                                            | Open the media player control panel.              |
-| `/pmms_play [url] [time] [loop] [filter] [lock] [video] [size] [mute] [min] [max]` | Play music/video on the nearest media player.     |
+| `/pmms_play [url] ...`                                                             | Play music/video on the nearest media player.     |
 | `/pmms_pause`                                                                      | Pause playback on the nearest media player.       |
 | `/pmms_stop`                                                                       | Stop playback on the nearest media player.        |
 | `/pmms_status`                                                                     | Show the status of the nearest media player.      |
@@ -52,7 +52,7 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from object
 ### startByNetworkId
 
 ```lua
-handle = exports.pmms:startByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation)
+handle = exports.pmms:startByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
 ```
 
 Starts playing something on a networked media player object, using its network ID.
@@ -60,7 +60,7 @@ Starts playing something on a networked media player object, using its network I
 ### startByCoords
 
 ```lua
-handle = exports.pmms:startByCoords(x, y, z, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation)
+handle = exports.pmms:startByCoords(x, y, z, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
 ```
 
 Starts playing something on a non-networked media player object, using its coordinates on the world map.

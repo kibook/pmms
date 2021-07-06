@@ -660,9 +660,9 @@ RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
 		object = data.handle
 	end
 
-	local defaultMediaPlayer = getDefaultMediaPlayer(object)
+	local defaults = getDefaultMediaPlayer(object) or Config.models[GetEntityModel(object)]
 
-	cb(defaultMediaPlayer or {})
+	cb(defaults or {})
 end)
 
 AddEventHandler("pmms:sync", function(players, fullControls, anyUrl)

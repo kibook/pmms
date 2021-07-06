@@ -1221,6 +1221,10 @@ function setMediaPlayerDefaults(handle) {
 	sendMessage('setMediaPlayerDefaults', {
 		handle: handle
 	}).then(resp => resp.json()).then(resp => {
+		if (resp.filter != undefined) {
+			document.getElementById('filter').checked = resp.filter;
+		}
+
 		if (resp.volume) {
 			document.getElementById('volume').value = resp.volume;
 		} else {

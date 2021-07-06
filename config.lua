@@ -32,6 +32,24 @@ Config.defaultVideoSize = 30
 --		If specified, video will be displayed on the render target with DUI,
 --		rather than in a floating screen above the object.
 --
+--	filter
+--		The default state of the filter for this type of object.
+--
+--	attenuation
+--		The default min and max attenuation for this type of object.
+--
+--	range
+--		The default range for this type of object
+--
+-- Example:
+--
+-- 	[`p_phonograph01x`] = {
+-- 		label = "Phonograph",
+-- 		filter = true,
+-- 		attenuation = {min = 4, max = 6},
+-- 		range = 30
+-- 	}
+--
 Config.models = {
 	[`p_phonograph01x`]  = {
 		label = "Phonograph"

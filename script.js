@@ -4,6 +4,7 @@ const maxVolumeFactor = 4.0;
 const maxTimeDifference = 2;
 
 var isRDR = true;
+var audioVisualizations = {};
 
 function sendMessage(name, params) {
 	return fetch('https://pmms/' + name, {
@@ -129,6 +130,56 @@ function applyRadioFilter(player) {
 	}
 }
 
+function createAudioVisualization(player, visualization) {
+	var waveCanvas = document.createElement('canvas');
+	waveCanvas.id = player.id + '_visualization';
+	waveCanvas.style.position = 'absolute';
+	waveCanvas.style.top = '0';
+	waveCanvas.style.left = '0';
+	waveCanvas.style.width = '100%';
+	waveCanvas.style.height = '100%';
+
+	player.appendChild(waveCanvas);
+
+	var html5Player;
+
+	if (player.youTubeApi) {
+		html5Player = player.youTubeApi.getIframe().contentWindow.document.querySelector('.html5-main-video');
+	} else if (player.hlsPlayer) {
+		html5Player = player.hlsPlayer.media;
+	} else if (player.originalNode) {
+		html5Player = player.originalNode;
+	} else {
+		html5Player = player;
+	}
+
+	if (!html5Player.id) {
+		html5Player.id = player.id + '_html5Player';
+	}
+
+	html5Player.style.visibility = 'hidden';
+
+	var doc = player.youTubeApi ? player.youTubeApi.getIframe().contentWindow.document : document;
+
+	if (player.youTubeApi) {
+		player.youTubeApi.getIframe().style.visibility = 'hidden';
+	}
+
+	var wave = new Wave();
+
+	var options;
+	if (visualization) {
+		options = audioVisualizations[visualization] || {};
+		options.type = visualization;
+	} else {
+		options = {type: 'cubes'}
+	}
+	options.skipUserEventsWatcher = true;
+	options.elementDoc = doc;
+
+	wave.fromElement(html5Player.id, waveCanvas.id, options);
+}
+
 function showLoadingIcon() {
 	document.getElementById('loading').style.display = 'block';
 }
@@ -137,7 +188,7 @@ function hideLoadingIcon() {
 	document.getElementById('loading').style.display = 'none';
 }
 
-function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, muted, attenuation, range, queue, coords) {
+function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, muted, attenuation, range, visualization, queue, coords) {
 	var player = document.createElement('video');
 	player.id = id;
 	player.src = url;
@@ -156,10 +207,10 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 		success: function(media, domNode) {
 			media.className = 'player';
 
-			media.phono = {};
-			media.phono.initialized = false;
-			media.phono.attenuationFactor = attenuation.max;
-			media.phono.volumeFactor = maxVolumeFactor;
+			media.pmms = {};
+			media.pmms.initialized = false;
+			media.pmms.attenuationFactor = attenuation.max;
+			media.pmms.volumeFactor = maxVolumeFactor;
 
 			media.volume = 0;
 
@@ -170,13 +221,13 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					url: url
 				});
 
-				if (!media.phono.initialized) {
+				if (!media.pmms.initialized) {
 					media.remove();
 				}
 			});
 
 			media.addEventListener('canplay', () => {
-				if (media.phono.initialized) {
+				if (media.pmms.initialized) {
 					return;
 				}
 
@@ -217,23 +268,29 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					muted: muted,
 					attenuation: attenuation,
 					range: range,
+					visualization: visualization,
 					queue: queue,
 					coords: coords,
 				});
 
-				media.phono.initialized = true;
+				media.pmms.initialized = true;
 
 				media.play();
 			});
 
 			media.addEventListener('playing', () => {
-				if (filter && !media.phono.filterAdded) {
+				if (filter && !media.pmms.filterAdded) {
 					if (isRDR) {
 						applyPhonographFilter(media);
 					} else {
 						applyRadioFilter(media);
 					}
-					media.phono.filterAdded = true;
+					media.pmms.filterAdded = true;
+				}
+
+				if (visualization && !media.pmms.visualizationAdded) {
+					createAudioVisualization(media, visualization);
+					media.pmms.visualizationAdded = true;
 				}
 			});
 
@@ -242,13 +299,13 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 	});
 }
 
-function getPlayer(handle, url, title, volume, offset, loop, filter, locked, muted, attenuation, range, queue, coords) {
+function getPlayer(handle, url, title, volume, offset, loop, filter, locked, video, muted, attenuation, range, visualization, queue, coords) {
 	var id = 'player_' + handle.toString(16);
 
 	var player = document.getElementById(id);
 
 	if (!player && url) {
-		player = initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, muted, attenuation, range, queue, coords);
+		player = initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, muted, attenuation, range, visualization, queue, coords);
 	}
 
 	return player;
@@ -273,9 +330,9 @@ function init(data) {
 	var offset = parseTimecode(data.offset);
 
 	if (data.title) {
-		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.loop, data.filter, data.locked, data.muted, data.attenuation, data.range, data.queue, data.coords);
+		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.muted, data.attenuation, data.range, data.visualization, data.queue, data.coords);
 	} else{
-		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.loop, data.filter, data.locked, data.muted, data.attenuation, data.range, data.queue, data.coords);
+		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.muted, data.attenuation, data.range, data.visualization, data.queue, data.coords);
 	}
 }
 
@@ -297,18 +354,18 @@ function stop(handle) {
 }
 
 function setAttenuationFactor(player, target) {
-	if (player.phono.attenuationFactor > target) {
-		player.phono.attenuationFactor -= 0.1;
+	if (player.pmms.attenuationFactor > target) {
+		player.pmms.attenuationFactor -= 0.1;
 	} else {
-		player.phono.attenuationFactor += 0.1;
+		player.pmms.attenuationFactor += 0.1;
 	}
 }
 
 function setVolumeFactor(player, target) {
-	if (player.phono.volumeFactor > target) {
-		player.phono.volumeFactor -= 0.1;
+	if (player.pmms.volumeFactor > target) {
+		player.pmms.volumeFactor -= 0.1;
 	} else {
-		player.phono.volumeFactor += 0.1;
+		player.pmms.volumeFactor += 0.1;
 	}
 }
 
@@ -323,7 +380,7 @@ function setVolume(player, target) {
 }
 
 function update(data) {
-	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.muted, data.attenuation, data.range, data.queue, data.coords);
+	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.muted, data.attenuation, data.range, data.visualization, data.queue, data.coords);
 
 	if (player) {
 		if (data.paused || data.distance < 0 || data.distance > data.range) {
@@ -345,7 +402,7 @@ function update(data) {
 				if (data.muted) {
 					volume = 0;
 				} else {
-					volume = (((100 - data.distance * player.phono.attenuationFactor) / 100) / player.phono.volumeFactor) * (data.volume / 100);
+					volume = (((100 - data.distance * player.pmms.attenuationFactor) / 100) / player.pmms.volumeFactor) * (data.volume / 100);
 				}
 
 				if (volume > 0) {
@@ -397,5 +454,6 @@ window.addEventListener('message', event => {
 window.addEventListener('load', () => {
 	sendMessage('duiStartup', {}).then(resp => resp.json()).then(resp => {
 		isRDR = resp.isRDR;
+		audioVisualizations = resp.audioVisualizations;
 	});
 });

@@ -243,21 +243,21 @@ local function getLocalMediaPlayer(coords, listenerPos, range)
 	return localMediaPlayers[handle]
 end
 
-local function getDefaultMediaPlayerLabel(object)
+local function getDefaultMediaPlayer(object)
 	local coords = GetEntityCoords(object)
 
 	for _, mediaPlayer in ipairs(Config.defaultMediaPlayers) do
 		if #(coords - mediaPlayer.position) < 0.001 then
-			return mediaPlayer.label
+			return mediaPlayer
 		end
 	end
 end
 
 local function getObjectLabel(handle, object)
-	local defaultMediaPlayerLabel = getDefaultMediaPlayerLabel(object)
+	local defaultMediaPlayer = getDefaultMediaPlayer(object)
 
-	if defaultMediaPlayerLabel then
-		return defaultMediaPlayerLabel
+	if defaultMediaPlayer and defaultMediaPlayer.label then
+		return defaultMediaPlayer.label
 	else
 		local model = GetEntityModel(object)
 
@@ -428,14 +428,6 @@ end
 
 local function tovector3(t)
 	return vector3(t.x, t.y, t.z)
-end
-
-local function getHandleModel(handle)
-	if NetworkDoesNetworkIdExist(handle) then
-		return GetEntityModel(NetToObj(handle))
-	else
-		return GetEntityModel(handle)
-	end
 end
 
 local function getObjectModelAndRenderTarget(handle)
@@ -657,6 +649,20 @@ end)
 RegisterNUICallback("toggleStatus", function(data, cb)
 	TriggerEvent("pmms:toggleStatus")
 	cb({})
+end)
+
+RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
+	local object
+
+	if NetworkDoesNetworkIdExist(data.handle) then
+		object = NetToObj(data.handle)
+	else
+		object = data.handle
+	end
+
+	local defaultMediaPlayer = getDefaultMediaPlayer(object)
+
+	cb(defaultMediaPlayer or {})
 end)
 
 AddEventHandler("pmms:sync", function(players, fullControls, anyUrl)

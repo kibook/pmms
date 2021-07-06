@@ -444,8 +444,10 @@ Config.presets = {
 	--['1'] = {url = 'https://example.com/example.ogg', title = 'Example Preset', filter = true, video = false}
 }
 
--- These media player objects will be automatically spawned and start playing
--- when the resource starts.
+-- These media player objects will be automatically spawned (if they do not
+-- exist) and can start playing something automatically when the resource
+-- starts. When selecting one of these objects in the UI, certain settings,
+-- such as attenuation and range, will be applied automatically.
 --
 -- Mandatory properties:
 --
@@ -509,6 +511,15 @@ Config.presets = {
 -- videoSize
 -- 	The default size of the video screen above the object.
 --
+-- muted
+--  Whether or not the default media player is muted.
+--
+-- attenuation
+--  The default min and max attenuation values used for this media player.
+--
+-- range
+--  The default range used for this media player.
+--
 Config.defaultMediaPlayers = {
 	--[[
 	{
@@ -526,7 +537,10 @@ Config.defaultMediaPlayers = {
 		filter = true,
 		locked = false,
 		video = false,
-		videoSize = 50
+		videoSize = 30,
+		muted = false,
+		attenuation = {min = 4, max = 6},
+		range = 30
 	}
 	]]
 }

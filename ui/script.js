@@ -936,8 +936,6 @@ function updateUi(data) {
 	var usableMediaPlayersValue = usableMediaPlayersSelect.value;
 	var presetValue = presetSelect.value;
 
-	usableMediaPlayersSelect.innerHTML = '';
-
 	var presetKeys = Object.keys(presets).sort();
 
 	if (presetKeys.length > 0) {
@@ -992,6 +990,8 @@ function updateUi(data) {
 		mutedInput.disabled = true;
 		playButton.disabled = true;
 	} else {
+		usableMediaPlayersSelect.innerHTML = '<option></option>';
+
 		usableMediaPlayers.forEach(mediaPlayer => {
 			var option = document.createElement('option');
 
@@ -1049,7 +1049,7 @@ function updateUi(data) {
 		loopCheckbox.disabled = false;
 		mutedInput.disabled = false;
 
-		if (presetSelect.value == '' && urlInput.value == '') {
+		if (usableMediaPlayersSelect.value == '' || (presetSelect.value == '' && urlInput.value == '')) {
 			playButton.disabled = true;
 		} else {
 			playButton.disabled = false;
@@ -1210,6 +1210,32 @@ function makeElementDraggable(element, dragPoint) {
 	}
 }
 
+function setMediaPlayerDefaults(handle) {
+	sendMessage('setMediaPlayerDefaults', {
+		handle: handle
+	}).then(resp => resp.json()).then(resp => {
+		if (resp.volume) {
+			document.getElementById('volume').value = resp.volume;
+		} else {
+			document.getElementById('volume').value = 100;
+		}
+
+		if (resp.attenuation) {
+			document.getElementById('min-attenuation').value = resp.attenuation.min;
+			document.getElementById('max-attenuation').value = resp.attenuation.max;
+		} else {
+			document.getElementById('min-attenuation').value = defaultMinAttenuation;
+			document.getElementById('max-attenuation').value = defaultMaxAttenuation;
+		}
+
+		if (resp.range) {
+			document.getElementById('range').value = resp.range;
+		} else {
+			document.getElementById('range').value = defaultRange;
+		}
+	});
+}
+
 window.addEventListener('message', event => {
 	switch (event.data.type) {
 		case 'init':
@@ -1306,11 +1332,17 @@ window.addEventListener('load', () => {
 
 	document.getElementById('revert-settings').addEventListener('click', event => {
 		document.getElementById('offset').value = '00:00:00';
-		document.getElementById('min-attenuation').value = defaultMinAttenuation;
-		document.getElementById('max-attenuation').value = defaultMaxAttenuation;
-		document.getElementById('range').value = defaultRange;
-		document.getElementById('volume').value = 100;
 		document.getElementById('visualization').value = null;
+
+		var usableMediaPlayersSelect = document.getElementById('usable-media-players');
+		if (usableMediaPlayersSelect.value != '') {
+			setMediaPlayerDefaults(parseInt(usableMediaPlayersSelect.value));
+		} else {
+			document.getElementById('min-attenuation').value = defaultMinAttenuation;
+			document.getElementById('max-attenuation').value = defaultMaxAttenuation;
+			document.getElementById('range').value = defaultRange;
+			document.getElementById('volume').value = 100;
+		}
 	});
 
 	document.getElementById('restore-ui-position').addEventListener('click', event => {
@@ -1326,6 +1358,12 @@ window.addEventListener('load', () => {
 		if (this.value != '') {
 			document.getElementById('filter').checked = false;
 			document.getElementById('video').checked = true;
+		}
+	});
+
+	document.getElementById('usable-media-players').addEventListener('input', function(event) {
+		if (this.value != '') {
+			setMediaPlayerDefaults(parseInt(this.value));
 		}
 	});
 });

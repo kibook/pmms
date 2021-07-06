@@ -932,6 +932,7 @@ function updateUi(data) {
 	var videoSizeInput = document.getElementById('video-size');
 	var mutedInput = document.getElementById('muted');
 	var playButton = document.getElementById('play-button');
+	var visualizationSelect = document.getElementById('visualization');
 
 	var usableMediaPlayersValue = usableMediaPlayersSelect.value;
 	var presetValue = presetSelect.value;
@@ -1024,14 +1025,20 @@ function updateUi(data) {
 		} else {
 			urlInput.disabled = true;
 			filterCheckbox.disabled = true;
-			videoCheckbox.disabled = true;
 
-			if (presets[presetSelect.value] && presets[presetSelect.value].video) {
-				videoSizeInput.disabled = false;
-				videoCheckbox.checked = true;
+			if (visualizationSelect.value == '') {
+				videoCheckbox.disabled = true;
+
+				if (presets[presetSelect.value] && presets[presetSelect.value].video) {
+					videoSizeInput.disabled = false;
+					videoCheckbox.checked = true;
+				} else {
+					videoSizeInput.disabled = true;
+					videoCheckbox.checked = false;
+				}
 			} else {
-				videoSizeInput.disabled = true;
-				videoCheckbox.checked = false;
+				videoCheckbox.disabled = false;
+				videoSizeInput.disabled = false;
 			}
 		}
 

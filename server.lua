@@ -415,7 +415,7 @@ AddEventHandler("pmms:start", function(handle, url, volume, offset, loop, filter
 				loop,
 				Config.presets[url].filter or false,
 				locked,
-				Config.presets[url].video or false,
+				Config.presets[url].video or visualization ~= nil,
 				videoSize,
 				muted,
 				attenuation,

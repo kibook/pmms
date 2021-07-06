@@ -171,15 +171,20 @@ function createAudioVisualization(player, visualization) {
 
         var wave = new Wave();
 
-		var options;
-		if (visualization) {
-			options = audioVisualizations[visualization] || {};
+	var options;
+
+	if (visualization) {
+		options = audioVisualizations[visualization] || {};
+
+		if (options.type == undefined) {
 			options.type = visualization;
-		} else {
-			options = {type: 'cubes'}
 		}
-		options.skipUserEventsWatcher = true;
-		options.elementDoc = doc;
+	} else {
+		options = {type: 'cubes'}
+	}
+
+	options.skipUserEventsWatcher = true;
+	options.elementDoc = doc;
 
         wave.fromElement(html5Player.id, waveCanvas.id, options);
 }
@@ -1251,7 +1256,11 @@ window.addEventListener('load', () => {
 
 		var visualizationSelect = document.getElementById('visualization');
 		audioVisualizations = resp.audioVisualizations;
-		Object.keys(audioVisualizations).forEach(key => {
+		var keys = Object.keys(audioVisualizations);
+		keys.sort((a, b) => {
+			return audioVisualizations[a].name < audioVisualizations[b].name;
+		});
+		keys.forEach(key => {
 			var option = document.createElement('option');
 			option.value = key;
 			option.innerHTML = audioVisualizations[key].name;

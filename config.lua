@@ -564,6 +564,9 @@ Config.commandSeparator = "_"
 --
 -- Optional properties:
 --
+-- 	type
+-- 		If the key is not the type, this must be given.
+--
 -- 	stroke
 --		The thickness of the lines that are drawn. Default is 2.
 --

@@ -214,7 +214,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 
 			media.pmms = {};
 			media.pmms.initialized = false;
-			media.pmms.attenuationFactor = attenuation.max;
+			media.pmms.attenuationFactor = attenuation.diffRoom;
 			media.pmms.volumeFactor = maxVolumeFactor;
 
 			media.volume = 0;
@@ -394,10 +394,10 @@ function update(data) {
 			}
 		} else {
 			if (data.sameRoom) {
-				setAttenuationFactor(player, data.attenuation.min);
+				setAttenuationFactor(player, data.attenuation.sameRoom);
 				setVolumeFactor(player, minVolumeFactor);
 			} else {
-				setAttenuationFactor(player, data.attenuation.max);
+				setAttenuationFactor(player, data.attenuation.diffRoom);
 				setVolumeFactor(player, maxVolumeFactor);
 			}
 

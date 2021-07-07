@@ -56,12 +56,12 @@ local function addMediaPlayer(handle, url, title, volume, offset, duration, loop
 	end
 
 	if attenuation then
-		attenuation.min = Clamp(attenuation.min, 0.0, 10.0, defaultMinAttenuation)
-		attenuation.max = Clamp(attenuation.max, 0.0, 10.0, defaultMaxAttenuation)
+		attenuation.sameRoom = Clamp(attenuation.sameRoom, 0.0, 10.0, defaultSameRoomAttenuation)
+		attenuation.diffRoom = Clamp(attenuation.diffRoom, 0.0, 10.0, defaultDiffRoomAttenuation)
 	else
 		attenuation = {
-			min = defaultMinAttenuation,
-			max = defaultMaxAttenuation
+			sameRoom = defaultSameRoomAttenuation,
+			diffRoom = defaultDiffRoomAttenuation
 		}
 	end
 
@@ -757,15 +757,11 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "play", funct
 		local video = args[6] == "1"
 		local videoSize = tonumber(args[7]) or Config.defaultVideoSize
 		local muted = args[8] == "1"
-		local minAttenuation = tonumber(args[9]) or Config.defaultMinAttenuation
-		local maxAttenuation = tonumber(args[10]) or Config.defaultMaxAttenuation
+		local attenuation = {}
+		attenuation.sameRoomAttenuation =  tonumber(args[9]) or Config.defaultSameRoomAttenuation
+		attenuation.diffRoomAttenuation = tonumber(args[10]) or Config.defaultDiffRoomAttenuation
 		local range = tonumber(args[11]) or Config.defaultRange
 		local visualization = args[12]
-
-		local attenuation = {
-			min = minAttenuation,
-			max = maxAttenuation
-		}
 
 		TriggerClientEvent("pmms:startClosestMediaPlayer", source, url, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
 	else
@@ -825,8 +821,8 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 				info.locked and "locked" or "unlocked",
 				info.video and "video" or "audio",
 				info.muted and "muted" or "unmuted",
-				info.attenuation.min,
-				info.attenuation.max,
+				info.attenuation.sameRoom,
+				info.attenuation.diffRoom,
 				info.range,
 				info.paused and "paused" or "playing"))
 		end

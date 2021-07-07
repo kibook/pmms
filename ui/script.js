@@ -4,8 +4,8 @@ const maxVolumeFactor = 4.0;
 const maxTimeDifference = 2;
 
 var isRDR = true;
-var defaultMinAttenuation = 4.0;
-var defaultMaxAttenuation = 6.0;
+var defaultSameRoomAttenuation = 4.0;
+var defaultDiffRoomAttenuation = 6.0;
 var defaultRange = 50;
 var defaultVideoSize = 30;
 var audioVisualizations = {};
@@ -218,7 +218,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 
 			media.pmms = {};
 			media.pmms.initialized = false;
-			media.pmms.attenuationFactor = attenuation.max;
+			media.pmms.attenuationFactor = attenuation.diffRoom;
 			media.pmms.volumeFactor = maxVolumeFactor;
 
 			media.volume = 0;
@@ -416,10 +416,10 @@ function update(data) {
 			}
 		} else {
 			if (data.sameRoom) {
-				setAttenuationFactor(player, data.attenuation.min);
+				setAttenuationFactor(player, data.attenuation.sameRoom);
 				setVolumeFactor(player, minVolumeFactor);
 			} else {
-				setAttenuationFactor(player, data.attenuation.max);
+				setAttenuationFactor(player, data.attenuation.diffRoom);
 				setVolumeFactor(player, maxVolumeFactor);
 			}
 
@@ -1111,8 +1111,8 @@ function startMediaPlayer() {
 	var videoCheckbox = document.getElementById('video');
 	var videoSizeInput = document.getElementById('video-size');
 	var mutedInput = document.getElementById('muted');
-	var minAttenuationInput = document.getElementById('min-attenuation');
-	var maxAttenuationInput = document.getElementById('max-attenuation');
+	var sameRoomAttenuationInput = document.getElementById('same-room-attenuation');
+	var diffRoomAttenuationInput = document.getElementById('diff-room-attenuation');
 	var rangeInput = document.getElementById('range');
 	var visualizationSelect = document.getElementById('visualization');
 
@@ -1133,8 +1133,8 @@ function startMediaPlayer() {
 	var video = videoCheckbox.checked;
 	var videoSize = parseInt(videoSizeInput.value);
 	var muted = mutedInput.checked;
-	var minAttenuation = parseFloat(minAttenuationInput.value);
-	var maxAttenuation = parseFloat(maxAttenuationInput.value);
+	var sameRoomAttenuation = parseFloat(sameRoomAttenuationInput.value);
+	var diffRoomAttenuation = parseFloat(diffRoomAttenuationInput.value);
 	var range = parseFloat(rangeInput.value);
 	var visualization = visualizationSelect.value;
 
@@ -1146,12 +1146,12 @@ function startMediaPlayer() {
 		videoSize = defaultVideoSize;
 	}
 
-	if (isNaN(minAttenuation)) {
-		minAttenuation = defaultMinAttenuation;
+	if (isNaN(sameRoomAttenuation)) {
+		sameRoomAttenuation = defaultSameRoomAttenuation;
 	}
 
-	if (isNaN(maxAttenuation)) {
-		maxAttenuation = defaultMaxAttenuation;
+	if (isNaN(diffRoomAttenuation)) {
+		diffRoomAttenuation = defaultDiffRoomAttenuation;
 	}
 
 	if (isNaN(range)) {
@@ -1177,8 +1177,8 @@ function startMediaPlayer() {
 		videoSize: videoSize,
 		muted: muted,
 		attenuation: {
-			min: minAttenuation,
-			max: maxAttenuation
+			sameRoom: sameRoomAttenuation,
+			diffRoom: diffRoomAttenuation
 		},
 		range: range,
 		visualization: visualization
@@ -1232,11 +1232,11 @@ function setMediaPlayerDefaults(handle) {
 		}
 
 		if (resp.attenuation) {
-			document.getElementById('min-attenuation').value = resp.attenuation.min;
-			document.getElementById('max-attenuation').value = resp.attenuation.max;
+			document.getElementById('same-room-attenuation').value = resp.attenuation.sameRoom;
+			document.getElementById('diff-room-attenuation').value = resp.attenuation.diffRoom;
 		} else {
-			document.getElementById('min-attenuation').value = defaultMinAttenuation;
-			document.getElementById('max-attenuation').value = defaultMaxAttenuation;
+			document.getElementById('same-room-attenuation').value = defaultSameRoomAttenuation;
+			document.getElementById('diff-room-attenuation').value = defaultDiffRoomAttenuation;
 		}
 
 		if (resp.range) {
@@ -1279,12 +1279,12 @@ window.addEventListener('message', event => {
 window.addEventListener('load', () => {
 	sendMessage('startup', {}).then(resp => resp.json()).then(resp => {
 		isRDR = resp.isRDR;
-		defaultMinAttenuation = resp.defaultMinAttenuation;
-		defaultMaxAttenuation = resp.defaultMaxAttenuation;
+		defaultSameRoomAttenuation = resp.defaultSameRoomAttenuation;
+		defaultDiffRoomAttenuation = resp.defaultDiffRoomAttenuation;
 		defaultRange = resp.defaultRange;
 
-		document.getElementById('min-attenuation').value = defaultMinAttenuation;
-		document.getElementById('max-attenuation').value = defaultMaxAttenuation;
+		document.getElementById('same-room-attenuation').value = defaultSameRoomAttenuation;
+		document.getElementById('diff-room-attenuation').value = defaultDiffRoomAttenuation;
 		document.getElementById('video-size').value = defaultVideoSize;
 
 		var rangeInput = document.getElementById('range');
@@ -1349,8 +1349,8 @@ window.addEventListener('load', () => {
 		if (usableMediaPlayersSelect.value != '') {
 			setMediaPlayerDefaults(parseInt(usableMediaPlayersSelect.value));
 		} else {
-			document.getElementById('min-attenuation').value = defaultMinAttenuation;
-			document.getElementById('max-attenuation').value = defaultMaxAttenuation;
+			document.getElementById('same-room-attenuation').value = defaultSameRoomAttenuation;
+			document.getElementById('diff-room-attenuation').value = defaultDiffRoomAttenuation;
 			document.getElementById('range').value = defaultRange;
 			document.getElementById('volume').value = 100;
 		}

@@ -482,8 +482,8 @@ RegisterNUICallback("startup", function(data, cb)
 	loadSettings()
 	cb {
 		isRDR = Config.isRDR,
-		defaultMinAttenuation = Config.defaultMinAttenuation,
-		defaultMaxAttenuation = Config.defaultMaxAttenuation,
+		defaultSameRoomAttenuation = Config.defaultSameRoomAttenuation,
+		defaultDiffRoomAttenuation = Config.defaultDiffRoomAttenuation,
 		defaultRange = Config.defaultRange,
 		maxRange = Config.maxRange,
 		defaultVideoSize = Config.defaultVideoSize,
@@ -816,8 +816,8 @@ Citizen.CreateThread(function()
 		{name = "video", help = "0 = hide video, 1 = show video"},
 		{name = "size", help = "Video size"},
 		{name = "mute", help = "0 = unmuted, 1 = muted"},
-		{name = "min", help = "Minimum attenuation (in the same room)"},
-		{name = "max", help = "Maximum attenuation (in a different room)"},
+		{name = "sameRoom", help = "Sound attenuation multiplier when in the same room"},
+		{name = "diffRoom", help = "Sound attenuation multiplier when in a different room"},
 		{name = "range", help = "Maximum range of the media player"},
 		{name = "visualization", help = "Audio visualization type"}
 	})

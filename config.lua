@@ -6,11 +6,11 @@ Config.isRDR = not TerraingridActivate
 -- Max distance at which inactive media player objects appear
 Config.maxDiscoveryDistance = 30.0
 
--- Default sound attenuation factor when in the same room
-Config.defaultMinAttenuation = 4.0
+-- Default sound attenuation multiplier when in the same room
+Config.defaultSameRoomAttenuation = 4.0
 
--- Default sound attenuation factor when in a different room
-Config.defaultMaxAttenuation = 6.0
+-- Default sound attenuation multiplier when in a different room
+Config.defaultDiffRoomAttenuation = 6.0
 
 -- Default range where active media players are visible/audible
 Config.defaultRange = 30.0
@@ -36,7 +36,7 @@ Config.defaultVideoSize = 30
 --		The default state of the filter for this type of object.
 --
 --	attenuation
---		The default min and max attenuation for this type of object.
+--		The default sound attenuation multipliers for this type of object.
 --
 --	range
 --		The default range for this type of object
@@ -46,7 +46,7 @@ Config.defaultVideoSize = 30
 -- 	[`p_phonograph01x`] = {
 -- 		label = "Phonograph",
 -- 		filter = true,
--- 		attenuation = {min = 4, max = 6},
+-- 		attenuation = {sameRoom = 4, diffRoom = 6},
 -- 		range = 30
 -- 	}
 --
@@ -539,7 +539,7 @@ Config.presets = {
 --  Whether or not the default media player is muted.
 --
 -- attenuation
---  The default min and max attenuation values used for this media player.
+--  The default sound attenuation multipliers used for this media player.
 --
 -- range
 --  The default range used for this media player.
@@ -563,7 +563,7 @@ Config.defaultMediaPlayers = {
 		video = false,
 		videoSize = 30,
 		muted = false,
-		attenuation = {min = 4, max = 6},
+		attenuation = {sameRoom = 4, diffRoom = 6},
 		range = 30
 	}
 	]]

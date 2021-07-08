@@ -368,14 +368,6 @@ local function setMediaPlayerLoop(handle, loop)
 	mediaPlayers[handle].loop = loop
 end
 
-local function getDefaultMediaPlayer(list, coords)
-	for _, mediaPlayer in ipairs(list) do
-		if #(coords - mediaPlayer.position) < 0.001 then
-			return mediaPlayer
-		end
-	end
-end
-
 local function loadSettings()
 	local models = json.decode(LoadResourceFile(GetCurrentResourceName(), "models.json"))
 
@@ -400,7 +392,7 @@ local function loadSettings()
 		for _, defaultMediaPlayer in ipairs(defaultMediaPlayers) do
 			defaultMediaPlayer.position = ToVector3(defaultMediaPlayer.position)
 
-			local dmp = getDefaultMediaPlayer(Config.defaultMediaPlayers, defaultMediaPlayer.position)
+			local dmp = GetDefaultMediaPlayer(Config.defaultMediaPlayers, defaultMediaPlayer.position)
 
 			if dmp then
 				dmp.label = defaultMediaPlayer.label
@@ -841,7 +833,7 @@ AddEventHandler("pmms:saveObject", function(coords, data)
 	data.method = nil
 	data.position = coords
 
-	local defaultMediaPlayer = getDefaultMediaPlayer(Config.defaultMediaPlayers, coords)
+	local defaultMediaPlayer = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords)
 
 	if defaultMediaPlayer then
 		if data.label == "" then
@@ -867,7 +859,7 @@ AddEventHandler("pmms:saveObject", function(coords, data)
 		defaultMediaPlayer.position = ToVector3(defaultMediaPlayer.position)
 	end
 
-	defaultMediaPlayer = getDefaultMediaPlayer(defaultMediaPlayers, coords)
+	defaultMediaPlayer = GetDefaultMediaPlayer(defaultMediaPlayers, coords)
 
 	if defaultMediaPlayer then
 		defaultMediaPlayer.label = data.label

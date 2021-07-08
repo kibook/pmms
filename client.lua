@@ -244,18 +244,8 @@ local function getLocalMediaPlayer(coords, listenerPos, range)
 	return localMediaPlayers[handle]
 end
 
-local function getDefaultMediaPlayer(object)
-	local coords = GetEntityCoords(object)
-
-	for _, mediaPlayer in ipairs(Config.defaultMediaPlayers) do
-		if #(coords - mediaPlayer.position) < 0.001 then
-			return mediaPlayer
-		end
-	end
-end
-
 local function getObjectLabel(handle, object)
-	local defaultMediaPlayer = getDefaultMediaPlayer(object)
+	local defaultMediaPlayer = GetDefaultMediaPlayer(Config.defaultMediaPlayers, GetEntityCoords(object))
 
 	if defaultMediaPlayer and defaultMediaPlayer.label then
 		return defaultMediaPlayer.label
@@ -658,7 +648,7 @@ RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
 		object = data.handle
 	end
 
-	local defaults = getDefaultMediaPlayer(object) or Config.models[GetEntityModel(object)]
+	local defaults = GetDefaultMediaPlayer(Config.defaultMediaPlayers, GetEntityCoords(object)) or Config.models[GetEntityModel(object)]
 
 	cb(defaults or {})
 end)
@@ -822,7 +812,20 @@ end)
 
 AddEventHandler("pmms:loadSettings", function(models, defaultMediaPlayers)
 	Config.models = models or {}
-	Config.defaultMediaPlayers = defaultMediaPlayers or {}
+
+	for _, defaultMediaPlayer in ipairs(defaultMediaPlayers) do
+		local dmp = GetDefaultMediaPlayer(Config.defaultMediaPlayers, defaultMediaPlayer.position)
+
+		if dmp then
+			dmp.label = defaultMediaPlayer.label
+			dmp.filter = defaultMediaPlayer.filter
+			dmp.volume = defaultMediaPlayer.volume
+			dmp.attenuation = defaultMediaPlayer.attenuation
+			dmp.range = defaultMediaPlayer.range
+		else
+			table.insert(Config.defaultMediaPlayers, defaultMediaPlayer)
+		end
+	end
 end)
 
 AddEventHandler("onResourceStop", function(resource)

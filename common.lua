@@ -17,3 +17,11 @@ end
 function ToVector3(t)
 	return vector3(t.x, t.y, t.z)
 end
+
+function GetDefaultMediaPlayer(list, coords)
+	for _, mediaPlayer in ipairs(list) do
+		if #(coords - mediaPlayer.position) < 0.001 then
+			return mediaPlayer
+		end
+	end
+end

@@ -80,34 +80,37 @@ function DuiBrowser:new(mediaPlayerHandle, model, renderTarget)
 	local self = Class.new(self)
 
 	self.mediaPlayerHandle = mediaPlayerHandle
-	self.duiObject = CreateDui(Config.dui.url, Config.dui.screenWidth, Config.dui.screenHeight)
-	self.handle = GetDuiHandle(self.duiObject)
-	self.txdName = "pmms_txd_" .. tostring(mediaPlayerHandle)
-	self.txnName = "video"
-	self.txd = CreateRuntimeTxd(self.txdName)
-	self.txn = CreateRuntimeTextureFromDuiHandle(self.txd, self.txnName, self.handle)
 	self.model = model
 	self.renderTarget = renderTarget
-	self.drawSprite = true
+
+	self.duiObject = CreateDui(Config.dui.url, Config.dui.screenWidth, Config.dui.screenHeight)
+	self.handle = GetDuiHandle(self.duiObject)
+
+	if self.renderTarget then
+		self.txdName = "pmms_txd_" .. tostring(mediaPlayerHandle)
+		self.txnName = "video"
+		self.txd = CreateRuntimeTxd(self.txdName)
+		self.txn = CreateRuntimeTextureFromDuiHandle(self.txd, self.txnName, self.handle)
+	end
 
 	if self:waitForConnection() then
-		DuiBrowser.pool[mediaPlayerHandle] = self
+		DuiBrowser.pool[self.mediaPlayerHandle] = self
 
-		if not DuiBrowser.renderTargets[renderTarget] then
-			DuiBrowser.renderTargets[renderTarget] = {
-				disabled = false,
-				browsers = {}
-			}
+		if self.renderTarget then
+			if not DuiBrowser.renderTargets[self.renderTarget] then
+				DuiBrowser.renderTargets[self.renderTarget] = {
+					disabled = false,
+					browsers = {}
+				}
+			end
 		end
 
 		return self
 	else
-		DuiBrowser.pool[mediaPlayerHandle] = nil
+		DuiBrowser.pool[self.mediaPlayerHandle] = nil
 		DestroyDui(self.duiObject)
 	end
 end
-
-local foo = false
 
 function DuiBrowser:renderFrame(drawSprite)
 	if DuiBrowser.renderTargets[self.renderTarget].disabled then
@@ -163,17 +166,21 @@ function DuiBrowser:resetPool()
 end
 
 function DuiBrowser:delete()
-	self:renderFrame(false)
-	DuiBrowser.renderTargets[self.renderTarget].disabled = true
-	Citizen.Wait(50)
-	DuiBrowser.renderTargets[self.renderTarget].disabled = false
+	if self.renderTarget then
+		self:renderFrame(false)
+		DuiBrowser.renderTargets[self.renderTarget].disabled = true
+		Citizen.Wait(50)
+		DuiBrowser.renderTargets[self.renderTarget].disabled = false
+	end
 
 	DuiBrowser.pool[self.mediaPlayerHandle] = nil
 
 	DestroyDui(self.duiObject)
 
-	for duiBrowser, _ in pairs(DuiBrowser.renderTargets[self.renderTarget].browsers) do
-		duiBrowser:disableRenderTarget()
+	if self.renderTarget then
+		for duiBrowser, _ in pairs(DuiBrowser.renderTargets[self.renderTarget].browsers) do
+			duiBrowser:disableRenderTarget()
+		end
 	end
 end
 

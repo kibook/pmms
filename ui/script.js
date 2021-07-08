@@ -1020,25 +1020,30 @@ function updateUi(data) {
 		if (presetSelect.value == '') {
 			urlInput.disabled = false;
 			filterCheckbox.disabled = false;
-			videoCheckbox.disabled = false;
-			videoSizeInput.disabled = false;
+
+			if (isRDR) {
+				videoCheckbox.disabled = false;
+				videoSizeInput.disabled = false;
+			}
 		} else {
 			urlInput.disabled = true;
 			filterCheckbox.disabled = true;
 
-			if (visualizationSelect.value == '') {
-				videoCheckbox.disabled = true;
+			if (isRDR) {
+				if (visualizationSelect.value == '') {
+					videoCheckbox.disabled = true;
 
-				if (presets[presetSelect.value] && presets[presetSelect.value].video) {
-					videoSizeInput.disabled = false;
-					videoCheckbox.checked = true;
+					if (presets[presetSelect.value] && presets[presetSelect.value].video) {
+						videoSizeInput.disabled = false;
+						videoCheckbox.checked = true;
+					} else {
+						videoSizeInput.disabled = true;
+						videoCheckbox.checked = false;
+					}
 				} else {
-					videoSizeInput.disabled = true;
-					videoCheckbox.checked = false;
+					videoCheckbox.disabled = false;
+					videoSizeInput.disabled = false;
 				}
-			} else {
-				videoCheckbox.disabled = false;
-				videoSizeInput.disabled = false;
 			}
 		}
 
@@ -1066,10 +1071,12 @@ function updateUi(data) {
 			playButton.disabled = false;
 		}
 
-		if (videoCheckbox.checked) {
-			videoSizeInput.style.display = 'inline-block';
-		} else {
-			videoSizeInput.style.display = 'none';
+		if (isRDR) {
+			if (videoCheckbox.checked) {
+				videoSizeInput.style.display = 'inline-block';
+			} else {
+				videoSizeInput.style.display = 'none';
+			}
 		}
 	}
 

@@ -449,29 +449,27 @@ local function getObjectModelAndRenderTarget(handle)
 	end
 end
 
-local function sendMessage(handle, coords, data)
-	local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
+local function sendMediaMessage(handle, coords, data)
+	if Config.isRDR then
+		SendNUIMessage(data)
+	else
+		local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
 
-	if not duiBrowser then
-		local object, model, renderTarget = getObjectModelAndRenderTarget(coords or handle)
+		if not duiBrowser then
+			local object, model, renderTarget = getObjectModelAndRenderTarget(coords or handle)
 
-		if object and model and renderTarget then
-			local ped, listenPos, viewerPos, viewerFov = getListenerAndViewerInfo()
+			if object and model then
+				local ped, listenPos, viewerPos, viewerFov = getListenerAndViewerInfo()
 
-			if #(viewerPos - GetEntityCoords(object)) < (data.range or Config.maxRange) then
-				duiBrowser = DuiBrowser:new(data.handle, model, renderTarget)
-
-				if not duiBrowser then
-					return
+				if #(viewerPos - GetEntityCoords(object)) < (data.range or Config.maxRange) then
+					duiBrowser = DuiBrowser:new(handle, model, renderTarget)
 				end
 			end
 		end
-	end
 
-	if duiBrowser then
-		duiBrowser:sendMessage(data)
-	else
-		SendNUIMessage(data)
+		if duiBrowser then
+			duiBrowser:sendMessage(data)
+		end
 	end
 end
 
@@ -710,7 +708,7 @@ AddEventHandler("pmms:sync", function(players, fullControls, anyUrl)
 end)
 
 AddEventHandler("pmms:start", function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
-	sendMessage(handle, coords, {
+	sendMediaMessage(handle, coords, {
 		type = "init",
 		handle = handle,
 		url = url,
@@ -732,7 +730,7 @@ AddEventHandler("pmms:start", function(handle, url, title, volume, offset, loop,
 end)
 
 AddEventHandler("pmms:play", function(handle)
-	sendMessage(handle, nil, {
+	sendMediaMessage(handle, nil, {
 		type = "play",
 		handle = handle
 	})
@@ -950,7 +948,7 @@ Citizen.CreateThread(function()
 
 				local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
 
-				if duiBrowser then
+				if duiBrowser and duiBrowser.renderTarget then
 					if distance < info.range then
 						if not duiToDraw[duiBrowser.renderTarget] then
 							duiToDraw[duiBrowser.renderTarget] = {}
@@ -992,7 +990,7 @@ Citizen.CreateThread(function()
 				}
 			end
 
-			sendMessage(handle, info.coords, data)
+			sendMediaMessage(handle, info.coords, data)
 		end
 
 		for renderTarget, items in pairs(duiToDraw) do

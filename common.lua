@@ -13,3 +13,7 @@ function Clamp(val, min, max, def)
 		return val
 	end
 end
+
+function ToVector3(t)
+	return vector3(t.x, t.y, t.z)
+end

@@ -22,6 +22,7 @@ RegisterNetEvent("pmms:stopClosestMediaPlayer")
 RegisterNetEvent("pmms:listPresets")
 RegisterNetEvent("pmms:setBaseVolume")
 RegisterNetEvent("pmms:showBaseVolume")
+RegisterNetEvent("pmms:loadSettings")
 
 local entityEnumerator = {
 	__gc = function(enum)
@@ -426,10 +427,6 @@ local function copyMediaPlayer(oldHandle, newHandle)
 	end
 end
 
-local function tovector3(t)
-	return vector3(t.x, t.y, t.z)
-end
-
 local function getObjectModelAndRenderTarget(handle)
 	local object
 
@@ -480,6 +477,9 @@ end
 
 RegisterNUICallback("startup", function(data, cb)
 	loadSettings()
+
+	TriggerServerEvent("pmms:loadSettings")
+
 	cb {
 		isRDR = Config.isRDR,
 		defaultSameRoomAttenuation = Config.defaultSameRoomAttenuation,
@@ -519,7 +519,7 @@ RegisterNUICallback("init", function(data, cb)
 			data.range,
 			data.visualization,
 			data.queue,
-			coords and tovector3(coords))
+			coords and ToVector3(coords))
 	end
 	cb({})
 end)
@@ -665,6 +665,40 @@ RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
 	cb(defaults or {})
 end)
 
+RegisterNUICallback("save", function(data, cb)
+	local object
+
+	if NetworkDoesNetworkIdExist(data.handle) then
+		object = NetToObj(data.handle)
+	elseif DoesEntityExist(data.handle) then
+		object = data.handle
+	end
+
+	if not object then
+		return
+	end
+
+	if data.method == "client-model" or data.method == "server-model" then
+		local model = GetEntityModel(object)
+
+		if data.method == "client-model" then
+			print("Client-side model saving is not implemented yet")
+		elseif data.method == "server-model" then
+			TriggerServerEvent("pmms:saveModel", model, data)
+		end
+	elseif data.method == "client-object" or data.method == "server-object" then
+		local coords = GetEntityCoords(object)
+
+		if data.method == "client-object" then
+			print("Client-side object saving is not implemented yet")
+		elseif data.method == "server-object" then
+			TriggerServerEvent("pmms:saveObject", coords, data)
+		end
+	end
+
+	cb({})
+end)
+
 AddEventHandler("pmms:sync", function(players, fullControls, anyUrl)
 	if syncIsEnabled then
 		mediaPlayers = players
@@ -786,6 +820,11 @@ end)
 
 AddEventHandler("pmms:setBaseVolume", function(volume)
 	setBaseVolume(volume)
+end)
+
+AddEventHandler("pmms:loadSettings", function(models, defaultMediaPlayers)
+	Config.models = models or {}
+	Config.defaultMediaPlayers = defaultMediaPlayers or {}
 end)
 
 AddEventHandler("onResourceStop", function(resource)

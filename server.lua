@@ -21,6 +21,9 @@ RegisterNetEvent("pmms:copy")
 RegisterNetEvent("pmms:setLoop")
 RegisterNetEvent("pmms:next")
 RegisterNetEvent("pmms:removeFromQueue")
+RegisterNetEvent("pmms:saveModel")
+RegisterNetEvent("pmms:saveObject")
+RegisterNetEvent("pmms:loadSettings")
 
 local function enqueue(queue, cb)
 	table.insert(queue, 1, cb)
@@ -363,6 +366,55 @@ end
 
 local function setMediaPlayerLoop(handle, loop)
 	mediaPlayers[handle].loop = loop
+end
+
+local function getDefaultMediaPlayer(list, coords)
+	for _, mediaPlayer in ipairs(list) do
+		if #(coords - mediaPlayer.position) < 0.001 then
+			return mediaPlayer
+		end
+	end
+end
+
+local function loadSettings()
+	local models = json.decode(LoadResourceFile(GetCurrentResourceName(), "models.json"))
+
+	if models then
+		for key, info in pairs(models) do
+			local model = tonumber(key)
+			if Config.models[model] then
+				Config.models[model].label = info.label
+				Config.models[model].filter = info.filter
+				Config.models[model].volume = info.volume
+				Config.models[model].attenuation = info.attenuation
+				Config.models[model].range = info.range
+			else
+				Config.models[model] = info
+			end
+		end
+	end
+
+	local defaultMediaPlayers = json.decode(LoadResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json"))
+
+	if defaultMediaPlayers then
+		for _, defaultMediaPlayer in ipairs(defaultMediaPlayers) do
+			defaultMediaPlayer.position = ToVector3(defaultMediaPlayer.position)
+
+			local dmp = getDefaultMediaPlayer(Config.defaultMediaPlayers, defaultMediaPlayer.position)
+
+			if dmp then
+				dmp.label = defaultMediaPlayer.label
+				dmp.filter = defaultMediaPlayer.filter
+				dmp.volume = defaultMediaPlayer.volume
+				dmp.attenuation = defaultMediaPlayer.attenuation
+				dmp.range = defaultMediaPlayer.range
+			else
+				table.insert(Config.defaultMediaPlayers, defaultMediaPlayer)
+			end
+		end
+	end
+
+	TriggerClientEvent("pmms:loadSettings", -1, Config.models, Config.defaultMediaPlayers)
 end
 
 exports("startByNetworkId", startMediaPlayerByNetworkId)
@@ -743,6 +795,99 @@ AddEventHandler("pmms:removeFromQueue", function(handle, id)
 	removeFromQueue(handle, id)
 end)
 
+AddEventHandler("pmms:saveModel", function(model, data)
+	if not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to save model defaults to the server")
+		return
+	end
+
+	data.handle = nil
+	data.method = nil
+
+	if Config.models[model] then
+		if data.label == "" then
+			data.label = Config.models[model].label
+		else
+			Config.models[model].label = data.label
+		end
+		Config.models[model].filter = data.filter
+		Config.models[model].volume = data.volume
+		Config.models[model].attenuation = data.attenuation
+		Config.models[model].range = data.range
+	else
+		Config.models[model] = data
+	end
+
+	local models = json.decode(LoadResourceFile(GetCurrentResourceName(), "models.json"))
+
+	if not models then
+		models = {}
+	end
+
+	models[tostring(model)] = data
+
+	SaveResourceFile(GetCurrentResourceName(), "models.json", json.encode(models), -1)
+
+	TriggerClientEvent("pmms:loadSettings", -1, Config.models, Config.defaultMediaPlayers)
+end)
+
+AddEventHandler("pmms:saveObject", function(coords, data)
+	if not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to save object defaults to the server")
+		return
+	end
+
+	data.handle = nil
+	data.method = nil
+	data.position = coords
+
+	local defaultMediaPlayer = getDefaultMediaPlayer(Config.defaultMediaPlayers, coords)
+
+	if defaultMediaPlayer then
+		if data.label == "" then
+			data.label = defaultMediaPlayer.label
+		else
+			defaultMediaPlayer.label = data.label
+		end
+		defaultMediaPlayer.filter = data.filter
+		defaultMediaPlayer.volume = data.volume
+		defaultMediaPlayer.attenuation = data.attenuation
+		defaultMediaPlayer.range = data.range
+	else
+		table.insert(Config.defaultMediaPlayers, data)
+	end
+
+	local defaultMediaPlayers = json.decode(LoadResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json"))
+
+	if not defaultMediaPlayers then
+		defaultMediaPlayers = {}
+	end
+
+	for _, defaultMediaPlayer in ipairs(defaultMediaPlayers) do
+		defaultMediaPlayer.position = ToVector3(defaultMediaPlayer.position)
+	end
+
+	defaultMediaPlayer = getDefaultMediaPlayer(defaultMediaPlayers, coords)
+
+	if defaultMediaPlayer then
+		defaultMediaPlayer.label = data.label
+		defaultMediaPlayer.filter = data.filter
+		defaultMediaPlayer.volume = data.volume
+		defaultMediaPlayer.attenuation = data.attenuation
+		defaultMediaPlayer.range = data.range
+	else
+		table.insert(defaultMediaPlayers, data)
+	end
+
+	SaveResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json", json.encode(defaultMediaPlayers), -1)
+
+	TriggerClientEvent("pmms:loadSettings", -1, Config.models, Config.defaultMediaPlayers)
+end)
+
+AddEventHandler("pmms:loadSettings", function()
+	TriggerClientEvent("pmms:loadSettings", source, Config.models, Config.defaultMediaPlayers)
+end)
+
 RegisterCommand(Config.commandPrefix, function(source, args, raw)
 	TriggerClientEvent("pmms:showControls", source)
 end, true)
@@ -858,6 +1003,8 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "fix", functi
 end, true)
 
 Citizen.CreateThread(function()
+	loadSettings()
+
 	startDefaultMediaPlayers()
 
 	while true do

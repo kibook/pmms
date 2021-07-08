@@ -1044,9 +1044,13 @@ function updateUi(data) {
 
 		if (data.fullControls) {
 			lockedCheckbox.disabled = false;
+
+			document.getElementById('save').disabled = false;
 		} else {
-			lockedCheckbox.checked = false
+			lockedCheckbox.checked = false;
 			lockedCheckbox.disabled = true;
+
+			document.getElementById('save').disabled = true;
 		}
 
 		usableMediaPlayersSelect.disabled = false;
@@ -1221,6 +1225,8 @@ function setMediaPlayerDefaults(handle) {
 	sendMessage('setMediaPlayerDefaults', {
 		handle: handle
 	}).then(resp => resp.json()).then(resp => {
+		document.getElementById('save-label').value = resp.label;
+
 		if (resp.filter != undefined) {
 			document.getElementById('filter').checked = resp.filter;
 		}
@@ -1245,6 +1251,32 @@ function setMediaPlayerDefaults(handle) {
 			document.getElementById('range').value = defaultRange;
 		}
 	});
+}
+
+function saveSettings(method) {
+	var handle = parseInt(document.getElementById('usable-media-players').value);
+
+	if (!isNaN(handle)) {
+		var label = document.getElementById('save-label').value;
+		var filter = document.getElementById('filter').checked;
+		var volume = parseInt(document.getElementById('volume').value);
+		var sameRoomAttenuation = parseFloat(document.getElementById('same-room-attenuation').value);
+		var diffRoomAttenuation = parseFloat(document.getElementById('diff-room-attenuation').value);
+		var range = parseFloat(document.getElementById('range').value);
+
+		sendMessage('save', {
+			handle: handle,
+			method: method,
+			label: label,
+			filter: filter,
+			volume: volume,
+			attenuation: {
+				sameRoom: sameRoomAttenuation,
+				diffRoom: diffRoomAttenuation
+			},
+			range: range
+		});
+	}
 }
 
 window.addEventListener('message', event => {
@@ -1376,5 +1408,18 @@ window.addEventListener('load', () => {
 		if (this.value != '') {
 			setMediaPlayerDefaults(parseInt(this.value));
 		}
+	});
+
+	document.getElementById('save').addEventListener('click', function(event) {
+		document.getElementById('save-settings').style.display = 'grid';
+	});
+
+	document.querySelectorAll('.save-method').forEach(e => e.addEventListener('click', function(event) {
+		saveSettings(this.getAttribute('data-save-method'));
+		document.getElementById('save-settings').style.display = 'none';
+	}));
+
+	document.getElementById('save-cancel').addEventListener('click', function(event) {
+		document.getElementById('save-settings').style.display = 'none';
 	});
 });

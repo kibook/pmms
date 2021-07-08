@@ -58,8 +58,9 @@
 					<input id="offset" type="text" size="8" value="00:00:00">
 				</div>
 				<div id="attenuation-container">
-					<i class="fas fa-wave-square"></i>
+					<i class="fas fa-door-closed"></i>
 					<input id="same-room-attenuation" type="number" min="0" max="10" step="0.5" value="4">
+					<i class="fas fa-door-open"></i>
 					<input id="diff-room-attenuation" type="number" min="0" max="10" step="0.5" value="6">
 				</div>
 				<div id="range-container">
@@ -76,6 +77,9 @@
 						<option></option>
 					</select>
 				</div>
+				<button id="save" class="control-button">
+					<i class="fas fa-save"></i>
+				</button>
 				<button id="revert-settings" class="control-button">
 					<i class="fas fa-undo"></i>
 				</button>
@@ -84,6 +88,22 @@
 				</button>
 				<button id="toggle-status" class="control-button">
 					<i class="fas fa-info-circle"></i>
+				</button>
+			</div>
+			<div id="save-settings" style="display: none;">
+				<div>Save as...</div>
+				<input id="save-label" type="text">
+				<button id="save-server-model" class="save-method" data-save-method="server-model">
+					<i class="fas fa-cubes"></i>
+					<span>Model</span>
+				</button>
+				<button id="save-server-object" class="save-method" data-save-method="server-object">
+					<i class="fas fa-cube"></i>
+					<span>Object</span>
+				</button>
+				<button id="save-cancel">
+					<i class="fas fa-times"></i>
+					<span>Cancel</span>
 				</button>
 			</div>
 			<div id="base-volume-container">

@@ -267,7 +267,7 @@ option {
 
 #advanced-settings {
 	display: grid;
-	grid-template-columns: repeat(8, max-content);
+	grid-template-columns: repeat(9, max-content);
 	grid-gap: 0.5vh 0.5vw;
 }
 
@@ -282,4 +282,12 @@ mediaelementwrapper > iframe {
 
 mediaelementwrapper > video {
 	width: 100%;
+}
+
+#save-settings {
+	display: grid;
+	grid-template-columns: repeat(5, max-content);
+	grid-gap: 0.25vh 0.25vw;
+	padding: 0.5vh 0.5vw;
+	margin: auto;
 }

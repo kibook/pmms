@@ -914,8 +914,8 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "play", funct
 		local videoSize = tonumber(args[7]) or Config.defaultVideoSize
 		local muted = args[8] == "1"
 		local attenuation = {}
-		attenuation.sameRoomAttenuation =  tonumber(args[9]) or Config.defaultSameRoomAttenuation
-		attenuation.diffRoomAttenuation = tonumber(args[10]) or Config.defaultDiffRoomAttenuation
+		attenuation.sameRoom =  tonumber(args[9]) or Config.defaultSameRoomAttenuation
+		attenuation.diffRoom = tonumber(args[10]) or Config.defaultDiffRoomAttenuation
 		local range = tonumber(args[11]) or Config.defaultRange
 		local visualization = args[12]
 
@@ -967,9 +967,10 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl stop <handle>")
 	elseif args[1] == "list" then
 		for handle, info in pairs(mediaPlayers) do
-			print(string.format("[%x] %s %d %d/%s %s %s %s %s %f %f %f %s",
+			print(string.format("[%x] %s %s %d %d/%s %s %s %s %s %f %f %f %s",
 				handle,
 				info.title,
+				info.filter and "filter" or "nofilter",
 				info.volume,
 				info.offset,
 				info.duration or "inf",

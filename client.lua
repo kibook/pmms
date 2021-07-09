@@ -137,7 +137,7 @@ local function startMediaPlayer(handle, url, volume, offset, loop, filter, locke
 	end
 end
 
-local function startClosestMediaPlayer(url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, visualization, range)
+local function startClosestMediaPlayer(url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
 	startMediaPlayer(getHandle(getClosestMediaPlayer()), url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, false, false)
 end
 

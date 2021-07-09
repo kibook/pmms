@@ -91,20 +91,37 @@
 				</button>
 			</div>
 			<div id="save-settings" style="display: none;">
-				<div>Save as...</div>
-				<input id="save-label" type="text">
-				<button id="save-server-model" class="save-method" data-save-method="server-model">
-					<i class="fas fa-cubes"></i>
-					<span>Model</span>
-				</button>
-				<button id="save-server-object" class="save-method" data-save-method="server-object">
-					<i class="fas fa-cube"></i>
-					<span>Object</span>
-				</button>
-				<button id="save-cancel">
-					<i class="fas fa-times"></i>
-					<span>Cancel</span>
-				</button>
+				<div>Save:</div>
+				<div id="save-model-container">
+					<div class="save-input-label">Model</div>
+					<input id="save-model" type="text">
+				</div>
+				<div id="save-render-target-container">
+					<div class="save-input-label">Render Target</div>
+					<input id="save-render-target" type="text">
+				</div>
+				<div>
+					<div class="save-input-label">Label</div>
+					<input id="save-label" type="text">
+				</div>
+				<div>
+					<button id="save-server-model" class="save-method" data-save-method="server-model" style="display: none;">
+						<i class="fas fa-cubes"></i>
+						<span>Model</span>
+					</button>
+					<button id="save-server-object" class="save-method" data-save-method="server-object" style="display: none;">
+						<i class="fas fa-cube"></i>
+						<span>Object</span>
+					</button>
+					<button id="save-new-model" class="save-method" data-save-method="new-model">
+						<i class="fas fa-plus"></i>
+						<span>Add</span>
+					</button>
+					<button id="save-cancel">
+						<i class="fas fa-times"></i>
+						<span>Cancel</span>
+					</button>
+				</div>
 			</div>
 			<div id="base-volume-container">
 				<i class="fas fa-volume-off"></i>

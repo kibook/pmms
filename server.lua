@@ -375,6 +375,7 @@ local function loadSettings()
 		for key, info in pairs(models) do
 			local model = tonumber(key)
 			if Config.models[model] then
+				Config.models[model].renderTarget = info.renderTarget
 				Config.models[model].label = info.label
 				Config.models[model].filter = info.filter
 				Config.models[model].volume = info.volume
@@ -787,17 +788,26 @@ AddEventHandler("pmms:removeFromQueue", function(handle, id)
 	removeFromQueue(handle, id)
 end)
 
-AddEventHandler("pmms:saveModel", function(model, data)
-	if not IsPlayerAceAllowed(source, "pmms.manage") then
-		errorMessage(source, "You do not have permission to save model defaults to the server")
-		return
-	end
-
+local function saveModel(model, data)
 	data.handle = nil
 	data.method = nil
+	data.model = nil
+
+	if data.renderTarget == "" then
+		data.renderTarget = nil
+	end
+
+	if data.label == "" then
+		data.label = nil
+	end
 
 	if Config.models[model] then
-		if data.label == "" then
+		if not data.renderTarget then
+			data.renderTarget = Config.models[model].renderTarget
+		else
+			Config.models[model].renderTarget = data.renderTarget
+		end
+		if not data.label then
 			data.label = Config.models[model].label
 		else
 			Config.models[model].label = data.label
@@ -821,6 +831,15 @@ AddEventHandler("pmms:saveModel", function(model, data)
 	SaveResourceFile(GetCurrentResourceName(), "models.json", json.encode(models), -1)
 
 	TriggerClientEvent("pmms:loadSettings", -1, Config.models, Config.defaultMediaPlayers)
+end
+
+AddEventHandler("pmms:saveModel", function(model, data)
+	if not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to save model defaults to the server")
+		return
+	end
+
+	saveModel(model, data)
 end)
 
 AddEventHandler("pmms:saveObject", function(coords, data)
@@ -987,7 +1006,10 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "add", functi
 	local label = args[2]
 	local renderTarget = args[3]
 
-	TriggerClientEvent("pmms:setModel", source, GetHashKey(model), label, renderTarget)
+	saveModel(GetHashKey(model), {
+		label = label,
+		renderTarget = renderTarget
+	})
 end, true)
 
 RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "fix", function(source, args, raw)

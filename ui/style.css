@@ -124,7 +124,7 @@ option {
 
 #start-media-player {
 	display: grid;
-	grid-template-columns: auto auto auto repeat(6, max-content) auto;
+	grid-template-columns: repeat(2, max-content) auto repeat(7, max-content);
 	grid-gap: 0.25vh 0.25vw;
 	padding: 0.5vh 0;
 }
@@ -288,6 +288,12 @@ mediaelementwrapper > video {
 	display: grid;
 	grid-template-columns: repeat(5, max-content);
 	grid-gap: 0.25vh 0.25vw;
+	align-items: end;
 	padding: 0.5vh 0.5vw;
 	margin: auto;
+}
+
+.save-input-label {
+	font-size: 1.5vh;
+	text-align: center;
 }

@@ -1262,28 +1262,29 @@ function setMediaPlayerDefaults(handle) {
 
 function saveSettings(method) {
 	var handle = parseInt(document.getElementById('usable-media-players').value);
+	var model = document.getElementById('save-model').value;
+	var renderTarget = document.getElementById('save-render-target').value;
+	var label = document.getElementById('save-label').value;
+	var filter = document.getElementById('filter').checked;
+	var volume = parseInt(document.getElementById('volume').value);
+	var sameRoomAttenuation = parseFloat(document.getElementById('same-room-attenuation').value);
+	var diffRoomAttenuation = parseFloat(document.getElementById('diff-room-attenuation').value);
+	var range = parseFloat(document.getElementById('range').value);
 
-	if (!isNaN(handle)) {
-		var label = document.getElementById('save-label').value;
-		var filter = document.getElementById('filter').checked;
-		var volume = parseInt(document.getElementById('volume').value);
-		var sameRoomAttenuation = parseFloat(document.getElementById('same-room-attenuation').value);
-		var diffRoomAttenuation = parseFloat(document.getElementById('diff-room-attenuation').value);
-		var range = parseFloat(document.getElementById('range').value);
-
-		sendMessage('save', {
-			handle: handle,
-			method: method,
-			label: label,
-			filter: filter,
-			volume: volume,
-			attenuation: {
-				sameRoom: sameRoomAttenuation,
-				diffRoom: diffRoomAttenuation
-			},
-			range: range
-		});
-	}
+	sendMessage('save', {
+		handle: handle,
+		method: method,
+		model: model,
+		renderTarget: renderTarget,
+		label: label,
+		filter: filter,
+		volume: volume,
+		attenuation: {
+			sameRoom: sameRoomAttenuation,
+			diffRoom: diffRoomAttenuation
+		},
+		range: range
+	});
 }
 
 window.addEventListener('message', event => {
@@ -1412,7 +1413,18 @@ window.addEventListener('load', () => {
 	});
 
 	document.getElementById('usable-media-players').addEventListener('input', function(event) {
-		if (this.value != '') {
+		if (this.value == '') {
+			document.getElementById('save-model-container').style.display = 'block';
+			document.getElementById('save-render-target-container').style.display = 'block';
+			document.getElementById('save-server-model').style.display = 'none';
+			document.getElementById('save-server-object').style.display = 'none';
+			document.getElementById('save-new-model').style.display = 'inline-block';
+		} else {
+			document.getElementById('save-model-container').style.display = 'none';
+			document.getElementById('save-render-target-container').style.display = 'none';
+			document.getElementById('save-server-model').style.display = 'inline-block';
+			document.getElementById('save-server-object').style.display = 'inline-block';
+			document.getElementById('save-new-model').style.display = 'none';
 			setMediaPlayerDefaults(parseInt(this.value));
 		}
 	});

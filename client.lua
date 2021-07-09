@@ -14,7 +14,6 @@ RegisterNetEvent("pmms:showControls")
 RegisterNetEvent("pmms:toggleStatus")
 RegisterNetEvent("pmms:error")
 RegisterNetEvent("pmms:init")
-RegisterNetEvent("pmms:setModel")
 RegisterNetEvent("pmms:reset")
 RegisterNetEvent("pmms:startClosestMediaPlayer")
 RegisterNetEvent("pmms:pauseClosestMediaPlayer")
@@ -654,33 +653,37 @@ RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
 end)
 
 RegisterNUICallback("save", function(data, cb)
-	local object
+	if data.method == "new-model" then
+		TriggerServerEvent("pmms:saveModel", GetHashKey(data.model), data)
+	else
+		local object
 
-	if NetworkDoesNetworkIdExist(data.handle) then
-		object = NetToObj(data.handle)
-	elseif DoesEntityExist(data.handle) then
-		object = data.handle
-	end
-
-	if not object then
-		return
-	end
-
-	if data.method == "client-model" or data.method == "server-model" then
-		local model = GetEntityModel(object)
-
-		if data.method == "client-model" then
-			print("Client-side model saving is not implemented yet")
-		elseif data.method == "server-model" then
-			TriggerServerEvent("pmms:saveModel", model, data)
+		if NetworkDoesNetworkIdExist(data.handle) then
+			object = NetToObj(data.handle)
+		elseif DoesEntityExist(data.handle) then
+			object = data.handle
 		end
-	elseif data.method == "client-object" or data.method == "server-object" then
-		local coords = GetEntityCoords(object)
 
-		if data.method == "client-object" then
-			print("Client-side object saving is not implemented yet")
-		elseif data.method == "server-object" then
-			TriggerServerEvent("pmms:saveObject", coords, data)
+		if not object then
+			return
+		end
+
+		if data.method == "client-model" or data.method == "server-model" then
+			local model = GetEntityModel(object)
+
+			if data.method == "client-model" then
+				print("Client-side model saving is not implemented yet")
+			elseif data.method == "server-model" then
+				TriggerServerEvent("pmms:saveModel", model, data)
+			end
+		elseif data.method == "client-object" or data.method == "server-object" then
+			local coords = GetEntityCoords(object)
+
+			if data.method == "client-object" then
+				print("Client-side object saving is not implemented yet")
+			elseif data.method == "server-object" then
+				TriggerServerEvent("pmms:saveObject", coords, data)
+			end
 		end
 	end
 
@@ -761,13 +764,6 @@ end)
 
 AddEventHandler("pmms:init", function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
 	startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
-end)
-
-AddEventHandler("pmms:setModel", function(model, label, renderTarget)
-	Config.models[model] = {
-		label = label,
-		renderTarget = renderTarget
-	}
 end)
 
 AddEventHandler("pmms:reset", function()

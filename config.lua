@@ -172,6 +172,18 @@ Config.models = {
 		label = "Cinema",
 		renderTarget = "cinscreen"
 	},
+	[`v_ilev_lest_bigscreen`] = {
+		label = "Projector",
+		renderTarget = "tvscreen"
+	},
+	[`v_ilev_mm_screen`] = {
+		label = "Projector",
+		renderTarget = "big_disp"
+	},
+	[`v_ilev_mm_screen2`] = {
+		label = "Projector",
+		renderTarget = "tvscreen"
+	},
 	[`ba_prop_battle_club_computer_01`] = {
 		label = "Computer",
 		renderTarget = "club_computer"
@@ -439,6 +451,34 @@ Config.models = {
 	[`apa_mp_h_str_avunits_04`] = {
 		label = "TV",
 		renderTarget = "tvscreen"
+	},
+	[`xs_prop_arena_screen_tv_01`] = {
+		label = "TV",
+		renderTarget = "screen_tv_01"
+	},
+	[`xs_prop_arena_bigscreen_01`] = {
+		label = "Jumbotron",
+		renderTarget = "bigscreen_01"
+	},
+	[`vw_prop_vw_arcade_01_screen`] = {
+		label = "Arcade Machine",
+		renderTarget = "arcade_01a_screen"
+	},
+	[`vw_prop_vw_arcade_02_screen`] = {
+		label = "Arcade Machine",
+		renderTarget = "arcade_02a_screen"
+	},
+	[`vw_prop_vw_arcade_02b_screen`] = {
+		label = "Arcade Machine",
+		renderTarget = "arcade_02b_screen"
+	},
+	[`vw_prop_vw_arcade_02c_screen`] = {
+		label = "Arcade Machine",
+		renderTarget = "arcade_02c_screen"
+	},
+	[`vw_prop_vw_arcade_02d_screen`] = {
+		label = "Arcade Machine",
+		renderTarget = "arcade_02d_screen"
 	},
 }
 

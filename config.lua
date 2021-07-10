@@ -480,6 +480,10 @@ Config.models = {
 		label = "Arcade Machine",
 		renderTarget = "arcade_02d_screen"
 	},
+	[`vw_prop_vw_cinema_tv_01`] = {
+		label = "TV",
+		renderTarget = "tvscreen"
+	},
 }
 
 -- The default model to use for default media players if none is specified.

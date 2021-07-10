@@ -893,16 +893,192 @@ function createActiveMediaPlayerDiv(mediaPlayer, fullControls, includeQueue) {
 function updateUi(data) {
 	var activeMediaPlayers = JSON.parse(data.activeMediaPlayers);
 
-	var activeMediaPlayersDiv = document.getElementById('active-media-players');
-	var queuesDiv = document.getElementById('queues');
-	activeMediaPlayersDiv.innerHTML = '';
-	activeMediaPlayers.forEach(mediaPlayer => {
-		var div = createActiveMediaPlayerDiv(mediaPlayer, data.fullControls, true);
+	if (data.uiIsOpen) {
+		var activeMediaPlayersDiv = document.getElementById('active-media-players');
+		var queuesDiv = document.getElementById('queues');
+		activeMediaPlayersDiv.innerHTML = '';
+		activeMediaPlayers.forEach(mediaPlayer => {
+			var div = createActiveMediaPlayerDiv(mediaPlayer, data.fullControls, true);
 
-		if (div) {
-			activeMediaPlayersDiv.appendChild(div);
+			if (div) {
+				activeMediaPlayersDiv.appendChild(div);
+			}
+		});
+
+		var usableMediaPlayers = JSON.parse(data.usableMediaPlayers);
+		var presets = JSON.parse(data.presets);
+
+		var usableMediaPlayersSelect = document.getElementById('usable-media-players');
+		var presetSelect = document.getElementById('preset');
+		var urlInput = document.getElementById('url');
+		var volumeInput = document.getElementById('volume');
+		var offsetInput = document.getElementById('offset');
+		var loopCheckbox = document.getElementById('loop');
+		var filterCheckbox = document.getElementById('filter');
+		var lockedCheckbox = document.getElementById('locked');
+		var videoCheckbox = document.getElementById('video');
+		var videoSizeInput = document.getElementById('video-size');
+		var mutedInput = document.getElementById('muted');
+		var playButton = document.getElementById('play-button');
+		var visualizationSelect = document.getElementById('visualization');
+
+		var usableMediaPlayersValue = usableMediaPlayersSelect.value;
+		var presetValue = presetSelect.value;
+
+		var presetKeys = Object.keys(presets).sort();
+
+		if (presetKeys.length > 0) {
+			if (data.anyUrl) {
+				presetSelect.innerHTML = '<option value="">&#xf0c1; Custom URL</option>';
+			} else {
+				presetSelect.innerHTML = '';
+			}
+
+			if (presetValue == 'random') {
+				presetSelect.innerHTML += '<option value="random" selected>&#xf522; Random</option>';
+			} else {
+				presetSelect.innerHTML += '<option value="random">&#xf522; Random</option>';
+			}
+
+			presetKeys.forEach(key => {
+				var preset = presets[key];
+				var option = document.createElement('option');
+
+				option.value = key;
+
+				if (preset.video) {
+					option.innerHTML = '&#xf008; ' + preset.title;
+				} else {
+					option.innerHTML = '&#xf001; ' + preset.title;
+				}
+
+				if (key == presetValue) {
+					option.selected = true;
+				}
+
+				presetSelect.appendChild(option);
+			});
+
+			presetSelect.style.visibility = 'visibile';
+		} else {
+			presetSelect.style.visibility = 'hidden';
+			presetSelect.style.width = 0;
 		}
-	});
+
+		usableMediaPlayersSelect.innerHTML = '<option></option>';
+
+		if (usableMediaPlayers.length == 0) {
+			usableMediaPlayersSelect.disabled = true;
+			presetSelect.disabled = true;
+			urlInput.disabled = true;
+			volumeInput.disabled = true;
+			offsetInput.disabled = true;
+			loopCheckbox.disabled = true;
+			filterCheckbox.disabled = true;
+			lockedCheckbox.disabled = true;
+			videoCheckbox.disabled = true;
+			videoSizeInput.disabled = true;
+			mutedInput.disabled = true;
+			playButton.disabled = true;
+		} else {
+			usableMediaPlayers.forEach(mediaPlayer => {
+				var option = document.createElement('option');
+
+				option.value = mediaPlayer.handle;
+
+				if (mediaPlayer.active) {
+					option.innerHTML = '&#xf144; ';
+				} else {
+					option.innerHTML = '';
+				}
+
+				if (mediaPlayer.label) {
+					option.innerHTML += mediaPlayer.label + ' (' + Math.floor(mediaPlayer.distance) + 'm)';
+				} else {
+					option.innerHTML += mediaPlayer.handle.toString(16) + ' (' + Math.floor(mediaPlayer.distance) + 'm)';
+				}
+
+				if (mediaPlayer.handle == usableMediaPlayersValue) {
+					option.selected = true;
+				}
+
+				usableMediaPlayersSelect.appendChild(option);
+			});
+
+			if (presetSelect.value == '') {
+				urlInput.disabled = false;
+				filterCheckbox.disabled = false;
+
+				if (isRDR) {
+					videoCheckbox.disabled = false;
+					videoSizeInput.disabled = false;
+				}
+			} else {
+				urlInput.disabled = true;
+				filterCheckbox.disabled = true;
+
+				if (isRDR) {
+					if (visualizationSelect.value == '') {
+						videoCheckbox.disabled = true;
+
+						if (presets[presetSelect.value] && presets[presetSelect.value].video) {
+							videoSizeInput.disabled = false;
+							videoCheckbox.checked = true;
+						} else {
+							videoSizeInput.disabled = true;
+							videoCheckbox.checked = false;
+						}
+					} else {
+						videoCheckbox.disabled = false;
+						videoSizeInput.disabled = false;
+					}
+				}
+			}
+
+			if (data.fullControls) {
+				lockedCheckbox.disabled = false;
+
+				document.getElementById('save').disabled = false;
+			} else {
+				lockedCheckbox.checked = false;
+				lockedCheckbox.disabled = true;
+
+				document.getElementById('save').disabled = true;
+			}
+
+			usableMediaPlayersSelect.disabled = false;
+			presetSelect.disabled = false;
+			volumeInput.disabled = false;
+			offsetInput.disabled = false;
+			loopCheckbox.disabled = false;
+			mutedInput.disabled = false;
+
+			if (usableMediaPlayersSelect.value == '' || (presetSelect.value == '' && urlInput.value == '')) {
+				playButton.disabled = true;
+			} else {
+				playButton.disabled = false;
+			}
+
+			if (isRDR) {
+				if (videoCheckbox.checked) {
+					videoSizeInput.style.display = 'inline-block';
+				} else {
+					videoSizeInput.style.display = 'none';
+				}
+			}
+		}
+
+		if (data.anyUrl) {
+			urlInput.style.display = 'inline-block';
+			document.getElementById('filter-container').style.display = 'inline-block';
+		} else {
+			urlInput.style.display = 'none';
+			document.getElementById('filter-container').style.display = 'none';
+		}
+
+		document.getElementById('base-volume').innerHTML = data.baseVolume;
+		document.getElementById('set-base-volume').value = data.baseVolume;
+	}
 
 	var statusDiv = document.getElementById('status');
 	statusDiv.innerHTML = '';
@@ -916,180 +1092,6 @@ function updateUi(data) {
 			}
 		}
 	}
-
-	var usableMediaPlayers = JSON.parse(data.usableMediaPlayers);
-	var presets = JSON.parse(data.presets);
-
-	var usableMediaPlayersSelect = document.getElementById('usable-media-players');
-	var presetSelect = document.getElementById('preset');
-	var urlInput = document.getElementById('url');
-	var volumeInput = document.getElementById('volume');
-	var offsetInput = document.getElementById('offset');
-	var loopCheckbox = document.getElementById('loop');
-	var filterCheckbox = document.getElementById('filter');
-	var lockedCheckbox = document.getElementById('locked');
-	var videoCheckbox = document.getElementById('video');
-	var videoSizeInput = document.getElementById('video-size');
-	var mutedInput = document.getElementById('muted');
-	var playButton = document.getElementById('play-button');
-	var visualizationSelect = document.getElementById('visualization');
-
-	var usableMediaPlayersValue = usableMediaPlayersSelect.value;
-	var presetValue = presetSelect.value;
-
-	var presetKeys = Object.keys(presets).sort();
-
-	if (presetKeys.length > 0) {
-		if (data.anyUrl) {
-			presetSelect.innerHTML = '<option value="">&#xf0c1; Custom URL</option>';
-		} else {
-			presetSelect.innerHTML = '';
-		}
-
-		if (presetValue == 'random') {
-			presetSelect.innerHTML += '<option value="random" selected>&#xf522; Random</option>';
-		} else {
-			presetSelect.innerHTML += '<option value="random">&#xf522; Random</option>';
-		}
-
-		presetKeys.forEach(key => {
-			var preset = presets[key];
-			var option = document.createElement('option');
-
-			option.value = key;
-
-			if (preset.video) {
-				option.innerHTML = '&#xf008; ' + preset.title;
-			} else {
-				option.innerHTML = '&#xf001; ' + preset.title;
-			}
-
-			if (key == presetValue) {
-				option.selected = true;
-			}
-
-			presetSelect.appendChild(option);
-		});
-
-		presetSelect.style.visibility = 'visibile';
-	} else {
-		presetSelect.style.visibility = 'hidden';
-		presetSelect.style.width = 0;
-	}
-
-	if (usableMediaPlayers.length == 0) {
-		usableMediaPlayersSelect.disabled = true;
-		presetSelect.disabled = true;
-		urlInput.disabled = true;
-		volumeInput.disabled = true;
-		offsetInput.disabled = true;
-		loopCheckbox.disabled = true;
-		filterCheckbox.disabled = true;
-		lockedCheckbox.disabled = true;
-		videoCheckbox.disabled = true;
-		videoSizeInput.disabled = true;
-		mutedInput.disabled = true;
-		playButton.disabled = true;
-	} else {
-		usableMediaPlayersSelect.innerHTML = '<option></option>';
-
-		usableMediaPlayers.forEach(mediaPlayer => {
-			var option = document.createElement('option');
-
-			option.value = mediaPlayer.handle;
-
-			if (mediaPlayer.active) {
-				option.innerHTML = '&#xf144; ';
-			} else {
-				option.innerHTML = '';
-			}
-
-			if (mediaPlayer.label) {
-				option.innerHTML += mediaPlayer.label + ' (' + Math.floor(mediaPlayer.distance) + 'm)';
-			} else {
-				option.innerHTML += mediaPlayer.handle.toString(16) + ' (' + Math.floor(mediaPlayer.distance) + 'm)';
-			}
-
-			if (mediaPlayer.handle == usableMediaPlayersValue) {
-				option.selected = true;
-			}
-
-			usableMediaPlayersSelect.appendChild(option);
-		});
-
-		if (presetSelect.value == '') {
-			urlInput.disabled = false;
-			filterCheckbox.disabled = false;
-
-			if (isRDR) {
-				videoCheckbox.disabled = false;
-				videoSizeInput.disabled = false;
-			}
-		} else {
-			urlInput.disabled = true;
-			filterCheckbox.disabled = true;
-
-			if (isRDR) {
-				if (visualizationSelect.value == '') {
-					videoCheckbox.disabled = true;
-
-					if (presets[presetSelect.value] && presets[presetSelect.value].video) {
-						videoSizeInput.disabled = false;
-						videoCheckbox.checked = true;
-					} else {
-						videoSizeInput.disabled = true;
-						videoCheckbox.checked = false;
-					}
-				} else {
-					videoCheckbox.disabled = false;
-					videoSizeInput.disabled = false;
-				}
-			}
-		}
-
-		if (data.fullControls) {
-			lockedCheckbox.disabled = false;
-
-			document.getElementById('save').disabled = false;
-		} else {
-			lockedCheckbox.checked = false;
-			lockedCheckbox.disabled = true;
-
-			document.getElementById('save').disabled = true;
-		}
-
-		usableMediaPlayersSelect.disabled = false;
-		presetSelect.disabled = false;
-		volumeInput.disabled = false;
-		offsetInput.disabled = false;
-		loopCheckbox.disabled = false;
-		mutedInput.disabled = false;
-
-		if (usableMediaPlayersSelect.value == '' || (presetSelect.value == '' && urlInput.value == '')) {
-			playButton.disabled = true;
-		} else {
-			playButton.disabled = false;
-		}
-
-		if (isRDR) {
-			if (videoCheckbox.checked) {
-				videoSizeInput.style.display = 'inline-block';
-			} else {
-				videoSizeInput.style.display = 'none';
-			}
-		}
-	}
-
-	if (data.anyUrl) {
-		urlInput.style.display = 'inline-block';
-		document.getElementById('filter-container').style.display = 'inline-block';
-	} else {
-		urlInput.style.display = 'none';
-		document.getElementById('filter-container').style.display = 'none';
-	}
-
-	document.getElementById('base-volume').innerHTML = data.baseVolume;
-	document.getElementById('set-base-volume').value = data.baseVolume;
 }
 
 function showUi() {

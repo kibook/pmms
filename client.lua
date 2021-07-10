@@ -325,6 +325,7 @@ local function updateUi(fullControls, anyUrl)
 
 	SendNUIMessage({
 		type = "updateUi",
+		uiIsOpen = uiIsOpen,
 		activeMediaPlayers = json.encode(activeMediaPlayers),
 		usableMediaPlayers = json.encode(usableMediaPlayers),
 		presets = json.encode(Config.presets),

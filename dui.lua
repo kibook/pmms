@@ -83,7 +83,7 @@ function DuiBrowser:new(mediaPlayerHandle, model, renderTarget)
 	self.model = model
 	self.renderTarget = renderTarget
 
-	self.duiObject = CreateDui(Config.dui.url, Config.dui.screenWidth, Config.dui.screenHeight)
+	self.duiObject = CreateDui(Config.dui.url .. "?resourceName=" .. GetCurrentResourceName(), Config.dui.screenWidth, Config.dui.screenHeight)
 	self.handle = GetDuiHandle(self.duiObject)
 
 	if self.renderTarget then

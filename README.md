@@ -29,6 +29,24 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from object
 |[![Attenuation Example](https://i.imgur.com/BTkglVYm.jpg)](https://imgur.com/BTkglVY)| [![Phonograph Filter](https://i.imgur.com/L8sWpOCm.jpg)](https://imgur.com/L8sWpOC) | [![Video](https://i.imgur.com/2jRYlSem.jpg)](https://imgur.com/2jRYlSe) |
 |[![FiveM basic audio](https://i.imgur.com/CofS0VPm.jpg)](https://imgur.com/CofS0VP)|[![FiveM DUI example](https://i.imgur.com/ndZwPvDm.jpg)](https://imgur.com/ndZwPvD)|[![DUI render target proximity](https://i.imgur.com/m2KddI6m.jpg)](https://imgur.com/m2KddI6)|
 
+# Installing
+
+1. Place the files from this repository in a new folder in your resources directory.
+
+   Example: `resources/[local]/pmms`
+   
+   > **NOTE**
+   > 
+   > The name of the resource **must** be in all lowercase in order for it to function properly. This is due to how [NUI callbacks](https://docs.fivem.net/docs/scripting-manual/nui-development/nui-callbacks/) work.
+
+2. Add the following in server.cfg:
+   ```
+   exec resources/[local]/pmms/permissions.cfg
+   start pmms
+   ```
+   
+   Adjust as necessary based on where you installed the resource and what you named it.
+
 # Commands
 
 > **Note**

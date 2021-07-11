@@ -1289,6 +1289,22 @@ function saveSettings(method) {
 	});
 }
 
+function updateSaveSettings(newModelMode) {
+	if (newModelMode) {
+		document.getElementById('save-model-container').style.display = 'block';
+		document.getElementById('save-render-target-container').style.display = 'block';
+		document.getElementById('save-server-model').style.display = 'none';
+		document.getElementById('save-server-object').style.display = 'none';
+		document.getElementById('save-new-model').style.display = 'inline-block';
+	} else {
+		document.getElementById('save-model-container').style.display = 'none';
+		document.getElementById('save-render-target-container').style.display = 'none';
+		document.getElementById('save-server-model').style.display = 'inline-block';
+		document.getElementById('save-server-object').style.display = 'inline-block';
+		document.getElementById('save-new-model').style.display = 'none';
+	}
+}
+
 window.addEventListener('message', event => {
 	switch (event.data.type) {
 		case 'init':
@@ -1416,22 +1432,15 @@ window.addEventListener('load', () => {
 
 	document.getElementById('usable-media-players').addEventListener('input', function(event) {
 		if (this.value == '') {
-			document.getElementById('save-model-container').style.display = 'block';
-			document.getElementById('save-render-target-container').style.display = 'block';
-			document.getElementById('save-server-model').style.display = 'none';
-			document.getElementById('save-server-object').style.display = 'none';
-			document.getElementById('save-new-model').style.display = 'inline-block';
+			updateSaveSettings(true);
 		} else {
-			document.getElementById('save-model-container').style.display = 'none';
-			document.getElementById('save-render-target-container').style.display = 'none';
-			document.getElementById('save-server-model').style.display = 'inline-block';
-			document.getElementById('save-server-object').style.display = 'inline-block';
-			document.getElementById('save-new-model').style.display = 'none';
+			updateSaveSettings(false);
 			setMediaPlayerDefaults(parseInt(this.value));
 		}
 	});
 
 	document.getElementById('save').addEventListener('click', function(event) {
+		updateSaveSettings(document.getElementById('usable-media-players').value == '');
 		document.getElementById('save-settings').style.display = 'grid';
 	});
 

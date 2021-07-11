@@ -1452,4 +1452,38 @@ window.addEventListener('load', () => {
 	document.getElementById('save-cancel').addEventListener('click', function(event) {
 		document.getElementById('save-settings').style.display = 'none';
 	});
+
+	document.getElementById('range').addEventListener('input', function(event) {
+		var handle = parseInt(document.getElementById('usable-media-players').value);
+
+		if (!isNaN(handle)) {
+			sendMessage('setRange', {
+				handle: handle,
+				range: parseFloat(this.value)
+			});
+		}
+	});
+
+	document.querySelectorAll('.set-attenuation').forEach(e => e.addEventListener('input', function(event) {
+		var handle = parseInt(document.getElementById('usable-media-players').value);
+
+		if (!isNaN(handle)) {
+			sendMessage('setAttenuation', {
+				handle: handle,
+				sameRoom: parseFloat(document.getElementById('same-room-attenuation').value),
+				diffRoom: parseFloat(document.getElementById('diff-room-attenuation').value)
+			});
+		}
+	}));
+
+	document.getElementById('volume').addEventListener('input', function(event) {
+		var handle = parseInt(document.getElementById('usable-media-players').value);
+
+		if (!isNaN(handle)) {
+			sendMessage('setVolume', {
+				handle: handle,
+				volume: parseInt(this.value)
+			});
+		}
+	});
 });

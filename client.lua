@@ -357,10 +357,6 @@ local function createMediaPlayer(mediaPlayer)
 	end
 end
 
-local function setMediaPlayerVolume(handle, volume)
-	TriggerServerEvent("pmms:setVolume", handle, volume)
-end
-
 local function setMediaPlayerStartTime(handle, time)
 	TriggerServerEvent("pmms:setStartTime", handle, time)
 end
@@ -463,6 +459,14 @@ local function sendMediaMessage(handle, coords, data)
 	end
 end
 
+local function getSvHandle(handle)
+	if NetworkDoesNetworkIdExist(handle) then
+		return handle
+	elseif DoesEntityExist(handle) then
+		return GetHandleFromCoords(GetEntityCoords(handle))
+	end
+end
+
 RegisterNUICallback("startup", function(data, cb)
 	loadSettings()
 
@@ -540,16 +544,6 @@ end)
 RegisterNUICallback("closeUi", function(data, cb)
 	SetNuiFocus(false, false)
 	uiIsOpen = false
-	cb({})
-end)
-
-RegisterNUICallback("volumeDown", function(data, cb)
-	setMediaPlayerVolume(data.handle, mediaPlayers[data.handle].volume - 5)
-	cb({})
-end)
-
-RegisterNUICallback("volumeUp", function(data, cb)
-	setMediaPlayerVolume(data.handle, mediaPlayers[data.handle].volume + 5)
 	cb({})
 end)
 
@@ -640,17 +634,36 @@ RegisterNUICallback("toggleStatus", function(data, cb)
 end)
 
 RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
+	local handle
 	local object
+	local coords
 
 	if NetworkDoesNetworkIdExist(data.handle) then
+		handle = data.handle
 		object = NetToObj(data.handle)
-	else
+		coords = GetEntityCoords(object)
+	elseif DoesEntityExist(data.handle) then
 		object = data.handle
+		coords = GetEntityCoords(object)
+		handle = GetHandleFromCoords(coords)
 	end
 
-	local defaults = GetDefaultMediaPlayer(Config.defaultMediaPlayers, GetEntityCoords(object)) or Config.models[GetEntityModel(object)]
+	local defaults = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords) or Config.models[GetEntityModel(object)]
 
-	cb(defaults or {})
+	local defaultsData = {}
+	for k, v in pairs(defaults) do
+		defaultsData[k] = v
+	end
+
+	local handle = getSvHandle(data.handle)
+
+	if handle and mediaPlayers[handle] then
+		defaultsData.volume = mediaPlayers[handle].volume
+		defaultsData.attenuation = mediaPlayers[handle].attenuation
+		defaultsData.range = mediaPlayers[handle].range
+	end
+
+	cb(defaultsData or {})
 end)
 
 RegisterNUICallback("save", function(data, cb)
@@ -686,6 +699,36 @@ RegisterNUICallback("save", function(data, cb)
 				TriggerServerEvent("pmms:saveObject", coords, data)
 			end
 		end
+	end
+
+	cb({})
+end)
+
+RegisterNUICallback("setVolume", function(data, cb)
+	local handle = getSvHandle(data.handle)
+
+	if handle and mediaPlayers[handle] then
+		TriggerServerEvent("pmms:setVolume", handle, data.volume)
+	end
+
+	cb({})
+end)
+
+RegisterNUICallback("setAttenuation", function(data, cb)
+	local handle = getSvHandle(data.handle)
+
+	if handle and mediaPlayers[handle] then
+		TriggerServerEvent("pmms:setAttenuation", handle, data.sameRoom, data.diffRoom)
+	end
+
+	cb({})
+end)
+
+RegisterNUICallback("setRange", function(data, cb)
+	local handle = getSvHandle(data.handle)
+
+	if handle and mediaPlayers[handle] then
+		TriggerServerEvent("pmms:setRange", handle, data.range)
 	end
 
 	cb({})

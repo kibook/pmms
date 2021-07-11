@@ -9,6 +9,8 @@ RegisterNetEvent("pmms:stop")
 RegisterNetEvent("pmms:showControls")
 RegisterNetEvent("pmms:toggleStatus")
 RegisterNetEvent("pmms:setVolume")
+RegisterNetEvent("pmms:setAttenuation")
+RegisterNetEvent("pmms:setRange")
 RegisterNetEvent("pmms:setStartTime")
 RegisterNetEvent("pmms:lock")
 RegisterNetEvent("pmms:unlock")
@@ -575,6 +577,45 @@ AddEventHandler("pmms:setVolume", function(handle, volume)
 	end
 
 	mediaPlayers[handle].volume = Clamp(volume, 0, 100, 100)
+end)
+
+AddEventHandler("pmms:setAttenuation", function(handle, sameRoom, diffRoom)
+	if not mediaPlayers[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to change the attenuation of media players")
+		return
+	end
+
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to change the attenuation of locked media players")
+		return
+	end
+
+	mediaPlayers[handle].attenuation = {
+		sameRoom = Clamp(sameRoom, 0.0, 10.0, Config.defaultSameRoomAttenuation),
+		diffRoom = Clamp(diffRoom, 0.0, 10.0, Config.defaultDiffRoomAttenuation)
+	}
+end)
+
+AddEventHandler("pmms:setRange", function(handle, range)
+	if not mediaPlayers[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to change the range of media players")
+		return
+	end
+
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to change the range of locked media players")
+		return
+	end
+
+	mediaPlayers[handle].range = Clamp(range, 0.0, Config.maxRange, Config.defaultRange)
 end)
 
 AddEventHandler("pmms:setStartTime", function(handle, time)

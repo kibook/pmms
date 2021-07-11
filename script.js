@@ -3,11 +3,12 @@ const maxVolumeFactor = 4.0;
 
 const maxTimeDifference = 2;
 
+var resourceName = 'pmms';
 var isRDR = true;
 var audioVisualizations = {};
 
 function sendMessage(name, params) {
-	return fetch('https://pmms/' + name, {
+	return fetch(`https://${resourceName}/${name}`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -436,6 +437,12 @@ function update(data) {
 	}
 }
 
+function setResourceNameFromUrl() {
+	var url = new URL(window.location);
+	var params = new URLSearchParams(url.search);
+	resourceName = params.get('resourceName') || resourceName;
+}
+
 window.addEventListener('message', event => {
 	switch (event.data.type) {
 		case 'init':
@@ -457,8 +464,14 @@ window.addEventListener('message', event => {
 });
 
 window.addEventListener('load', () => {
+	setResourceNameFromUrl();
+
 	sendMessage('duiStartup', {}).then(resp => resp.json()).then(resp => {
-		isRDR = resp.isRDR;
-		audioVisualizations = resp.audioVisualizations;
+		if (resp.isRDR != undefined) {
+			isRDR = resp.isRDR;
+		}
+		if (resp.audioVisualizations != undefined) {
+			audioVisualizations = resp.audioVisualizations;
+		}
 	});
 });

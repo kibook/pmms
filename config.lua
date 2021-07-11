@@ -436,10 +436,6 @@ Config.models = {
 		label = "Laptop",
 		renderTarget = "tvscreen"
 	},
-	[`hei_heist_str_avunitl_03`] = {
-		label = "TV",
-		renderTarget = "tvscreen"
-	},
 	[`xm_prop_x17dlc_monitor_wall_01a`] = {
 		label = "Screen",
 		renderTarget = "prop_x17dlc_monitor_wall_01a"
@@ -448,7 +444,31 @@ Config.models = {
 		label = "TV",
 		renderTarget = "ch_tv_rt_01a"
 	},
+	[`apa_mp_h_str_avunitl_01_b`] = {
+		label = "TV",
+		renderTarget = "tvscreen"
+	},
+	[`apa_mp_h_str_avunitl_04`] = {
+		label = "TV",
+		renderTarget = "tvscreen"
+	},
+	[`apa_mp_h_str_avunitm_01`] = {
+		label = "TV",
+		renderTarget = "tvscreen"
+	},
+	[`apa_mp_h_str_avunitm_03`] = {
+		label = "TV",
+		renderTarget = "tvscreen"
+	},
+	[`apa_mp_h_str_avunits_01`] = {
+		label = "TV",
+		renderTarget = "tvscreen"
+	},
 	[`apa_mp_h_str_avunits_04`] = {
+		label = "TV",
+		renderTarget = "tvscreen"
+	},
+	[`hei_heist_str_avunitl_03`] = {
 		label = "TV",
 		renderTarget = "tvscreen"
 	},

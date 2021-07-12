@@ -23,6 +23,25 @@ RegisterNetEvent("pmms:setBaseVolume")
 RegisterNetEvent("pmms:showBaseVolume")
 RegisterNetEvent("pmms:loadSettings")
 
+local function notify(args)
+	if type(args) ~= "table" then
+		args = {}
+	end
+
+	if not args.title then
+		args.title = GetCurrentResourceName()
+	end
+
+	if not args.duration then
+		args.duration = Config.notificationDuration;
+	end
+
+	SendNUIMessage({
+		type = "showNotification",
+		args = args
+	})
+end
+
 local entityEnumerator = {
 	__gc = function(enum)
 		if enum.destructor and enum.handle then
@@ -138,7 +157,17 @@ local function startMediaPlayer(handle, url, volume, offset, loop, filter, locke
 end
 
 local function startClosestMediaPlayer(url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
-	startMediaPlayer(getHandle(getClosestMediaPlayer()), url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, false, false)
+	local mediaPlayer = getClosestMediaPlayer()
+
+	if not mediaPlayer then
+		if Config.showNotifications then
+			notify{text = "No media player nearby"}
+		end
+
+		return
+	end
+
+	startMediaPlayer(getHandle(mediaPlayer), url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, false, false)
 end
 
 local function pauseMediaPlayer(handle)
@@ -146,7 +175,17 @@ local function pauseMediaPlayer(handle)
 end
 
 local function pauseClosestMediaPlayer()
-	pauseMediaPlayer(findHandle(getClosestMediaPlayer()))
+	local mediaPlayer = getClosestMediaPlayer()
+
+	if not mediaPlayer then
+		if Config.showNotifications then
+			notify{text = "No media player nearby"}
+		end
+
+		return
+	end
+
+	pauseMediaPlayer(findHandle(mediaPlayer))
 end
 
 local function stopMediaPlayer(handle)
@@ -154,7 +193,17 @@ local function stopMediaPlayer(handle)
 end
 
 local function stopClosestMediaPlayer()
-	stopMediaPlayer(findHandle(getClosestMediaPlayer()))
+	local mediaPlayer = getClosestMediaPlayer()
+
+	if not mediaPlayer then
+		if Config.showNotifications then
+			notify{text = "No media player nearby"}
+		end
+
+		return
+	end
+
+	stopMediaPlayer(findHandle(mediaPlayer))
 end
 
 local function getListenerAndViewerInfo()
@@ -218,10 +267,7 @@ local function listPresets()
 	end
 
 	if #presets == 0 then
-		TriggerEvent("chat:addMessage", {
-			color = {255, 255, 128},
-			args = {"No presets available"}
-		})
+		notify{text = "No presets available"}
 	else
 		table.sort(presets)
 
@@ -474,21 +520,6 @@ local function getSvHandle(handle)
 	elseif DoesEntityExist(handle) then
 		return GetHandleFromCoords(GetEntityCoords(handle))
 	end
-end
-
-local function notify(args)
-	if type(args) ~= "table" then
-		args = {}
-	end
-
-	if not args.duration then
-		args.duration = Config.notificationDuration;
-	end
-
-	SendNUIMessage({
-		type = "showNotification",
-		args = args
-	})
 end
 
 RegisterNUICallback("startup", function(data, cb)
@@ -822,13 +853,7 @@ AddEventHandler("pmms:toggleStatus", function()
 	toggleStatus()
 
 	if Config.showNotifications then
-		local message = "Status " .. (statusIsShown and "enabled" or "disabled")
-
-		notify {
-			title = GetCurrentResourceName(),
-			text = message,
-			duration = 1000
-		}
+		notify{text = "Status " .. (statusIsShown and "enabled" or "disabled"), duration = 1000}
 	end
 end)
 
@@ -836,10 +861,7 @@ AddEventHandler("pmms:error", function(message)
 	print(message)
 
 	if Config.showNotifications then
-		notify {
-			title = GetCurrentResourceName(),
-			text = message
-		}
+		notify{text = message}
 	end
 end)
 
@@ -877,10 +899,7 @@ AddEventHandler("pmms:listPresets", function()
 end)
 
 AddEventHandler("pmms:showBaseVolume", function()
-	TriggerEvent("chat:addMessage", {
-		color = {255, 255, 128},
-		args = {"Volume", baseVolume}
-	})
+	notify{text = "Volume: " .. baseVolume}
 end)
 
 AddEventHandler("pmms:setBaseVolume", function(volume)

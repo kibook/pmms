@@ -375,6 +375,14 @@ local function setBaseVolume(volume)
 	SetResourceKvp("baseVolume", tostring(baseVolume))
 end
 
+local function toggleStatus()
+	SendNUIMessage({
+		type = "toggleStatus"
+	})
+	statusIsShown = not statusIsShown
+	SetResourceKvpInt("showStatus", statusIsShown and 1 or 0)
+end
+
 local function loadSettings()
 	local volume = GetResourceKvpString("baseVolume")
 
@@ -385,7 +393,7 @@ local function loadSettings()
 	local showStatus = GetResourceKvpInt("showStatus")
 
 	if showStatus == 1 then
-		TriggerEvent("pmms:toggleStatus")
+		toggleStatus()
 	end
 end
 
@@ -811,11 +819,17 @@ AddEventHandler("pmms:showControls", function()
 end)
 
 AddEventHandler("pmms:toggleStatus", function()
-	SendNUIMessage({
-		type = "toggleStatus"
-	})
-	statusIsShown = not statusIsShown
-	SetResourceKvpInt("showStatus", statusIsShown and 1 or 0)
+	toggleStatus()
+
+	if Config.showNotifications then
+		local message = "Status " .. (statusIsShown and "enabled" or "disabled")
+
+		notify {
+			title = GetCurrentResourceName(),
+			text = message,
+			duration = 1000
+		}
+	end
 end)
 
 AddEventHandler("pmms:error", function(message)

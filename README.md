@@ -63,6 +63,7 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from object
 | `/pmms_status`                                                                     | Show the status of the nearest media player.      |
 | `/pmms_presets`                                                                    | List presets.                                     |
 | `/pmms_vol [volume]`                                                               | Set a personal base volume for all media players. |
+| `/pmms_fix`                                                                        | Reset your client, which may fix certain issues.  |
 | `/pmms_ctl`                                                                        | Advanced media player control.                    |
 | `/pmms_add`                                                                        | Add or modify a media player model preset.        |
 

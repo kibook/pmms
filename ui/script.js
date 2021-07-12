@@ -352,16 +352,21 @@ function pause(handle) {
 	});
 }
 
-function stop(handle) {
-	var player = getPlayer(handle);
+function removePlayer(player) {
+		let noise = document.getElementById(player.id + '_noise');
 
-	if (player) {
-		var noise = document.getElementById(player.id + '_noise');
 		if (noise) {
 			noise.remove();
 		}
 
 		player.remove();
+}
+
+function stop(handle) {
+	var player = getPlayer(handle);
+
+	if (player) {
+		removePlayer(player);
 	}
 }
 
@@ -1352,6 +1357,10 @@ function showNotification(data) {
 	setTimeout(() => notifications.removeChild(notification), data.args.duration);
 }
 
+function resetPlayers() {
+	document.querySelectorAll('.player').forEach(player => removePlayer(player));
+}
+
 window.addEventListener('message', event => {
 	switch (event.data.type) {
 		case 'init':
@@ -1380,6 +1389,9 @@ window.addEventListener('message', event => {
 			break;
 		case 'showNotification':
 			showNotification(event.data);
+			break;
+		case 'reset':
+			resetPlayers();
 			break;
 	}
 });

@@ -896,7 +896,15 @@ end)
 AddEventHandler("pmms:reset", function()
 	print("Resetting...")
 
+	if Config.showNotifications then
+		notify{text = "Resetting..."}
+	end
+
 	syncIsEnabled = false
+
+	SendNUIMessage({
+		type = "reset"
+	})
 
 	mediaPlayers = {}
 	localMediaPlayers = {}

@@ -1478,6 +1478,20 @@ window.addEventListener('load', () => {
 
 	document.getElementById('toggle-status').addEventListener('click', event => {
 		sendMessage('toggleStatus');
+
+		let message = "Status ";
+
+		if (document.getElementById('status').style.display == 'none') {
+			message += "enabled";
+		} else {
+			message += "disabled";
+		}
+
+		showNotification({args: {
+			title: GetParentResourceName(),
+			text: message,
+			duration: 1000
+		}});
 	});
 
 	document.getElementById('visualization').addEventListener('input', function(event) {

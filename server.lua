@@ -293,6 +293,7 @@ local function syncMediaPlayers()
 	for _, playerId in ipairs(GetPlayers()) do
 		TriggerClientEvent("pmms:sync", playerId,
 			mediaPlayers,
+			IsPlayerAceAllowed(playerId, "pmms.interact"),
 			IsPlayerAceAllowed(playerId, "pmms.manage"),
 			IsPlayerAceAllowed(playerId, "pmms.anyUrl"))
 	end

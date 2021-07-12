@@ -259,7 +259,7 @@ local function getObjectLabel(handle, object)
 	end
 end
 
-local function updateUi(fullControls, anyUrl)
+local function updateUi(canInteract, fullControls, anyUrl)
 	local pos = GetEntityCoords(PlayerPedId())
 
 	local activeMediaPlayers = {}
@@ -331,6 +331,7 @@ local function updateUi(fullControls, anyUrl)
 		presets = json.encode(Config.presets),
 		anyUrl = anyUrl,
 		maxDiscoveryDistance = Config.maxDiscoveryDistance,
+		canInteract = canInteract,
 		fullControls = fullControls,
 		baseVolume = baseVolume
 	})
@@ -749,12 +750,12 @@ RegisterNUICallback("setRange", function(data, cb)
 	cb({})
 end)
 
-AddEventHandler("pmms:sync", function(players, fullControls, anyUrl)
+AddEventHandler("pmms:sync", function(players, canInteract, fullControls, anyUrl)
 	if syncIsEnabled then
 		mediaPlayers = players
 
 		if uiIsOpen or statusIsShown then
-			updateUi(fullControls, anyUrl)
+			updateUi(canInteract, fullControls, anyUrl)
 		end
 	end
 end)

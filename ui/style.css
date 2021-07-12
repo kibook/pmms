@@ -297,3 +297,35 @@ mediaelementwrapper > video {
 	font-size: 1.5vh;
 	text-align: center;
 }
+
+.notifications {
+	position: absolute;
+	top: 0;
+	right: 0;
+	height: 98vh;
+	width: 15vw;
+	overflow: hidden;
+	margin: 1vh 1vw 1vh 1vw;
+}
+
+.notification {
+	background-color: rgba(0, 0, 0, 0.5);
+	color: white;
+	text-align: center;
+	font-family: Arial;
+	margin: 0.5vh 0.5vw 0.5vh 0.5vw;
+	border-radius: 0.5vw;
+}
+
+.notification .title {
+	padding: 0.5vh 0.5vw 0.5vh 0.5vw;
+	font-size: 2.0vh;
+	font-weight: bold;
+	background-color: rgba(0, 0, 0, 0.25);
+	border-radius: 0.5vw;
+}
+
+.notification .text {
+	padding: 0.5vh 0.5vw 0.5vh 0.5vw;
+	font-size: 1.7vh;
+}

@@ -1305,6 +1305,36 @@ function updateSaveSettings(newModelMode) {
 	}
 }
 
+function showNotification(data) {
+	let notification = document.createElement("div")
+	notification.className = "notification";
+
+	if (data.args.title) {
+		let title = document.createElement("div");
+		title.className = "title";
+		title.innerHTML = data.args.title;
+		notification.appendChild(title);
+	}
+
+	if (data.args.text) {
+		let text = document.createElement("div");
+		text.className = "text";
+
+		text.innerHTML = data.args.text;
+
+		if (data.args.color) {
+			text.style.color = data.args.color;
+		}
+
+		notification.appendChild(text);
+	}
+
+	let notifications = document.querySelector(".notifications")
+	notifications.appendChild(notification)
+
+	setTimeout(() => notifications.removeChild(notification), data.args.duration);
+}
+
 window.addEventListener('message', event => {
 	switch (event.data.type) {
 		case 'init':
@@ -1330,6 +1360,9 @@ window.addEventListener('message', event => {
 			break;
 		case 'updateUi':
 			updateUi(event.data);
+			break;
+		case 'showNotification':
+			showNotification(event.data);
 			break;
 	}
 });

@@ -49,7 +49,7 @@ function DuiBrowser:waitForConnection()
 		DuiBrowser.initQueue[self.mediaPlayerHandle] = nil
 		return true
 	else
-		print("Failed to connect to " .. Config.dui.url)
+		TriggerEvent("pmms:error", "Failed to connect to " .. Config.dui.url)
 		return false
 	end
 end

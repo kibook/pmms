@@ -738,3 +738,9 @@ Config.audioVisualizations = {
 		name = "Wave"
 	}
 }
+
+-- Whether to show errors and other notifications on-screen, or only in the console.
+Config.showNotifications = true
+
+-- How long on-screen notifications appear for, if enabled.
+Config.notificationDuration = 5000

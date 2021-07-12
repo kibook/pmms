@@ -467,6 +467,21 @@ local function getSvHandle(handle)
 	end
 end
 
+local function notify(args)
+	if type(args) ~= "table" then
+		args = {}
+	end
+
+	if not args.duration then
+		args.duration = Config.notificationDuration;
+	end
+
+	SendNUIMessage({
+		type = "showNotification",
+		args = args
+	})
+end
+
 RegisterNUICallback("startup", function(data, cb)
 	loadSettings()
 
@@ -804,6 +819,13 @@ end)
 
 AddEventHandler("pmms:error", function(message)
 	print(message)
+
+	if Config.showNotifications then
+		notify {
+			title = GetCurrentResourceName(),
+			text = message
+		}
+	end
 end)
 
 AddEventHandler("pmms:init", function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)

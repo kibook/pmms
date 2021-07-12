@@ -976,8 +976,12 @@ function updateUi(data) {
 			loopCheckbox.disabled = true;
 			filterCheckbox.disabled = true;
 			lockedCheckbox.disabled = true;
-			videoCheckbox.disabled = true;
-			videoSizeInput.disabled = true;
+
+			if (isRDR) {
+				videoCheckbox.disabled = true;
+				videoSizeInput.disabled = true;
+			}
+
 			mutedInput.disabled = true;
 			playButton.disabled = true;
 		} else {
@@ -1459,7 +1463,10 @@ window.addEventListener('load', () => {
 	document.getElementById('visualization').addEventListener('input', function(event) {
 		if (this.value != '') {
 			document.getElementById('filter').checked = false;
-			document.getElementById('video').checked = true;
+
+			if (isRDR) {
+				document.getElementById('video').checked = true;
+			}
 		}
 	});
 

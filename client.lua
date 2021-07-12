@@ -22,6 +22,7 @@ RegisterNetEvent("pmms:listPresets")
 RegisterNetEvent("pmms:setBaseVolume")
 RegisterNetEvent("pmms:showBaseVolume")
 RegisterNetEvent("pmms:loadSettings")
+RegisterNetEvent("pmms:notify")
 
 local function notify(args)
 	if type(args) ~= "table" then
@@ -922,6 +923,10 @@ AddEventHandler("pmms:loadSettings", function(models, defaultMediaPlayers)
 			table.insert(Config.defaultMediaPlayers, defaultMediaPlayer)
 		end
 	end
+end)
+
+AddEventHandler("pmms:notify", function(data)
+	notify(data)
 end)
 
 AddEventHandler("onResourceStop", function(resource)

@@ -882,6 +882,8 @@ AddEventHandler("pmms:saveModel", function(model, data)
 	end
 
 	saveModel(model, data)
+
+	TriggerClientEvent("pmms:notify", source, {text = "Model \"" .. data.label .. "\" saved"})
 end)
 
 AddEventHandler("pmms:saveObject", function(coords, data)
@@ -934,6 +936,7 @@ AddEventHandler("pmms:saveObject", function(coords, data)
 
 	SaveResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json", json.encode(defaultMediaPlayers), -1)
 
+	TriggerClientEvent("pmms:notify", source, {text = "Object \"" .. data.label .. "\" saved"})
 	TriggerClientEvent("pmms:loadSettings", -1, Config.models, Config.defaultMediaPlayers)
 end)
 

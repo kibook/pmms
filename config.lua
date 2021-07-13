@@ -643,7 +643,7 @@ Config.dui = {}
 --
 -- To host your own server:
 -- 	git clone --branch gh-pages https://github.com/kibook/pmms
-Config.dui.url = "https://fivem.khzae.net/pmms"
+Config.dui.url = "https://kibook.github.io/pmms"
 
 -- The screen width of the DUI browser
 Config.dui.screenWidth = 1280

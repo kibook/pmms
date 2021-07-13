@@ -71,12 +71,12 @@ local function addMediaPlayer(handle, options)
 	options.paused = false
 
 	if options.attenuation then
-		options.attenuation.sameRoom = Clamp(options.attenuation.sameRoom, 0.0, 10.0, defaultSameRoomAttenuation)
-		options.attenuation.diffRoom = Clamp(options.attenuation.diffRoom, 0.0, 10.0, defaultDiffRoomAttenuation)
+		options.attenuation.sameRoom = Clamp(options.attenuation.sameRoom, 0.0, 10.0, Config.defaultSameRoomAttenuation)
+		options.attenuation.diffRoom = Clamp(options.attenuation.diffRoom, 0.0, 10.0, Config.defaultDiffRoomAttenuation)
 	else
 		options.attenuation = {
-			sameRoom = defaultSameRoomAttenuation,
-			diffRoom = defaultDiffRoomAttenuation
+			sameRoom = Config.defaultSameRoomAttenuation,
+			diffRoom = Config.defaultDiffRoomAttenuation
 		}
 	end
 

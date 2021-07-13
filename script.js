@@ -194,10 +194,10 @@ function hideLoadingIcon() {
 	document.getElementById('loading').style.display = 'none';
 }
 
-function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, muted, attenuation, range, visualization, queue, coords) {
+function initPlayer(id, handle, options) {
 	var player = document.createElement('video');
 	player.id = id;
-	player.src = url;
+	player.src = options.url;
 	document.body.appendChild(player);
 
 	new MediaElement(id, {
@@ -205,7 +205,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 			hideLoadingIcon();
 
 			sendMessage('initError', {
-				url: url
+				url: options.url
 			});
 
 			media.remove();
@@ -215,7 +215,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 
 			media.pmms = {};
 			media.pmms.initialized = false;
-			media.pmms.attenuationFactor = attenuation.diffRoom;
+			media.pmms.attenuationFactor = options.attenuation.diffRoom;
 			media.pmms.volumeFactor = maxVolumeFactor;
 
 			media.volume = 0;
@@ -224,7 +224,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 				hideLoadingIcon();
 
 				sendMessage('playError', {
-					url: url
+					url: options.url
 				});
 
 				if (!media.pmms.initialized) {
@@ -242,15 +242,15 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 				var duration;
 				
 				if (media.duration == NaN || media.duration == Infinity || media.duration == 0 || media.hlsPlayer) {
-					offset = 0;
-					duration = false;
-					loop = false;
+					options.offset = 0;
+					options.duration = false;
+					options.loop = false;
 				} else {
-					duration = media.duration;
+					options.duration = media.duration;
 				}
 
 				if (media.youTubeApi) {
-					title = media.youTubeApi.getVideoData().title;
+					options.title = media.youTubeApi.getVideoData().title;
 
 					media.videoTracks = {length: 1};
 				} else if (media.hlsPlayer) {
@@ -259,24 +259,12 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					media.videoTracks = media.originalNode.videoTracks;
 				}
 
+				options.video = true;
+				options.videoSize = 0;
+
 				sendMessage('init', {
 					handle: handle,
-					url: url,
-					title: title,
-					volume: volume,
-					offset: offset,
-					duration: duration,
-					loop: loop,
-					filter: filter,
-					locked: locked,
-					video: true,
-					videoSize: 50,
-					muted: muted,
-					attenuation: attenuation,
-					range: range,
-					visualization: visualization,
-					queue: queue,
-					coords: coords,
+					options: options
 				});
 
 				media.pmms.initialized = true;
@@ -285,7 +273,7 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 			});
 
 			media.addEventListener('playing', () => {
-				if (filter && !media.pmms.filterAdded) {
+				if (options.filter && !media.pmms.filterAdded) {
 					if (isRDR) {
 						applyPhonographFilter(media);
 					} else {
@@ -294,8 +282,8 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 					media.pmms.filterAdded = true;
 				}
 
-				if (visualization && !media.pmms.visualizationAdded) {
-					createAudioVisualization(media, visualization);
+				if (options.visualization && !media.pmms.visualizationAdded) {
+					createAudioVisualization(media, options.visualization);
 					media.pmms.visualizationAdded = true;
 				}
 			});
@@ -305,20 +293,26 @@ function initPlayer(id, handle, url, title, volume, offset, loop, filter, locked
 	});
 }
 
-function getPlayer(handle, url, title, volume, offset, loop, filter, locked, video, muted, attenuation, range, visualization, queue, coords) {
-	var id = 'player_' + handle.toString(16);
+function getPlayer(handle, options) {
+	if (handle == undefined) {
+		return;
+	}
+
+	var id = 'player_' + handle.toString();
 
 	var player = document.getElementById(id);
 
-	if (!player && url) {
-		player = initPlayer(id, handle, url, title, volume, offset, loop, filter, locked, video, muted, attenuation, range, visualization, queue, coords);
+	if (!player && options && options.url) {
+		player = initPlayer(id, handle, options);
 	}
 
 	return player;
 }
 
 function parseTimecode(timecode) {
-	if (timecode.includes(':')) {
+	if (typeof timecode != "string") {
+		return timecode;
+	} else if (timecode.includes(':')) {
 		var a = timecode.split(':');
 		return parseInt(a[0]) * 3600 + parseInt(a[1]) * 60 + parseInt(a[2]);
 	} else {
@@ -333,13 +327,13 @@ function init(data) {
 
 	showLoadingIcon();
 
-	var offset = parseTimecode(data.offset);
+	data.options.offset = parseTimecode(data.options.offset);
 
-	if (data.title) {
-		getPlayer(data.handle, data.url, data.title, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.muted, data.attenuation, data.range, data.visualization, data.queue, data.coords);
-	} else{
-		getPlayer(data.handle, data.url, data.url, data.volume, offset, data.loop, data.filter, data.locked, data.video, data.muted, data.attenuation, data.range, data.visualization, data.queue, data.coords);
+	if (!data.options.title) {
+		data.options.title = data.options.url;
 	}
+
+	getPlayer(data.handle, data.options);
 }
 
 function play(handle) {
@@ -386,26 +380,26 @@ function setVolume(player, target) {
 }
 
 function update(data) {
-	var player = getPlayer(data.handle, data.url, data.title, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.muted, data.attenuation, data.range, data.visualization, data.queue, data.coords);
+	var player = getPlayer(data.handle, data.options);
 
 	if (player) {
-		if (data.paused || data.distance < 0 || data.distance > data.range) {
+		if (data.options.paused || data.distance < 0 || data.distance > data.options.range) {
 			if (!player.paused) {
 				player.pause();
 			}
 		} else {
 			if (data.sameRoom) {
-				setAttenuationFactor(player, data.attenuation.sameRoom);
+				setAttenuationFactor(player, data.options.attenuation.sameRoom);
 				setVolumeFactor(player, minVolumeFactor);
 			} else {
-				setAttenuationFactor(player, data.attenuation.diffRoom);
+				setAttenuationFactor(player, data.options.attenuation.diffRoom);
 				setVolumeFactor(player, maxVolumeFactor);
 			}
 
 			if (player.readyState > 0) {
 				var volume;
 
-				if (data.muted) {
+				if (data.options.muted || data.volume == 0) {
 					volume = 0;
 				} else {
 					volume = (((100 - data.distance * player.pmms.attenuationFactor) / 100) / player.pmms.volumeFactor) * (data.volume / 100);
@@ -421,8 +415,8 @@ function update(data) {
 					player.volume = 0;
 				}
 
-				if (data.duration) {
-					var currentTime = data.offset % player.duration;
+				if (data.options.duration) {
+					var currentTime = data.options.offset % player.duration;
 
 					if (Math.abs(currentTime - player.currentTime) > maxTimeDifference) {
 						player.currentTime = currentTime;

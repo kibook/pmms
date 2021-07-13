@@ -14,7 +14,7 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from object
 
 - Optional immersive filter can be applied to any audio.
 
-- Play video on a TV screen with DUI (FiveM only), or on a screen displayed above the object.
+- Play video on a TV screen with DUI (FiveM), or on a screen displayed above the object (RedM).
 
 - Permissions system and ability to lock objects so only certain players can control them.
 

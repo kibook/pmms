@@ -23,7 +23,8 @@ var Wave = (function () {
         };
 
         const waveContext = this;
-		let elementDoc = (options.elementDoc || document);
+        let elementDoc = (options.elementDoc || document);
+        options.elementDoc = null;
         let element = elementDoc.getElementById(element_id);
         if (!element) return
         element.crossOrigin = "anonymous";

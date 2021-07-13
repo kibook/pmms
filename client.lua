@@ -1057,21 +1057,13 @@ Citizen.CreateThread(function()
 					camDistance = -1
 				end
 
-				local sameRoom
-
-				if objectExists then
-					sameRoom = isInSameRoom(ped, object)
-				else
-					sameRoom = true
-				end
-
 				data = {
 					type = "update",
 					handle = handle,
 					options = info,
 					volume = math.floor(info.volume * (baseVolume / 100)),
 					distance = distance,
-					sameRoom = sameRoom,
+					sameRoom = objectExists and isInSameRoom(ped, object),
 					camDistance = camDistance,
 					fov = viewerFov,
 					screenX = screenX,

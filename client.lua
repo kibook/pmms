@@ -306,6 +306,16 @@ local function getObjectLabel(handle, object)
 	end
 end
 
+local function getCoordsLabel(handle, coords)
+	local defaultMediaPlayer = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords)
+
+	if defaultMediaPlayer and defaultMediaPlayer.label then
+		return defaultMediaPlayer.label
+	else
+		return string.format("%x", handle)
+	end
+end
+
 local function updateUi(canInteract, fullControls, anyUrl)
 	local pos = GetEntityCoords(PlayerPedId())
 
@@ -320,8 +330,17 @@ local function updateUi(canInteract, fullControls, anyUrl)
 			object = NetToObj(handle)
 		end
 
-		if object and object > 0 then
-			local mediaPos = GetEntityCoords(object)
+		local objectExists = object and object > 0
+
+		local mediaPos
+
+		if objectExists then
+			mediaPos = GetEntityCoords(object)
+		elseif info.coords then
+			mediaPos = info.coords
+		end
+
+		if mediaPos then
 			local distance = #(pos - mediaPos)
 
 			if fullControls or distance <= info.range then
@@ -329,7 +348,7 @@ local function updateUi(canInteract, fullControls, anyUrl)
 					handle = handle,
 					info = info,
 					distance = distance,
-					label = getObjectLabel(handle, object)
+					label = objectExists and getObjectLabel(handle, object) or getCoordsLabel(handle, mediaPos)
 				})
 			end
 		else
@@ -1003,12 +1022,19 @@ Citizen.CreateThread(function()
 			end
 
 			local data
-			local distance
 
-			if object and object > 0 then
-				local mediaPos = GetEntityCoords(object)
+			local objectExists = object and object > 0
 
-				distance = #(listenPos - mediaPos)
+			local mediaPos
+
+			if objectExists then
+				mediaPos = GetEntityCoords(object)
+			elseif info.coords then
+				mediaPos = info.coords
+			end
+
+			if mediaPos then
+				local distance = #(listenPos - mediaPos)
 
 				local camDistance
 				local onScreen, screenX, screenY = GetScreenCoordFromWorldCoord(mediaPos.x, mediaPos.y, mediaPos.z + 0.8)
@@ -1039,7 +1065,7 @@ Citizen.CreateThread(function()
 					paused = info.paused,
 					coords = json.encode(info.coords),
 					distance = distance,
-					sameRoom = isInSameRoom(ped, object),
+					sameRoom = objectExists and isInSameRoom(ped, object) or true,
 					camDistance = camDistance,
 					fov = viewerFov,
 					screenX = screenX,
@@ -1064,8 +1090,6 @@ Citizen.CreateThread(function()
 					end
 				end
 			else
-				distance = -1
-
 				data = {
 					type = "update",
 					handle = handle,
@@ -1085,7 +1109,7 @@ Citizen.CreateThread(function()
 					videoSize = info.videoSize,
 					paused = info.paused,
 					coords = json.encode(info.coords),
-					distance = distance,
+					distance = -1,
 					sameRoom = false,
 					camDistance = -1,
 					fov = viewerFov,

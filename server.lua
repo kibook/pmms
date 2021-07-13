@@ -10,6 +10,7 @@ RegisterNetEvent("pmms:showControls")
 RegisterNetEvent("pmms:toggleStatus")
 RegisterNetEvent("pmms:setVolume")
 RegisterNetEvent("pmms:setAttenuation")
+RegisterNetEvent("pmms:setDiffRoomVolume")
 RegisterNetEvent("pmms:setRange")
 RegisterNetEvent("pmms:setStartTime")
 RegisterNetEvent("pmms:lock")
@@ -79,6 +80,8 @@ local function addMediaPlayer(handle, options)
 			diffRoom = Config.defaultDiffRoomAttenuation
 		}
 	end
+
+	options.diffRoomVolume = Clamp(options.diffRoomVolume, 0.0, 1.0, Config.defaultDiffRoomVolume)
 
 	options.range = Clamp(options.range, 0, Config.maxRange, Config.defaultRange)
 
@@ -322,6 +325,7 @@ local function loadSettings()
 				Config.models[model].filter = info.filter
 				Config.models[model].volume = info.volume
 				Config.models[model].attenuation = info.attenuation
+				Config.models[model].diffRoomVolume = info.diffRoomVolume
 				Config.models[model].range = info.range
 			else
 				Config.models[model] = info
@@ -342,6 +346,7 @@ local function loadSettings()
 				dmp.filter = defaultMediaPlayer.filter
 				dmp.volume = defaultMediaPlayer.volume
 				dmp.attenuation = defaultMediaPlayer.attenuation
+				dmp.diffRoomVolume = defaultMediaPlayer.diffRoomVolume
 				dmp.range = defaultMediaPlayer.range
 			else
 				table.insert(Config.defaultMediaPlayers, defaultMediaPlayer)
@@ -513,6 +518,24 @@ AddEventHandler("pmms:setAttenuation", function(handle, sameRoom, diffRoom)
 		sameRoom = Clamp(sameRoom, 0.0, 10.0, Config.defaultSameRoomAttenuation),
 		diffRoom = Clamp(diffRoom, 0.0, 10.0, Config.defaultDiffRoomAttenuation)
 	}
+end)
+
+AddEventHandler("pmms:setDiffRoomVolume", function(handle, diffRoomVolume)
+	if not mediaPlayers[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to change the volume of media players")
+		return
+	end
+
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to change the volume of locked media players")
+		return
+	end
+
+	mediaPlayers[handle].diffRoomVolume = Clamp(diffRoomVolume, 0.0, 1.0, Config.defaultDiffRoomVolume)
 end)
 
 AddEventHandler("pmms:setRange", function(handle, range)
@@ -771,6 +794,7 @@ local function saveModel(model, data)
 		Config.models[model].filter = data.filter
 		Config.models[model].volume = data.volume
 		Config.models[model].attenuation = data.attenuation
+		Config.models[model].diffRoomVolume = data.diffRoomVolume
 		Config.models[model].range = data.range
 	else
 		Config.models[model] = data
@@ -821,6 +845,7 @@ AddEventHandler("pmms:saveObject", function(coords, data)
 		defaultMediaPlayer.filter = data.filter
 		defaultMediaPlayer.volume = data.volume
 		defaultMediaPlayer.attenuation = data.attenuation
+		defaultMediaPlayer.diffRoomVolume = data.diffRoomVolume
 		defaultMediaPlayer.range = data.range
 	else
 		table.insert(Config.defaultMediaPlayers, data)
@@ -843,6 +868,7 @@ AddEventHandler("pmms:saveObject", function(coords, data)
 		defaultMediaPlayer.filter = data.filter
 		defaultMediaPlayer.volume = data.volume
 		defaultMediaPlayer.attenuation = data.attenuation
+		defaultMediaPlayer.diffRoomVolume = data.diffRoomVolume
 		defaultMediaPlayer.range = data.range
 	else
 		table.insert(defaultMediaPlayers, data)
@@ -877,8 +903,9 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "play", funct
 		options.attenuation = {}
 		options.attenuation.sameRoom =  tonumber(args[9]) or Config.defaultSameRoomAttenuation
 		options.attenuation.diffRoom = tonumber(args[10]) or Config.defaultDiffRoomAttenuation
-		options.range = tonumber(args[11]) or Config.defaultRange
-		options.visualization = args[12]
+		options.diffRoomVolume = tonumber(args[11]) or Config.defaultDiffRoomVolume
+		options.range = tonumber(args[12]) or Config.defaultRange
+		options.visualization = args[13]
 
 		options.volume = 100
 
@@ -930,7 +957,7 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl stop <handle>")
 	elseif args[1] == "list" then
 		for handle, info in pairs(mediaPlayers) do
-			print(string.format("[%d] %s %s %d %d/%s %s %s %s %s %f %f %f %s %s %d %s",
+			print(string.format("[%d] %s %s %d %d/%s %s %s %s %s %f %f %f %f %s %s %d %s",
 				handle,
 				info.title,
 				info.filter and "filter" or "nofilter",
@@ -943,6 +970,7 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 				info.muted and "muted" or "unmuted",
 				info.attenuation.sameRoom,
 				info.attenuation.diffRoom,
+				info.diffRoomVolume,
 				info.range,
 				info.paused and "paused" or "playing",
 				info.label or "nolabel",

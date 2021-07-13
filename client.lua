@@ -584,6 +584,7 @@ RegisterNUICallback("startup", function(data, cb)
 		isRDR = Config.isRDR,
 		defaultSameRoomAttenuation = Config.defaultSameRoomAttenuation,
 		defaultDiffRoomAttenuation = Config.defaultDiffRoomAttenuation,
+		defaultDiffRoomVolume = Config.defaultDiffRoomVolume,
 		defaultRange = Config.defaultRange,
 		maxRange = Config.maxRange,
 		defaultVideoSize = Config.defaultVideoSize,
@@ -753,6 +754,7 @@ RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
 	if handle and mediaPlayers[handle] then
 		defaultsData.volume = mediaPlayers[handle].volume
 		defaultsData.attenuation = mediaPlayers[handle].attenuation
+		defaultsData.diffRoomVolume = mediaPlayers[handle].diffRoomVolume
 		defaultsData.range = mediaPlayers[handle].range
 	end
 
@@ -812,6 +814,16 @@ RegisterNUICallback("setAttenuation", function(data, cb)
 
 	if handle and mediaPlayers[handle] then
 		TriggerServerEvent("pmms:setAttenuation", handle, data.sameRoom, data.diffRoom)
+	end
+
+	cb({})
+end)
+
+RegisterNUICallback("setDiffRoomVolume", function(data, cb)
+	local handle = getSvHandle(data.handle)
+
+	if handle and mediaPlayers[handle] then
+		TriggerServerEvent("pmms:setDiffRoomVolume", handle, data.diffRoomVolume)
 	end
 
 	cb({})
@@ -949,6 +961,7 @@ AddEventHandler("pmms:loadSettings", function(models, defaultMediaPlayers)
 			dmp.filter = defaultMediaPlayer.filter
 			dmp.volume = defaultMediaPlayer.volume
 			dmp.attenuation = defaultMediaPlayer.attenuation
+			dmp.diffRoomVolume = defaultMediaPlayer.diffRoomVolume
 			dmp.range = defaultMediaPlayer.range
 		else
 			table.insert(Config.defaultMediaPlayers, defaultMediaPlayer)
@@ -990,6 +1003,7 @@ Citizen.CreateThread(function()
 		{name = "mute", help = "0 = unmuted, 1 = muted"},
 		{name = "sameRoom", help = "Sound attenuation multiplier when in the same room"},
 		{name = "diffRoom", help = "Sound attenuation multiplier when in a different room"},
+		{name = "volumeDiff", help = "Difference in volume between the same and different rooms. Default: " .. Config.defaultDiffRoomVolume},
 		{name = "range", help = "Maximum range of the media player"},
 		{name = "visualization", help = "Audio visualization type"}
 	})

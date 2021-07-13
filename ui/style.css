@@ -267,7 +267,7 @@ option {
 
 #advanced-settings {
 	display: grid;
-	grid-template-columns: repeat(9, max-content);
+	grid-template-columns: repeat(10, max-content);
 	grid-gap: 0.5vh 0.5vw;
 }
 

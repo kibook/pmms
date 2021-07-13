@@ -83,22 +83,23 @@ Starts playing something on a networked media player object, using its network I
 
 `options` is a table of options for the new media player.
 
-| Option          | Description                                                                             |
-|-----------------|-----------------------------------------------------------------------------------------|
-| `url`           | The URL of the media to play.                                                           |
-| `title`         | The title of the media to display.                                                      |
-| `volume`        | The volume of the new media player. Default: 100.                                       |
-| `offset`        | The time to start the media at in seconds. Default: 0.                                  |
-| `duration`      | The duration of the media. `nil`, `false` or `0` will treat the media as a live stream. |
-| `loop`          | Whether to loop the media. Requires a duration.                                         |
-| `filter`        | Whether to apply the immersive filter to the media player.                              |
-| `locked`        | Whether to lock the media player.                                                       |
-| `video`         | Whether to display NUI video (RedM only).                                               |
-| `videoSize`     | The size of the NUI video screen (RedM only).                                           |
-| `muted`         | Whether the media player is muted by default.                                           |
-| `attenuation`   | The attenuation multipliers for the media player.                                       |
-| `range`         | The range of the media player.                                                          |
-| `visualization` | The audio visualization to apply to the media player.                                   |
+| Option           | Description                                                                             |
+|------------------|-----------------------------------------------------------------------------------------|
+| `url`            | The URL of the media to play.                                                           |
+| `title`          | The title of the media to display.                                                      |
+| `volume`         | The volume of the new media player. Default: 100.                                       |
+| `offset`         | The time to start the media at in seconds. Default: 0.                                  |
+| `duration`       | The duration of the media. `nil`, `false` or `0` will treat the media as a live stream. |
+| `loop`           | Whether to loop the media. Requires a duration.                                         |
+| `filter`         | Whether to apply the immersive filter to the media player.                              |
+| `locked`         | Whether to lock the media player.                                                       |
+| `video`          | Whether to display NUI video (RedM only).                                               |
+| `videoSize`      | The size of the NUI video screen (RedM only).                                           |
+| `muted`          | Whether the media player is muted by default.                                           |
+| `attenuation`    | The attenuation multipliers for the media player.                                       |
+| `diffRoomVolume` | Difference between the base volume in the same room and a different room.               |
+| `range`          | The range of the media player.                                                          |
+| `visualization`  | The audio visualization to apply to the media player.                                   |
 
 ### startByCoords
 

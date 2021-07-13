@@ -1,11 +1,9 @@
-const minVolumeFactor = 1.0;
-const maxVolumeFactor = 4.0;
-
 const maxTimeDifference = 2;
 
 var isRDR = true;
 var defaultSameRoomAttenuation = 4.0;
 var defaultDiffRoomAttenuation = 6.0;
+var defaultDiffRoomVolume = 4.0;
 var defaultRange = 50;
 var defaultVideoSize = 30;
 var audioVisualizations = {};
@@ -219,7 +217,7 @@ function initPlayer(id, handle, options) {
 			media.pmms = {};
 			media.pmms.initialized = false;
 			media.pmms.attenuationFactor = options.attenuation.diffRoom;
-			media.pmms.volumeFactor = maxVolumeFactor;
+			media.pmms.volumeFactor = options.diffRoomVolume;
 
 			media.volume = 0;
 
@@ -380,9 +378,9 @@ function setAttenuationFactor(player, target) {
 
 function setVolumeFactor(player, target) {
 	if (player.pmms.volumeFactor > target) {
-		player.pmms.volumeFactor -= 0.1;
+		player.pmms.volumeFactor -= 0.01;
 	} else {
-		player.pmms.volumeFactor += 0.1;
+		player.pmms.volumeFactor += 0.01;
 	}
 }
 
@@ -413,10 +411,10 @@ function update(data) {
 		} else {
 			if (data.sameRoom) {
 				setAttenuationFactor(player, data.options.attenuation.sameRoom);
-				setVolumeFactor(player, minVolumeFactor);
+				setVolumeFactor(player, 1.0);
 			} else {
 				setAttenuationFactor(player, data.options.attenuation.diffRoom);
-				setVolumeFactor(player, maxVolumeFactor);
+				setVolumeFactor(player, data.options.diffRoomVolume);
 			}
 
 			if (player.readyState > 0) {
@@ -425,7 +423,7 @@ function update(data) {
 				if (data.options.muted || data.volume == 0) {
 					volume = 0;
 				} else {
-					volume = (((100 - data.distance * player.pmms.attenuationFactor) / 100) / player.pmms.volumeFactor) * (data.volume / 100);
+					volume = (((100 - data.distance * player.pmms.attenuationFactor) / 100) * player.pmms.volumeFactor) * (data.volume / 100);
 				}
 
 				if (volume > 0) {
@@ -923,6 +921,7 @@ function updateUi(data) {
 		var visualizationSelect = document.getElementById('visualization');
 		var sameRoomAttenuationInput = document.getElementById('same-room-attenuation');
 		var diffRoomAttenuationInput = document.getElementById('diff-room-attenuation');
+		var diffRoomVolumeInput = document.getElementById('diff-room-volume');
 		var rangeInput = document.getElementById('range');
 		var saveButton = document.getElementById('save');
 		var revertButton = document.getElementById('revert-settings');
@@ -984,6 +983,7 @@ function updateUi(data) {
 			visualizationSelect.disabled = true;
 			sameRoomAttenuationInput.disabled = true;
 			diffRoomAttenuationInput.disabled = true;
+			diffRoomVolumeInput.disabled = true;
 			rangeInput.disabled = true;
 			saveButton.disabled = true;
 			revertButton.disabled = true;
@@ -1070,6 +1070,7 @@ function updateUi(data) {
 			visualizationSelect.disabled = false;
 			sameRoomAttenuationInput.disabled = false;
 			diffRoomAttenuationInput.disabled = false;
+			diffRoomVolumeInput.disabled = false;
 			rangeInput.disabled = false;
 			revertButton.disabled = false;
 
@@ -1146,6 +1147,7 @@ function startMediaPlayer() {
 	var mutedInput = document.getElementById('muted');
 	var sameRoomAttenuationInput = document.getElementById('same-room-attenuation');
 	var diffRoomAttenuationInput = document.getElementById('diff-room-attenuation');
+	var diffRoomVolumeInput = document.getElementById('diff-room-volume');
 	var rangeInput = document.getElementById('range');
 	var visualizationSelect = document.getElementById('visualization');
 
@@ -1168,6 +1170,7 @@ function startMediaPlayer() {
 	var muted = mutedInput.checked;
 	var sameRoomAttenuation = parseFloat(sameRoomAttenuationInput.value);
 	var diffRoomAttenuation = parseFloat(diffRoomAttenuationInput.value);
+	var diffRoomVolume = parseFloat(diffRoomVolumeInput.value);
 	var range = parseFloat(rangeInput.value);
 	var visualization = visualizationSelect.value;
 
@@ -1185,6 +1188,10 @@ function startMediaPlayer() {
 
 	if (isNaN(diffRoomAttenuation)) {
 		diffRoomAttenuation = defaultDiffRoomAttenuation;
+	}
+
+	if (isNaN(diffRoomVolume)) {
+		diffRoomVolume = defaultDiffRoomVolume;
 	}
 
 	if (isNaN(range)) {
@@ -1214,6 +1221,7 @@ function startMediaPlayer() {
 				sameRoom: sameRoomAttenuation,
 				diffRoom: diffRoomAttenuation
 			},
+			diffRoomVolume: diffRoomVolume,
 			range: range,
 			visualization: visualization
 		}
@@ -1276,6 +1284,12 @@ function setMediaPlayerDefaults(handle) {
 			document.getElementById('diff-room-attenuation').value = defaultDiffRoomAttenuation;
 		}
 
+		if (resp.diffRoomVolume) {
+			document.getElementById('diff-room-volume').value = resp.diffRoomVolume;
+		} else {
+			document.getElementById('diff-room-volume').value = defaultDiffRoomVolume;
+		}
+
 		if (resp.range) {
 			document.getElementById('range').value = resp.range;
 		} else {
@@ -1293,6 +1307,7 @@ function saveSettings(method) {
 	var volume = parseInt(document.getElementById('volume').value);
 	var sameRoomAttenuation = parseFloat(document.getElementById('same-room-attenuation').value);
 	var diffRoomAttenuation = parseFloat(document.getElementById('diff-room-attenuation').value);
+	var diffRoomVolume = parseFloat(document.getElementById('diff-room-volume').value);
 	var range = parseFloat(document.getElementById('range').value);
 
 	sendMessage('save', {
@@ -1307,6 +1322,7 @@ function saveSettings(method) {
 			sameRoom: sameRoomAttenuation,
 			diffRoom: diffRoomAttenuation
 		},
+		diffRoomVolume: diffRoomVolume,
 		range: range
 	});
 }
@@ -1401,10 +1417,12 @@ window.addEventListener('load', () => {
 		isRDR = resp.isRDR;
 		defaultSameRoomAttenuation = resp.defaultSameRoomAttenuation;
 		defaultDiffRoomAttenuation = resp.defaultDiffRoomAttenuation;
+		defaultDiffRoomVolume = resp.defaultDiffRoomVolume;
 		defaultRange = resp.defaultRange;
 
 		document.getElementById('same-room-attenuation').value = defaultSameRoomAttenuation;
 		document.getElementById('diff-room-attenuation').value = defaultDiffRoomAttenuation;
+		document.getElementById('diff-room-volume').value = defaultDiffRoomVolume;
 		document.getElementById('video-size').value = defaultVideoSize;
 
 		var rangeInput = document.getElementById('range');
@@ -1471,6 +1489,7 @@ window.addEventListener('load', () => {
 		} else {
 			document.getElementById('same-room-attenuation').value = defaultSameRoomAttenuation;
 			document.getElementById('diff-room-attenuation').value = defaultDiffRoomAttenuation;
+			document.getElementById('diff-room-volume').value = defaultDiffRoomVolume;
 			document.getElementById('range').value = defaultRange;
 			document.getElementById('volume').value = 100;
 		}
@@ -1540,6 +1559,17 @@ window.addEventListener('load', () => {
 			});
 		}
 	}));
+
+	document.getElementById('diff-room-volume').addEventListener('input', function(event) {
+		var handle = parseInt(document.getElementById('usable-media-players').value);
+
+		if (!isNaN(handle)) {
+			sendMessage('setDiffRoomVolume', {
+				handle: handle,
+				diffRoomVolume: parseFloat(this.value)
+			});
+		}
+	});
 
 	document.getElementById('volume').addEventListener('input', function(event) {
 		var handle = parseInt(document.getElementById('usable-media-players').value);

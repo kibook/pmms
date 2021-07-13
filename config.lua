@@ -18,6 +18,9 @@ Config.defaultRange = 30.0
 -- Maximum range that players can set
 Config.maxRange = 200.0
 
+-- Difference between the base volume in the same room and a different room
+Config.defaultDiffRoomVolume = 0.25
+
 -- Default size for the NUI video screen
 Config.defaultVideoSize = 30
 
@@ -38,6 +41,10 @@ Config.defaultVideoSize = 30
 --	attenuation
 --		The default sound attenuation multipliers for this type of object.
 --
+--	diffRoomVolume
+--		The default difference between the base volume in the same
+--		room and a different room.
+--
 --	range
 --		The default range for this type of object
 --
@@ -47,6 +54,7 @@ Config.defaultVideoSize = 30
 -- 		label = "Phonograph",
 -- 		filter = true,
 -- 		attenuation = {sameRoom = 4, diffRoom = 6},
+-- 		diffRoomVolume = 0.25,
 -- 		range = 30
 -- 	}
 --
@@ -605,6 +613,9 @@ Config.presets = {
 -- attenuation
 --  The default sound attenuation multipliers used for this media player.
 --
+-- diffRoomVolume
+--  The default difference between the volume in the same and a different room.
+--
 -- range
 --  The default range used for this media player.
 --
@@ -628,6 +639,7 @@ Config.defaultMediaPlayers = {
 		videoSize = 30,
 		muted = false,
 		attenuation = {sameRoom = 4, diffRoom = 6},
+		diffRoomVolume = 0.25,
 		range = 30
 	}
 	]]

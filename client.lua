@@ -139,25 +139,23 @@ local function getClosestMediaPlayer()
 	return getClosestMediaPlayerObject(GetEntityCoords(PlayerPedId()), Config.maxDiscoveryDistance)
 end
 
-local function startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
-	volume = Clamp(volume, 0, 100, 100)
-
-	if not offset then
-		offset = "0"
+local function startMediaPlayer(handle, options)
+	if not options.offset then
+		options.offset = "0"
 	end
 
 	if NetworkDoesNetworkIdExist(handle) then
-		TriggerServerEvent("pmms:start", handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, false)
+		TriggerServerEvent("pmms:start", handle, options)
 	else
-		if not coords then
-			coords = GetEntityCoords(handle)
+		if not options.coords then
+			options.coords = GetEntityCoords(handle)
 		end
 
-		TriggerServerEvent("pmms:start", nil, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
+		TriggerServerEvent("pmms:start", false, options)
 	end
 end
 
-local function startClosestMediaPlayer(url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
+local function startClosestMediaPlayer(options)
 	local mediaPlayer = getClosestMediaPlayer()
 
 	if not mediaPlayer then
@@ -168,7 +166,7 @@ local function startClosestMediaPlayer(url, volume, offset, loop, filter, locked
 		return
 	end
 
-	startMediaPlayer(getHandle(mediaPlayer), url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, false, false)
+	startMediaPlayer(getHandle(mediaPlayer), options)
 end
 
 local function pauseMediaPlayer(handle)
@@ -301,7 +299,7 @@ local function getObjectLabel(handle, object)
 		if model and Config.models[model] then
 			return Config.models[model].label
 		else
-			return string.format("%x", handle)
+			return tostring(handle)
 		end
 	end
 end
@@ -312,7 +310,7 @@ local function getCoordsLabel(handle, coords)
 	if defaultMediaPlayer and defaultMediaPlayer.label then
 		return defaultMediaPlayer.label
 	else
-		return string.format("%x", handle)
+		return tostring(handle)
 	end
 end
 
@@ -566,27 +564,12 @@ RegisterNUICallback("duiStartup", function(data, cb)
 end)
 
 RegisterNUICallback("init", function(data, cb)
-	if NetworkDoesNetworkIdExist(data.handle) or data.coords then
-		local coords = json.decode(data.coords)
+	if NetworkDoesNetworkIdExist(data.handle) or data.options.coords then
+		if data.options.coords then
+			data.options.coords = ToVector3(data.options.coords)
+		end
 
-		TriggerServerEvent("pmms:init",
-			data.handle,
-			data.url,
-			data.title,
-			data.volume,
-			data.offset,
-			data.duration,
-			data.loop,
-			data.filter,
-			data.locked,
-			data.video,
-			data.videoSize,
-			data.muted,
-			data.attenuation,
-			data.range,
-			data.visualization,
-			data.queue,
-			coords and ToVector3(coords))
+		TriggerServerEvent("pmms:init", data.handle, data.options)
 	end
 	cb({})
 end)
@@ -602,7 +585,7 @@ RegisterNUICallback("playError", function(data, cb)
 end)
 
 RegisterNUICallback("play", function(data, cb)
-	startMediaPlayer(data.handle, data.url, data.volume, data.offset, data.loop, data.filter, data.locked, data.video, data.videoSize, data.muted, data.attenuation, data.range, data.visualization, false, false)
+	startMediaPlayer(data.handle, data.options)
 	cb({})
 end)
 
@@ -819,25 +802,11 @@ AddEventHandler("pmms:sync", function(players, canInteract, fullControls, anyUrl
 	end
 end)
 
-AddEventHandler("pmms:start", function(handle, url, title, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
-	sendMediaMessage(handle, coords, {
+AddEventHandler("pmms:start", function(handle, options)
+	sendMediaMessage(handle, options.coords, {
 		type = "init",
 		handle = handle,
-		url = url,
-		title = title,
-		volume = volume,
-		offset = offset,
-		loop = loop,
-		filter = filter,
-		locked = locked,
-		video = video,
-		videoSize = videoSize,
-		muted = muted,
-		attenuation = attenuation,
-		range = range,
-		visualization = visualization,
-		queue = queue,
-		coords = json.encode(coords)
+		options = options
 	})
 end)
 
@@ -885,8 +854,8 @@ AddEventHandler("pmms:error", function(message)
 	end
 end)
 
-AddEventHandler("pmms:init", function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
-	startMediaPlayer(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
+AddEventHandler("pmms:init", function(handle, options)
+	startMediaPlayer(handle, options)
 end)
 
 AddEventHandler("pmms:reset", function()
@@ -902,8 +871,8 @@ AddEventHandler("pmms:reset", function()
 	syncIsEnabled = true
 end)
 
-AddEventHandler("pmms:startClosestMediaPlayer", function(url, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
-	startClosestMediaPlayer(url, 100, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
+AddEventHandler("pmms:startClosestMediaPlayer", function(options)
+	startClosestMediaPlayer(options)
 end)
 
 AddEventHandler("pmms:pauseClosestMediaPlayer", function()
@@ -1048,22 +1017,8 @@ Citizen.CreateThread(function()
 				data = {
 					type = "update",
 					handle = handle,
-					url = info.url,
-					title = info.title,
+					options = info,
 					volume = math.floor(info.volume * (baseVolume / 100)),
-					muted = info.muted,
-					attenuation = info.attenuation,
-					range = info.range,
-					visualization = info.visualization,
-					offset = info.offset,
-					duration = info.duration,
-					loop = info.loop,
-					filter = info.filter,
-					locked = info.locked,
-					video = info.video,
-					videoSize = info.videoSize,
-					paused = info.paused,
-					coords = json.encode(info.coords),
 					distance = distance,
 					sameRoom = objectExists and isInSameRoom(ped, object) or true,
 					camDistance = camDistance,
@@ -1093,22 +1048,8 @@ Citizen.CreateThread(function()
 				data = {
 					type = "update",
 					handle = handle,
-					url = info.url,
-					title = info.title,
+					options = info,
 					volume = 0,
-					muted = true,
-					attenuation = info.attenuation,
-					range = info.range,
-					visualization = info.visualization,
-					offset = info.offset,
-					duration = info.duration,
-					loop = info.loop,
-					filter = info.filter,
-					locked = info.locked,
-					video = info.video,
-					videoSize = info.videoSize,
-					paused = info.paused,
-					coords = json.encode(info.coords),
 					distance = -1,
 					sameRoom = false,
 					camDistance = -1,

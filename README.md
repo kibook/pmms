@@ -73,18 +73,41 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from object
 ### startByNetworkId
 
 ```lua
-handle = exports.pmms:startByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
+handle = exports.pmms:startByNetworkId(netId, options)
 ```
 
 Starts playing something on a networked media player object, using its network ID.
 
+#### Media player options
+
+`options` is a table of options for the new media player.
+
+| Option          | Description                                                                             |
+|-----------------|-----------------------------------------------------------------------------------------|
+| `url`           | The URL of the media to play.                                                           |
+| `title`         | The title of the media to display.                                                      |
+| `volume`        | The volume of the new media player. Default: 100.                                       |
+| `offset`        | The time to start the media at in seconds. Default: 0.                                  |
+| `duration`      | The duration of the media. `nil`, `false` or `0` will treat the media as a live stream. |
+| `loop`          | Whether to loop the media. Requires a duration.                                         |
+| `filter`        | Whether to apply the immersive filter to the media player.                              |
+| `locked`        | Whether to lock the media player.                                                       |
+| `video`         | Whether to display NUI video (RedM only).                                               |
+| `videoSize`     | The size of the NUI video screen (RedM only).                                           |
+| `muted`         | Whether the media player is muted by default.                                           |
+| `attenuation`   | The attenuation multipliers for the media player.                                       |
+| `range`         | The range of the media player.                                                          |
+| `visualization` | The audio visualization to apply to the media player.                                   |
+
 ### startByCoords
 
 ```lua
-handle = exports.pmms:startByCoords(x, y, z, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
+handle = exports.pmms:startByCoords(x, y, z, options)
 ```
 
 Starts playing something on a non-networked media player object, using its coordinates on the world map.
+
+Refer to [Media player options](#media-player-options).
 
 ### stop
 

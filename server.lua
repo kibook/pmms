@@ -55,41 +55,38 @@ local function removeFromQueue(handle, index)
 	table.remove(mediaPlayers[handle].queue, index)
 end
 
-local function addMediaPlayer(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
+local function addMediaPlayer(handle, options)
 	if mediaPlayers[handle] then
 		return
 	end
 
-	if attenuation then
-		attenuation.sameRoom = Clamp(attenuation.sameRoom, 0.0, 10.0, defaultSameRoomAttenuation)
-		attenuation.diffRoom = Clamp(attenuation.diffRoom, 0.0, 10.0, defaultDiffRoomAttenuation)
+	if not options.title then
+		options.title = options.url
+	end
+
+	options.volume = Clamp(options.volume, 0, 100, 100)
+	options.startTime = os.time() - (options.offset or 0)
+	options.offset = 0
+	options.videoSize = Clamp(options.videoSize, 10, 100, Config.defaultVideoSize)
+	options.paused = false
+
+	if options.attenuation then
+		options.attenuation.sameRoom = Clamp(options.attenuation.sameRoom, 0.0, 10.0, defaultSameRoomAttenuation)
+		options.attenuation.diffRoom = Clamp(options.attenuation.diffRoom, 0.0, 10.0, defaultDiffRoomAttenuation)
 	else
-		attenuation = {
+		options.attenuation = {
 			sameRoom = defaultSameRoomAttenuation,
 			diffRoom = defaultDiffRoomAttenuation
 		}
 	end
 
-	mediaPlayers[handle] = {
-		url = url,
-		title = title or url,
-		volume = Clamp(volume, 0, 100, 100),
-		startTime = os.time() - (offset or 0),
-		offset = 0,
-		duration = duration,
-		loop = loop,
-		filter = filter,
-		locked = locked,
-		video = video,
-		videoSize = Clamp(videoSize, 10, 100, Config.defaultVideoSize),
-		coords = coords,
-		paused = false,
-		muted = muted,
-		attenuation = attenuation,
-		range = Clamp(range, 0, Config.maxRange, Config.defaultRange),
-		visualization = visualization,
-		queue = queue or {}
-	}
+	options.range = Clamp(options.range, 0, Config.maxRange, Config.defaultRange)
+
+	if not options.queue then
+		options.queue = {}
+	end
+
+	mediaPlayers[handle] = options
 
 	enqueue(syncQueue, function()
 		TriggerClientEvent("pmms:play", -1, handle)
@@ -123,24 +120,19 @@ local function playNextInQueue(handle)
 		if client then
 			restrictedHandles[handle] = client
 
+			local options = {}
+			for k, v in pairs(mediaPlayer) do
+				options[k] = v
+			end
+
+			options.url = next.url
+			options.volume = next.volume
+			options.offset = next.offset
+			options.filter = next.filter
+			options.video = next.video
+
 			enqueue(syncQueue, function()
-				TriggerClientEvent("pmms:init",
-					client,
-					handle,
-					next.url,
-					next.volume,
-					next.offset,
-					mediaPlayer.loop,
-					next.filter,
-					mediaPlayer.locked,
-					next.video,
-					mediaPlayer.videoSize,
-					mediaPlayer.muted,
-					mediaPlayer.attenuation,
-					mediaPlayer.range,
-					mediaPlayer.visualization,
-					mediaPlayer.queue,
-					mediaPlayer.coords)
+				TriggerClientEvent("pmms:init", client, handle, options)
 			end)
 
 			break
@@ -188,53 +180,35 @@ local function resolvePreset(url, title, filter, video)
 	end
 end
 
-local function startMediaPlayerByNetworkId(netId, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
-	local resolved = resolvePreset(url, title, filter, video)
+local function startMediaPlayerByNetworkId(netId, options)
+	local resolved = resolvePreset(options.url, options.title, options.filter, options.video)
 
-	addMediaPlayer(netId,
-		resolved.url,
-		resolved.title,
-		volume,
-		offset,
-		duration,
-		loop,
-		resolved.filter,
-		locked,
-		resolved.video,
-		videoSize,
-		muted,
-		attenuation,
-		range,
-		visualization,
-		false,
-		false)
+	options.url = resolved.url
+	options.title = resolved.title
+	options.filter = resolved.filter
+	options.video = resolved.video
+	options.queue = false
+	options.coords = false
+
+	addMediaPlayer(netId, options)
 
 	return netId
 end
 
-local function startMediaPlayerByCoords(x, y, z, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
+local function startMediaPlayerByCoords(x, y, z, options)
 	local coords = vector3(x, y, z)
 	local handle = GetHandleFromCoords(coords)
 
-	local resolved = resolvePreset(url, title, filter, video)
+	local resolved = resolvePreset(options.url, options.title, options.filter, options.video)
 
-	addMediaPlayer(handle,
-		resolved.url,
-		resolved.title,
-		volume,
-		offset,
-		duration,
-		loop,
-		resolved.filter,
-		locked,
-		resolved.video,
-		videoSize,
-		muted,
-		attenuation,
-		range,
-		visualization,
-		false,
-		coords)
+	options.url = resolved.url
+	options.title = resolved.title
+	options.filter = resolved.filter
+	options.video = resolved.video
+	options.queue = false
+	options.coords = coords
+
+	addMediaPlayer(handle, options)
 
 	return handle
 end
@@ -250,20 +224,7 @@ local function startDefaultMediaPlayers()
 				mediaPlayer.position.x,
 				mediaPlayer.position.y,
 				mediaPlayer.position.z,
-				mediaPlayer.url,
-				mediaPlayer.title,
-				mediaPlayer.volume,
-				mediaPlayer.offset,
-				mediaPlayer.duration,
-				mediaPlayer.loop,
-				mediaPlayer.filter,
-				mediaPlayer.locked,
-				mediaPlayer.video,
-				mediaPlayer.videoSize,
-				mediaPlayer.muted,
-				mediaPlayer.attenuation,
-				mediaPlayer.range,
-				mediaPlayer.visualization)
+				mediaPlayer)
 		end
 	end
 end
@@ -328,42 +289,15 @@ local function unmuteMediaPlayer(handle)
 end
 
 local function copyMediaPlayer(oldHandle, newHandle, newCoords)
+	local options = {}
+	for k, v in pairs(mediaPlayers[oldHandle]) do
+		options[k] = v
+	end
+
 	if newHandle then
-		startMediaPlayerByNetworkId(
-			newHandle,
-			mediaPlayers[oldHandle].url,
-			mediaPlayers[oldHandle].title,
-			mediaPlayers[oldHandle].volume,
-			mediaPlayers[oldHandle].offset,
-			mediaPlayers[oldHandle].duration,
-			mediaPlayers[oldHandle].loop,
-			mediaPlayers[oldHandle].filter,
-			mediaPlayers[oldHandle].locked,
-			mediaPlayers[oldHandle].video,
-			mediaPlayers[oldHandle].videoSize,
-			mediaPlayers[oldHandle].muted,
-			mediaPlayers[oldHandle].attenuation,
-			mediaPlayers[oldHandle].range,
-			mediaPlayers[oldHandle].visualization)
+		startMediaPlayerByNetworkId(newHandle, options)
 	elseif newCoords then
-		startMediaPlayerByCoords(
-			newCoords.x,
-			newCoords.y,
-			newCoords.z,
-			mediaPlayers[oldHandle].url,
-			mediaPlayers[oldHandle].title,
-			mediaPlayers[oldHandle].volume,
-			mediaPlayers[oldHandle].offset,
-			mediaPlayers[oldHandle].duration,
-			mediaPlayers[oldHandle].loop,
-			mediaPlayers[oldHandle].filter,
-			mediaPlayers[oldHandle].locked,
-			mediaPlayers[oldHandle].video,
-			mediaPlayers[oldHandle].videoSize,
-			mediaPlayers[oldHandle].muted,
-			mediaPlayers[oldHandle].attenuation,
-			mediaPlayers[oldHandle].range,
-			mediaPlayers[oldHandle].visualization)
+		startMediaPlayerByCoords(newCoords.x, newCoords.y, newCoords.z, options)
 	end
 end
 
@@ -422,9 +356,9 @@ exports("unlock", unlockMediaPlayer)
 exports("mute", muteMediaPlayer)
 exports("unmute", unmuteMediaPlayer)
 
-AddEventHandler("pmms:start", function(handle, url, volume, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
-	if coords then
-		handle = GetHandleFromCoords(coords)
+AddEventHandler("pmms:start", function(handle, options)
+	if options.coords then
+		handle = GetHandleFromCoords(options.coords)
 	end
 
 	if restrictedHandles[handle] then
@@ -437,7 +371,7 @@ AddEventHandler("pmms:start", function(handle, url, volume, offset, loop, filter
 	end
 
 	if mediaPlayers[handle] then
-		addToQueue(handle, source, url, volume, offset, filter, video)
+		addToQueue(handle, source, options.url, options.volume, options.offset, options.filter, options.video)
 	else
 		if not IsPlayerAceAllowed(source, "pmms.interact") then
 			errorMessage(source, "You do not have permission to play a song on a media player")
@@ -454,48 +388,23 @@ AddEventHandler("pmms:start", function(handle, url, volume, offset, loop, filter
 		end
 
 		if Config.presets[url] then
-			TriggerClientEvent("pmms:start", source,
-				handle,
-				Config.presets[url].url,
-				Config.presets[url].title,
-				volume,
-				offset,
-				loop,
-				Config.presets[url].filter or false,
-				locked,
-				Config.presets[url].video or visualization ~= nil,
-				videoSize,
-				muted,
-				attenuation,
-				range,
-				visualization,
-				queue,
-				coords)
+			options.url    = Config.presets[options.url].url
+			options.title  = Config.presets[options.url].title
+			options.filter = Config.presets[options.url].filter or false
+			options.video  = Config.presets[options.url].video or options.visualization ~= nil
+
+			TriggerClientEvent("pmms:start", source, handle, options)
 		elseif IsPlayerAceAllowed(source, "pmms.anyUrl") then
-			TriggerClientEvent("pmms:start", source,
-				handle,
-				url,
-				false,
-				volume,
-				offset,
-				loop,
-				filter,
-				locked,
-				video,
-				videoSize,
-				muted,
-				attenuation,
-				range,
-				visualization,
-				queue,
-				coords)
+			options.title = false
+
+			TriggerClientEvent("pmms:start", source, handle, options)
 		else
 			errorMessage(source, "You must select from one of the pre-defined songs (" .. Config.commandPrefix .. Config.commandSeparator .. "presets)")
 		end
 	end
 end)
 
-AddEventHandler("pmms:init", function(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
+AddEventHandler("pmms:init", function(handle, options)
 	if mediaPlayers[handle] then
 		return
 	end
@@ -510,7 +419,7 @@ AddEventHandler("pmms:init", function(handle, url, title, volume, offset, durati
 		return
 	end
 
-	addMediaPlayer(handle, url, title, volume, offset, duration, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization, queue, coords)
+	addMediaPlayer(handle, options)
 end)
 
 AddEventHandler("pmms:pause", function(handle)
@@ -950,21 +859,25 @@ end, true)
 
 RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "play", function(source, args, raw)
 	if #args > 0 then
-		local url = args[1]
-		local filter = args[2] ~= "0"
-		local loop = args[3] == "1"
-		local offset = args[4]
-		local locked = args[5] == "1"
-		local video = args[6] == "1"
-		local videoSize = tonumber(args[7]) or Config.defaultVideoSize
-		local muted = args[8] == "1"
-		local attenuation = {}
-		attenuation.sameRoom =  tonumber(args[9]) or Config.defaultSameRoomAttenuation
-		attenuation.diffRoom = tonumber(args[10]) or Config.defaultDiffRoomAttenuation
-		local range = tonumber(args[11]) or Config.defaultRange
-		local visualization = args[12]
+		local options = {}
 
-		TriggerClientEvent("pmms:startClosestMediaPlayer", source, url, offset, loop, filter, locked, video, videoSize, muted, attenuation, range, visualization)
+		options.url = args[1]
+		options.filter = args[2] ~= "0"
+		options.loop = args[3] == "1"
+		options.offset = args[4]
+		options.locked = args[5] == "1"
+		options.video = args[6] == "1"
+		options.videoSize = tonumber(args[7]) or Config.defaultVideoSize
+		options.muted = args[8] == "1"
+		options.attenuation = {}
+		options.attenuation.sameRoom =  tonumber(args[9]) or Config.defaultSameRoomAttenuation
+		options.attenuation.diffRoom = tonumber(args[10]) or Config.defaultDiffRoomAttenuation
+		options.range = tonumber(args[11]) or Config.defaultRange
+		options.visualization = args[12]
+
+		options.volume = 100
+
+		TriggerClientEvent("pmms:startClosestMediaPlayer", source, options)
 	else
 		TriggerClientEvent("pmms:pauseClosestMediaPlayer", source)
 	end
@@ -1012,7 +925,7 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl stop <handle>")
 	elseif args[1] == "list" then
 		for handle, info in pairs(mediaPlayers) do
-			print(string.format("[%x] %s %s %d %d/%s %s %s %s %s %f %f %f %s",
+			print(string.format("[%d] %s %s %d %d/%s %s %s %s %s %f %f %f %s",
 				handle,
 				info.title,
 				info.filter and "filter" or "nofilter",
@@ -1029,21 +942,21 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 				info.paused and "paused" or "playing"))
 		end
 	elseif args[1] == "lock" then
-		lockMediaPlayer(tonumber(args[2], 16))
+		lockMediaPlayer(tonumber(args[2]))
 	elseif args[1] == "unlock" then
-		unlockMediaPlayer(tonumber(args[2], 16))
+		unlockMediaPlayer(tonumber(args[2]))
 	elseif args[1] == "mute" then
-		muteMediaPlayer(tonumber(args[2], 16))
+		muteMediaPlayer(tonumber(args[2]))
 	elseif args[1] == "unmute" then
-		unmuteMediaPlayer(tonumber(args[2], 16))
+		unmuteMediaPlayer(tonumber(args[2]))
 	elseif args[1] == "next" then
-		playNextInQueue(tonumber(args[2], 16))
+		playNextInQueue(tonumber(args[2]))
 	elseif args[1] == "pause" then
-		pauseMediaPlayer(tonumber(args[2], 16))
+		pauseMediaPlayer(tonumber(args[2]))
 	elseif args[1] == "stop" then
-		removeMediaPlayer(tonumber(args[2], 16))
+		removeMediaPlayer(tonumber(args[2]))
 	elseif args[1] == "loop" then
-		setMediaPlayerLoop(tonumber(args[2], 16), args[3] == "on")
+		setMediaPlayerLoop(tonumber(args[2]), args[3] == "on")
 	end
 end, true)
 

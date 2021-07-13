@@ -1,6 +1,3 @@
-const minVolumeFactor = 1.0;
-const maxVolumeFactor = 4.0;
-
 const maxTimeDifference = 2;
 
 var resourceName = 'pmms';
@@ -216,7 +213,7 @@ function initPlayer(id, handle, options) {
 			media.pmms = {};
 			media.pmms.initialized = false;
 			media.pmms.attenuationFactor = options.attenuation.diffRoom;
-			media.pmms.volumeFactor = maxVolumeFactor;
+			media.pmms.volumeFactor = options.diffRoomVolume;
 
 			media.volume = 0;
 
@@ -363,9 +360,9 @@ function setAttenuationFactor(player, target) {
 
 function setVolumeFactor(player, target) {
 	if (player.pmms.volumeFactor > target) {
-		player.pmms.volumeFactor -= 0.1;
+		player.pmms.volumeFactor -= 0.01;
 	} else {
-		player.pmms.volumeFactor += 0.1;
+		player.pmms.volumeFactor += 0.01;
 	}
 }
 
@@ -390,10 +387,10 @@ function update(data) {
 		} else {
 			if (data.sameRoom) {
 				setAttenuationFactor(player, data.options.attenuation.sameRoom);
-				setVolumeFactor(player, minVolumeFactor);
+				setVolumeFactor(player, 1.0);
 			} else {
 				setAttenuationFactor(player, data.options.attenuation.diffRoom);
-				setVolumeFactor(player, maxVolumeFactor);
+				setVolumeFactor(player, data.options.diffRoomVolume);
 			}
 
 			if (player.readyState > 0) {
@@ -402,7 +399,7 @@ function update(data) {
 				if (data.options.muted || data.volume == 0) {
 					volume = 0;
 				} else {
-					volume = (((100 - data.distance * player.pmms.attenuationFactor) / 100) / player.pmms.volumeFactor) * (data.volume / 100);
+					volume = (((100 - data.distance * player.pmms.attenuationFactor) / 100) * player.pmms.volumeFactor) * (data.volume / 100);
 				}
 
 				if (volume > 0) {

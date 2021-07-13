@@ -139,20 +139,60 @@ local function getClosestMediaPlayer()
 	return getClosestMediaPlayerObject(GetEntityCoords(PlayerPedId()), Config.maxDiscoveryDistance)
 end
 
+local function getObjectLabel(handle, object)
+	local defaultMediaPlayer = GetDefaultMediaPlayer(Config.defaultMediaPlayers, GetEntityCoords(object))
+
+	if defaultMediaPlayer and defaultMediaPlayer.label then
+		return defaultMediaPlayer.label
+	else
+		local model = GetEntityModel(object)
+
+		if model and Config.models[model] then
+			return Config.models[model].label
+		else
+			return tostring(handle)
+		end
+	end
+end
+
+local function getCoordsLabel(handle, coords)
+	local defaultMediaPlayer = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords)
+
+	if defaultMediaPlayer and defaultMediaPlayer.label then
+		return defaultMediaPlayer.label
+	else
+		return tostring(handle)
+	end
+end
+
 local function startMediaPlayer(handle, options)
 	if not options.offset then
 		options.offset = "0"
 	end
 
 	if NetworkDoesNetworkIdExist(handle) then
-		TriggerServerEvent("pmms:start", handle, options)
-	else
+		local object = NetToObj(handle)
+
+		options.model = GetEntityModel(object)
+		options.renderTarget = Config.models[options.model].renderTarget
+		options.label = getObjectLabel(handle, object)
+	elseif DoesEntityExist(handle) then
 		if not options.coords then
 			options.coords = GetEntityCoords(handle)
 		end
 
-		TriggerServerEvent("pmms:start", false, options)
+		options.model = GetEntityModel(handle)
+		options.renderTarget = Config.models[options.model].renderTarget
+		options.label = getObjectLabel(handle, handle)
+
+		handle = false
+	elseif options.coords then
+		options.label = getCoordsLabel(handle, options.coords)
+
+		handle = false
 	end
+
+	TriggerServerEvent("pmms:start", handle, options)
 end
 
 local function startClosestMediaPlayer(options)
@@ -278,42 +318,6 @@ local function listPresets()
 	end
 end
 
-local function getLocalMediaPlayer(coords, listenerPos, range)
-	local handle = GetHandleFromCoords(coords)
-
-	if not (localMediaPlayers[handle] and DoesEntityExist(localMediaPlayers[handle])) then
-		localMediaPlayers[handle] = getClosestMediaPlayerObject(coords, 1.0, listenerPos, range)
-	end
-
-	return localMediaPlayers[handle]
-end
-
-local function getObjectLabel(handle, object)
-	local defaultMediaPlayer = GetDefaultMediaPlayer(Config.defaultMediaPlayers, GetEntityCoords(object))
-
-	if defaultMediaPlayer and defaultMediaPlayer.label then
-		return defaultMediaPlayer.label
-	else
-		local model = GetEntityModel(object)
-
-		if model and Config.models[model] then
-			return Config.models[model].label
-		else
-			return tostring(handle)
-		end
-	end
-end
-
-local function getCoordsLabel(handle, coords)
-	local defaultMediaPlayer = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords)
-
-	if defaultMediaPlayer and defaultMediaPlayer.label then
-		return defaultMediaPlayer.label
-	else
-		return tostring(handle)
-	end
-end
-
 local function updateUi(canInteract, fullControls, anyUrl)
 	local pos = GetEntityCoords(PlayerPedId())
 
@@ -321,14 +325,15 @@ local function updateUi(canInteract, fullControls, anyUrl)
 
 	for handle, info in pairs(mediaPlayers) do
 		local object
+		local objectExists
 
 		if info.coords then
-			object = getLocalMediaPlayer(info.coords, pos, info.range)
+			object = localMediaPlayers[handle]
 		elseif NetworkDoesNetworkIdExist(handle) then
 			object = NetToObj(handle)
 		end
 
-		local objectExists = object and object > 0
+		local objectExists = object and DoesEntityExist(object)
 
 		local mediaPos
 
@@ -342,11 +347,21 @@ local function updateUi(canInteract, fullControls, anyUrl)
 			local distance = #(pos - mediaPos)
 
 			if fullControls or distance <= info.range then
+				local label
+
+				if info.label then
+					label = info.label
+				elseif objectExists then
+					label = getObjectLabel(handle, object)
+				else
+					label = getCoordsLabel(handle, mediaPos)
+				end
+
 				table.insert(activeMediaPlayers, {
 					handle = handle,
 					info = info,
 					distance = distance,
-					label = objectExists and getObjectLabel(handle, object) or getCoordsLabel(handle, mediaPos)
+					label = label
 				})
 			end
 		else
@@ -486,6 +501,16 @@ local function copyMediaPlayer(oldHandle, newHandle)
 	end
 end
 
+local function getLocalMediaPlayer(coords, listenerPos, range)
+	local handle = GetHandleFromCoords(coords)
+
+	if not (localMediaPlayers[handle] and DoesEntityExist(localMediaPlayers[handle])) then
+		localMediaPlayers[handle] = getClosestMediaPlayerObject(coords, 1.0, listenerPos, range)
+	end
+
+	return localMediaPlayers[handle]
+end
+
 local function getObjectModelAndRenderTarget(handle)
 	local object
 
@@ -517,10 +542,20 @@ local function sendMediaMessage(handle, coords, data)
 		if not duiBrowser then
 			local object, model, renderTarget = getObjectModelAndRenderTarget(coords or handle)
 
-			if object and model then
+			local mediaPos
+
+			if object then
+				mediaPos = GetEntityCoords(object)
+			elseif mediaPlayers[handle] then
+				mediaPos = mediaPlayers[handle].coords
+				model = mediaPlayers[handle].model
+				renderTarget = mediaPlayers[handle].renderTarget
+			end
+
+			if mediaPos and model then
 				local ped, listenPos, viewerPos, viewerFov = getListenerAndViewerInfo()
 
-				if #(viewerPos - GetEntityCoords(object)) < (data.range or Config.maxRange) then
+				if #(viewerPos - mediaPos) < (data.range or Config.maxRange) then
 					duiBrowser = DuiBrowser:new(handle, model, renderTarget)
 				end
 			end
@@ -985,14 +1020,14 @@ Citizen.CreateThread(function()
 			local object
 
 			if info.coords then
-				object = getLocalMediaPlayer(info.coords, listenPos, info.range)
+				object = localMediaPlayers[handle]
 			elseif NetworkDoesNetworkIdExist(handle) then
 				object = NetToObj(handle)
 			end
 
 			local data
 
-			local objectExists = object and object > 0
+			local objectExists = object and DoesEntityExist(object)
 
 			local mediaPos
 
@@ -1089,6 +1124,12 @@ end)
 Citizen.CreateThread(function()
 	while true do
 		local myPos = GetEntityCoords(PlayerPedId())
+
+		for handle, info in pairs(mediaPlayers) do
+			if info.coords then
+				getLocalMediaPlayer(info.coords, myPos, info.range)
+			end
+		end
 
 		for _, mediaPlayer in ipairs(Config.defaultMediaPlayers) do
 			if mediaPlayer.spawn then

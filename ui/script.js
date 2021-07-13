@@ -562,7 +562,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, canInteract, fullControls, incl
 	if (mediaPlayer.label) {
 		handleDiv.innerHTML = mediaPlayer.label;
 	} else {
-		handleDiv.innerHTML = mediaPlayer.handle.toString(16);
+		handleDiv.innerHTML = mediaPlayer.handle.toString();
 	}
 
 	var distanceDiv = document.createElement('div');
@@ -1005,7 +1005,7 @@ function updateUi(data) {
 				if (mediaPlayer.label) {
 					option.innerHTML += mediaPlayer.label + ' (' + Math.floor(mediaPlayer.distance) + 'm)';
 				} else {
-					option.innerHTML += mediaPlayer.handle.toString(16) + ' (' + Math.floor(mediaPlayer.distance) + 'm)';
+					option.innerHTML += mediaPlayer.handle.toString() + ' (' + Math.floor(mediaPlayer.distance) + 'm)';
 				}
 
 				if (mediaPlayer.handle == usableMediaPlayersValue) {

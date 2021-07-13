@@ -187,8 +187,8 @@ local function startMediaPlayerByNetworkId(netId, options)
 	options.title = resolved.title
 	options.filter = resolved.filter
 	options.video = resolved.video
-	options.queue = false
-	options.coords = false
+	options.queue = nil
+	options.coords = nil
 
 	addMediaPlayer(netId, options)
 
@@ -205,7 +205,7 @@ local function startMediaPlayerByCoords(x, y, z, options)
 	options.title = resolved.title
 	options.filter = resolved.filter
 	options.video = resolved.video
-	options.queue = false
+	options.queue = nil
 	options.coords = coords
 
 	addMediaPlayer(handle, options)
@@ -290,9 +290,14 @@ end
 
 local function copyMediaPlayer(oldHandle, newHandle, newCoords)
 	local options = {}
+
 	for k, v in pairs(mediaPlayers[oldHandle]) do
 		options[k] = v
 	end
+
+	options.label = nil
+	options.model = nil
+	options.renderTarget = nil
 
 	if newHandle then
 		startMediaPlayerByNetworkId(newHandle, options)
@@ -925,7 +930,7 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl stop <handle>")
 	elseif args[1] == "list" then
 		for handle, info in pairs(mediaPlayers) do
-			print(string.format("[%d] %s %s %d %d/%s %s %s %s %s %f %f %f %s",
+			print(string.format("[%d] %s %s %d %d/%s %s %s %s %s %f %f %f %s %s %d %s",
 				handle,
 				info.title,
 				info.filter and "filter" or "nofilter",
@@ -939,7 +944,10 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 				info.attenuation.sameRoom,
 				info.attenuation.diffRoom,
 				info.range,
-				info.paused and "paused" or "playing"))
+				info.paused and "paused" or "playing",
+				info.label or "nolabel",
+				info.model or 0,
+				info.renderTarget or "nort"))
 		end
 	elseif args[1] == "lock" then
 		lockMediaPlayer(tonumber(args[2]))

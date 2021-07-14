@@ -745,8 +745,11 @@ RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
 	local defaults = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords) or Config.models[GetEntityModel(object)]
 
 	local defaultsData = {}
-	for k, v in pairs(defaults) do
-		defaultsData[k] = v
+
+	if defaults then
+		for k, v in pairs(defaults) do
+			defaultsData[k] = v
+		end
 	end
 
 	local handle = getSvHandle(data.handle)

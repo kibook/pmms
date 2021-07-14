@@ -1456,12 +1456,12 @@ window.addEventListener('load', () => {
 		startMediaPlayer();
 	});
 
-	document.getElementById('start-media-player').addEventListener('keyup', function(event) {
+	document.querySelectorAll('.start-on-enter').forEach(e => e.addEventListener('keyup', function(event) {
 		if (event.keyCode == 13) {
 			event.preventDefault();
 			startMediaPlayer();
 		}
-	});
+	}));
 
 	document.getElementById('set-base-volume').addEventListener('input', function(event) {
 		sendMessage('setBaseVolume', {

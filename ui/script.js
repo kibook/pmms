@@ -198,7 +198,7 @@ function hideLoadingIcon() {
 function initPlayer(id, handle, options) {
 	var player = document.createElement('video');
 	player.id = id;
-	player.src = url;
+	player.src = options.url;
 	document.body.appendChild(player);
 
 	new MediaElement(id, {

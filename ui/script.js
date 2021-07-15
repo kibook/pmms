@@ -924,6 +924,7 @@ function updateUi(data) {
 		var diffRoomVolumeInput = document.getElementById('diff-room-volume');
 		var rangeInput = document.getElementById('range');
 		var saveButton = document.getElementById('save');
+		var deleteButton = document.getElementById('delete');
 		var revertButton = document.getElementById('revert-settings');
 
 		var usableMediaPlayersValue = usableMediaPlayersSelect.value;
@@ -985,7 +986,7 @@ function updateUi(data) {
 			diffRoomAttenuationInput.disabled = true;
 			diffRoomVolumeInput.disabled = true;
 			rangeInput.disabled = true;
-			saveButton.disabled = true;
+			deleteButton.disabled = true;
 			revertButton.disabled = true;
 
 			if (isRDR) {
@@ -1059,6 +1060,12 @@ function updateUi(data) {
 				lockedCheckbox.disabled = true;
 
 				saveButton.disabled = true;
+			}
+
+			if (data.permissions.manage && usableMediaPlayersSelect.value != '') {
+				deleteButton.disabled = false;
+			} else {
+				deleteButton.disabled = true;
 			}
 
 			usableMediaPlayersSelect.disabled = false;
@@ -1373,6 +1380,15 @@ function showNotification(data) {
 	setTimeout(() => notifications.removeChild(notification), data.args.duration);
 }
 
+function deleteSettings(method) {
+	var handle = parseInt(document.getElementById('usable-media-players').value);
+
+	sendMessage('delete', {
+		handle: handle,
+		method: method
+	});
+}
+
 function resetPlayers() {
 	document.querySelectorAll('.player').forEach(player => removePlayer(player));
 }
@@ -1535,6 +1551,19 @@ window.addEventListener('load', () => {
 
 	document.getElementById('save-cancel').addEventListener('click', function(event) {
 		document.getElementById('save-settings').style.display = 'none';
+	});
+
+	document.getElementById('delete').addEventListener('click', function(event) {
+		document.getElementById('delete-settings').style.display = 'grid';
+	});
+
+	document.querySelectorAll('.delete-method').forEach(e => e.addEventListener('click', function(event) {
+		deleteSettings(this.getAttribute('data-delete-method'));
+		document.getElementById('delete-settings').style.display = 'none';
+	}));
+
+	document.getElementById('delete-cancel').addEventListener('click', function(event) {
+		document.getElementById('delete-settings').style.display = 'none';
 	});
 
 	document.getElementById('range').addEventListener('input', function(event) {

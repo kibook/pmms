@@ -871,6 +871,24 @@ RegisterNUICallback("setRange", function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback("delete", function(data, cb)
+	local object
+
+	if NetworkDoesNetworkIdExist(data.handle) then
+		object = NetToObj(data.handle)
+	elseif DoesEntityExist(data.handle) then
+		object = data.handle
+	end
+
+	if data.method == "server-model" then
+		TriggerServerEvent("pmms:deleteModel", GetEntityModel(object))
+	elseif data.method == "server-object" then
+		TriggerServerEvent("pmms:deleteObject", GetEntityCoords(object))
+	end
+
+	cb({})
+end)
+
 AddEventHandler("pmms:sync", function(players)
 	if syncIsEnabled then
 		mediaPlayers = players

@@ -747,5 +747,3 @@ Config.showNotifications = true
 
 -- How long on-screen notifications appear for, if enabled.
 Config.notificationDuration = 5000
-
-Config.restrictModels = false

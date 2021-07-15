@@ -85,6 +85,9 @@
 				<button id="save" class="control-button">
 					<i class="fas fa-save"></i>
 				</button>
+				<button id="delete" class="control-button">
+					<i class="fas fa-trash-alt"></i>
+				</button>
 				<button id="revert-settings" class="control-button">
 					<i class="fas fa-undo"></i>
 				</button>
@@ -127,6 +130,21 @@
 						<span>Cancel</span>
 					</button>
 				</div>
+			</div>
+			<div id="delete-settings" style="display: none;">
+				<div>Delete:</div>
+				<button id="delete-server-model" class="delete-method" data-delete-method="server-model">
+					<i class="fas fa-cubes"></i>
+					<span>Model</span>
+				</button>
+				<button id="delete-server-object" class="delete-method" data-delete-method="server-object">
+					<i class="fas fa-cube"></i>
+					<span>Object</span>
+				</button>
+				<button id="delete-cancel">
+					<i class="fas fa-times"></i>
+					<span>Cancel</span>
+				</button>
 			</div>
 			<div id="base-volume-container">
 				<i class="fas fa-volume-off"></i>

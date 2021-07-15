@@ -267,7 +267,7 @@ option {
 
 #advanced-settings {
 	display: grid;
-	grid-template-columns: repeat(10, max-content);
+	grid-template-columns: repeat(11, max-content);
 	grid-gap: 0.5vh 0.5vw;
 }
 
@@ -296,6 +296,15 @@ mediaelementwrapper > video {
 .save-input-label {
 	font-size: 1.5vh;
 	text-align: center;
+}
+
+#delete-settings {
+	display: grid;
+	grid-template-columns: repeat(4, max-content);
+	grid-gap: 0.25vh 0.25vw;
+	align-items: end;
+	padding: 0.5vh 0.5vw;
+	margin: auto;
 }
 
 .notifications {

@@ -467,13 +467,17 @@ local function removeModel(model)
 		return
 	end
 
+	local data = Config.models[model]
+
 	Config.models[model] = nil
 
 	syncSettings()
+
+	return data
 end
 
 local function removeModelPermanently(model)
-	removeModel(model)
+	local data = removeModel(model)
 
 	local models = json.decode(LoadResourceFile(GetCurrentResourceName(), "models.json"))
 
@@ -482,21 +486,27 @@ local function removeModelPermanently(model)
 
 		SaveResourceFile(GetCurrentResourceName(), "models.json", json.encode(models), -1)
 	end
+
+	return data
 end
 
 local function removeObject(coords)
+	local data
+
 	for i = 1, #Config.defaultMediaPlayers do
 		if IsSameObject(coords, Config.defaultMediaPlayers[i].position) then
-			table.remove(Config.defaultMediaPlayers, i)
+			data = table.remove(Config.defaultMediaPlayers, i)
 			break
 		end
 	end
 
 	syncSettings()
+
+	return data
 end
 
 local function removeObjectPermanently(coords)
-	removeObject(coords)
+	local data = removeObject(coords)
 
 	local defaultMediaPlayers = json.decode(LoadResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json"))
 
@@ -511,6 +521,8 @@ local function removeObjectPermanently(coords)
 
 		SaveResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json", json.encode(defaultMediaPlayers), -1)
 	end
+
+	return data
 end
 
 local function getPermissions(player)
@@ -962,9 +974,15 @@ AddEventHandler("pmms:deleteModel", function(model)
 		return
 	end
 
-	removeModelPermanently(model)
+	local data = removeModelPermanently(model)
 
-	TriggerClientEvent("pmms:notify", source, {text = "Model deleted"})
+	if data then
+		if data.label then
+			TriggerClientEvent("pmms:notify", source, {text = "Model \"" .. data.label .. "\" deleted"})
+		else
+			TriggerClientEvent("pmms:notify", source, {text = "Model deleted"})
+		end
+	end
 end)
 
 AddEventHandler("pmms:deleteObject", function(coords)
@@ -973,9 +991,15 @@ AddEventHandler("pmms:deleteObject", function(coords)
 		return
 	end
 
-	removeObjectPermanently(coords)
+	local data = removeObjectPermanently(coords)
 
-	TriggerClientEvent("pmms:notify", source, {text = "Object deleted"})
+	if data then
+		if data.label then
+			TriggerClientEvent("pmms:notify", source, {text = "Object \"" .. data.label .. "\" deleted"})
+		else
+			TriggerClientEvent("pmms:notify", source, {text = "Object deleted"})
+		end
+	end
 end)
 
 AddEventHandler("pmms:loadSettings", function()

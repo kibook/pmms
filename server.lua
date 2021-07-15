@@ -26,6 +26,9 @@ RegisterNetEvent("pmms:next")
 RegisterNetEvent("pmms:removeFromQueue")
 RegisterNetEvent("pmms:saveModel")
 RegisterNetEvent("pmms:saveObject")
+RegisterNetEvent("pmms:deleteModel")
+RegisterNetEvent("pmms:deleteObject")
+RegisterNetEvent("pmms:loadPermissions")
 RegisterNetEvent("pmms:loadSettings")
 
 local function enqueue(queue, cb)
@@ -254,13 +257,7 @@ local function syncMediaPlayers()
 		end
 	end
 
-	for _, playerId in ipairs(GetPlayers()) do
-		TriggerClientEvent("pmms:sync", playerId,
-			mediaPlayers,
-			IsPlayerAceAllowed(playerId, "pmms.interact"),
-			IsPlayerAceAllowed(playerId, "pmms.manage"),
-			IsPlayerAceAllowed(playerId, "pmms.anyUrl"))
-	end
+	TriggerClientEvent("pmms:sync", -1, mediaPlayers)
 
 	dequeue(syncQueue)
 end
@@ -313,6 +310,10 @@ local function setMediaPlayerLoop(handle, loop)
 	mediaPlayers[handle].loop = loop
 end
 
+local function syncSettings()
+	TriggerClientEvent("pmms:loadSettings", -1, Config.models, Config.defaultMediaPlayers)
+end
+
 local function loadSettings()
 	local models = json.decode(LoadResourceFile(GetCurrentResourceName(), "models.json"))
 
@@ -354,7 +355,165 @@ local function loadSettings()
 		end
 	end
 
-	TriggerClientEvent("pmms:loadSettings", -1, Config.models, Config.defaultMediaPlayers)
+	syncSettings()
+end
+
+local function addModel(model, data)
+	if Config.models[model] then
+		if not data.renderTarget then
+			data.renderTarget = Config.models[model].renderTarget
+		else
+			Config.models[model].renderTarget = data.renderTarget
+		end
+		if not data.label then
+			data.label = Config.models[model].label
+		else
+			Config.models[model].label = data.label
+		end
+		Config.models[model].filter = data.filter
+		Config.models[model].volume = data.volume
+		Config.models[model].attenuation = data.attenuation
+		Config.models[model].diffRoomVolume = data.diffRoomVolume
+		Config.models[model].range = data.range
+	else
+		Config.models[model] = data
+	end
+
+	syncSettings()
+end
+
+local function addModelPermanently(model, data)
+	data.handle = nil
+	data.method = nil
+	data.model = nil
+
+	if data.renderTarget == "" then
+		data.renderTarget = nil
+	end
+
+	if data.label == "" then
+		data.label = nil
+	end
+
+	addModel(model, data)
+
+	local models = json.decode(LoadResourceFile(GetCurrentResourceName(), "models.json"))
+
+	if not models then
+		models = {}
+	end
+
+	models[tostring(model)] = data
+
+	SaveResourceFile(GetCurrentResourceName(), "models.json", json.encode(models), -1)
+end
+
+local function addObject(coords, data)
+	local defaultMediaPlayer = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords)
+
+	if defaultMediaPlayer then
+		if data.label == "" then
+			data.label = defaultMediaPlayer.label
+		else
+			defaultMediaPlayer.label = data.label
+		end
+		defaultMediaPlayer.filter = data.filter
+		defaultMediaPlayer.volume = data.volume
+		defaultMediaPlayer.attenuation = data.attenuation
+		defaultMediaPlayer.diffRoomVolume = data.diffRoomVolume
+		defaultMediaPlayer.range = data.range
+	else
+		table.insert(Config.defaultMediaPlayers, data)
+	end
+
+	syncSettings()
+end
+
+local function addObjectPermanently(coords, data)
+	data.handle = nil
+	data.method = nil
+	data.position = coords
+
+	addObject(coords, data)
+
+	local defaultMediaPlayers = json.decode(LoadResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json"))
+
+	if not defaultMediaPlayers then
+		defaultMediaPlayers = {}
+	end
+
+	for _, defaultMediaPlayer in ipairs(defaultMediaPlayers) do
+		defaultMediaPlayer.position = ToVector3(defaultMediaPlayer.position)
+	end
+
+	defaultMediaPlayer = GetDefaultMediaPlayer(defaultMediaPlayers, coords)
+
+	if defaultMediaPlayer then
+		defaultMediaPlayer.label = data.label
+		defaultMediaPlayer.filter = data.filter
+		defaultMediaPlayer.volume = data.volume
+		defaultMediaPlayer.attenuation = data.attenuation
+		defaultMediaPlayer.diffRoomVolume = data.diffRoomVolume
+		defaultMediaPlayer.range = data.range
+	else
+		table.insert(defaultMediaPlayers, data)
+	end
+
+	SaveResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json", json.encode(defaultMediaPlayers), -1)
+end
+
+local function removeModel(model)
+	if not Config.models[model] then
+		return
+	end
+
+	Config.models[model] = nil
+
+	syncSettings()
+end
+
+local function removeModelPermanently(model)
+	removeModel(model)
+
+	local models = json.decode(LoadResourceFile(GetCurrentResourceName(), "models.json"))
+
+	if models then
+		models[tostring(model)] = nil
+
+		SaveResourceFile(GetCurrentResourceName(), "models.json", json.encode(models), -1)
+	end
+end
+
+local function removeObject(coords)
+	for i = 1, #Config.defaultMediaPlayers do
+		if IsSameObject(coords, Config.defaultMediaPlayers[i].position) then
+			table.remove(Config.defaultMediaPlayers, i)
+			break
+		end
+	end
+
+	syncSettings()
+end
+
+local function removeObjectPermanently(coords)
+	removeObject(coords)
+
+	local defaultMediaPlayers = json.decode(LoadResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json"))
+
+	if defaultMediaPlayers then
+		for i = 1, #defaultMediaPlayers do
+			local position = ToVector3(defaultMediaPlayers[i].position)
+			if IsSameObject(coords, position) then
+				table.remove(defaultMediaPlayers, i)
+				break
+			end
+		end
+
+		SaveResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json", json.encode(defaultMediaPlayers), -1)
+	end
+end
+
+local function getPermissions(player)
 end
 
 exports("startByNetworkId", startMediaPlayerByNetworkId)
@@ -365,6 +524,14 @@ exports("lock", lockMediaPlayer)
 exports("unlock", unlockMediaPlayer)
 exports("mute", muteMediaPlayer)
 exports("unmute", unmuteMediaPlayer)
+exports("addModel", addModel)
+exports("addModelPermanently", addModelPermanently)
+exports("addObject", addObject)
+exports("addObjectPermanently", addObjectPermanently)
+exports("removeModel", removeModel)
+exports("removeModelPermanently", removeModelPermanently)
+exports("removeObject", removeObject)
+exports("removeObjectPermanently", removeObjectPermanently)
 
 AddEventHandler("pmms:start", function(handle, options)
 	if options.coords then
@@ -767,59 +934,13 @@ AddEventHandler("pmms:removeFromQueue", function(handle, id)
 	removeFromQueue(handle, id)
 end)
 
-local function saveModel(model, data)
-	data.handle = nil
-	data.method = nil
-	data.model = nil
-
-	if data.renderTarget == "" then
-		data.renderTarget = nil
-	end
-
-	if data.label == "" then
-		data.label = nil
-	end
-
-	if Config.models[model] then
-		if not data.renderTarget then
-			data.renderTarget = Config.models[model].renderTarget
-		else
-			Config.models[model].renderTarget = data.renderTarget
-		end
-		if not data.label then
-			data.label = Config.models[model].label
-		else
-			Config.models[model].label = data.label
-		end
-		Config.models[model].filter = data.filter
-		Config.models[model].volume = data.volume
-		Config.models[model].attenuation = data.attenuation
-		Config.models[model].diffRoomVolume = data.diffRoomVolume
-		Config.models[model].range = data.range
-	else
-		Config.models[model] = data
-	end
-
-	local models = json.decode(LoadResourceFile(GetCurrentResourceName(), "models.json"))
-
-	if not models then
-		models = {}
-	end
-
-	models[tostring(model)] = data
-
-	SaveResourceFile(GetCurrentResourceName(), "models.json", json.encode(models), -1)
-
-	TriggerClientEvent("pmms:loadSettings", -1, Config.models, Config.defaultMediaPlayers)
-end
-
 AddEventHandler("pmms:saveModel", function(model, data)
 	if not IsPlayerAceAllowed(source, "pmms.manage") then
 		errorMessage(source, "You do not have permission to save model defaults to the server")
 		return
 	end
 
-	saveModel(model, data)
+	addModelPermanently(model, data)
 
 	TriggerClientEvent("pmms:notify", source, {text = "Model \"" .. data.label .. "\" saved"})
 end)
@@ -830,58 +951,46 @@ AddEventHandler("pmms:saveObject", function(coords, data)
 		return
 	end
 
-	data.handle = nil
-	data.method = nil
-	data.position = coords
-
-	local defaultMediaPlayer = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords)
-
-	if defaultMediaPlayer then
-		if data.label == "" then
-			data.label = defaultMediaPlayer.label
-		else
-			defaultMediaPlayer.label = data.label
-		end
-		defaultMediaPlayer.filter = data.filter
-		defaultMediaPlayer.volume = data.volume
-		defaultMediaPlayer.attenuation = data.attenuation
-		defaultMediaPlayer.diffRoomVolume = data.diffRoomVolume
-		defaultMediaPlayer.range = data.range
-	else
-		table.insert(Config.defaultMediaPlayers, data)
-	end
-
-	local defaultMediaPlayers = json.decode(LoadResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json"))
-
-	if not defaultMediaPlayers then
-		defaultMediaPlayers = {}
-	end
-
-	for _, defaultMediaPlayer in ipairs(defaultMediaPlayers) do
-		defaultMediaPlayer.position = ToVector3(defaultMediaPlayer.position)
-	end
-
-	defaultMediaPlayer = GetDefaultMediaPlayer(defaultMediaPlayers, coords)
-
-	if defaultMediaPlayer then
-		defaultMediaPlayer.label = data.label
-		defaultMediaPlayer.filter = data.filter
-		defaultMediaPlayer.volume = data.volume
-		defaultMediaPlayer.attenuation = data.attenuation
-		defaultMediaPlayer.diffRoomVolume = data.diffRoomVolume
-		defaultMediaPlayer.range = data.range
-	else
-		table.insert(defaultMediaPlayers, data)
-	end
-
-	SaveResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json", json.encode(defaultMediaPlayers), -1)
+	addObjectPermanently(coords, data)
 
 	TriggerClientEvent("pmms:notify", source, {text = "Object \"" .. data.label .. "\" saved"})
-	TriggerClientEvent("pmms:loadSettings", -1, Config.models, Config.defaultMediaPlayers)
+end)
+
+AddEventHandler("pmms:deleteModel", function(model)
+	if not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to delete model defaults from the server")
+		return
+	end
+
+	removeModelPermanently(model)
+
+	TriggerClientEvent("pmms:notify", source, {text = "Model deleted"})
+end)
+
+AddEventHandler("pmms:deleteObject", function(coords)
+	if not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to delete object defaults from the server")
+		return
+	end
+
+	removeObjectPermanently(coords)
+
+	TriggerClientEvent("pmms:notify", source, {text = "Object deleted"})
 end)
 
 AddEventHandler("pmms:loadSettings", function()
 	TriggerClientEvent("pmms:loadSettings", source, Config.models, Config.defaultMediaPlayers)
+end)
+
+AddEventHandler("pmms:loadPermissions", function()
+	local permissions = {}
+
+	permissions.interact = IsPlayerAceAllowed(source, "pmms.interact")
+	permissions.anyModel = IsPlayerAceAllowed(source, "pmms.anyModel")
+	permissions.anyUrl   = IsPlayerAceAllowed(source, "pmms.anyUrl")
+	permissions.manage   = IsPlayerAceAllowed(source, "pmms.manage")
+
+	TriggerClientEvent("pmms:loadPermissions", source, permissions)
 end)
 
 RegisterCommand(Config.commandPrefix, function(source, args, raw)
@@ -1001,7 +1110,7 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "add", functi
 	local label = args[2]
 	local renderTarget = args[3]
 
-	saveModel(GetHashKey(model), {
+	addModelPermanently(GetHashKey(model), {
 		label = label,
 		renderTarget = renderTarget
 	})
@@ -1009,6 +1118,10 @@ end, true)
 
 RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "fix", function(source, args, raw)
 	TriggerClientEvent("pmms:reset", source)
+end, true)
+
+RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "refresh_perms", function(source, args, raw)
+	TriggerClientEvent("pmms:refreshPermissions", -1)
 end, true)
 
 Citizen.CreateThread(function()

@@ -1,10 +1,18 @@
 local mediaPlayers = {}
 local localMediaPlayers = {}
 
+local usableModels = {}
+
 local baseVolume = 50
 local statusIsShown = false
 local uiIsOpen = false
 local syncIsEnabled = true
+
+local permissions = {}
+permissions.interact = false
+permissions.anyModel = false
+permissions.anyUrl = false
+permissions.manage = false
 
 RegisterNetEvent("pmms:sync")
 RegisterNetEvent("pmms:start")
@@ -21,8 +29,12 @@ RegisterNetEvent("pmms:stopClosestMediaPlayer")
 RegisterNetEvent("pmms:listPresets")
 RegisterNetEvent("pmms:setBaseVolume")
 RegisterNetEvent("pmms:showBaseVolume")
+RegisterNetEvent("pmms:loadPermissions")
 RegisterNetEvent("pmms:loadSettings")
 RegisterNetEvent("pmms:notify")
+RegisterNetEvent("pmms:enableModel")
+RegisterNetEvent("pmms:disableModel")
+RegisterNetEvent("pmms:refreshPermissions")
 
 local function notify(args)
 	if type(args) ~= "table" then
@@ -81,7 +93,13 @@ local function enumerateObjects()
 end
 
 local function isMediaPlayer(object)
-	return Config.models[GetEntityModel(object)] ~= nil
+	local model = GetEntityModel(object)
+
+	if not (permissions.anyModel or usableModels[model]) then
+		return false
+	end
+
+	return Config.models[model] ~= nil
 end
 
 local function getHandle(object)
@@ -318,7 +336,7 @@ local function listPresets()
 	end
 end
 
-local function updateUi(canInteract, fullControls, anyUrl)
+local function updateUi()
 	local pos = GetEntityCoords(PlayerPedId())
 
 	local activeMediaPlayers = {}
@@ -346,7 +364,7 @@ local function updateUi(canInteract, fullControls, anyUrl)
 		if mediaPos then
 			local distance = #(pos - mediaPos)
 
-			if fullControls or distance <= info.range then
+			if permissions.manage or distance <= info.range then
 				local label
 
 				if info.label then
@@ -357,15 +375,27 @@ local function updateUi(canInteract, fullControls, anyUrl)
 					label = getCoordsLabel(handle, mediaPos)
 				end
 
+				local model
+
+				if info.model then
+					model = info.model
+				elseif objectExists then
+					model = GetEntityModel(object)
+				end
+
+				-- Can the user interact with this particular media player?
+				local canInteract = permissions.manage or (permissions.interact and (permissions.anyModel or usableModels[model] ~= nil))
+
 				table.insert(activeMediaPlayers, {
 					handle = handle,
 					info = info,
 					distance = distance,
-					label = label
+					label = label,
+					canInteract = canInteract
 				})
 			end
 		else
-			if fullControls then
+			if permissions.manage then
 				table.insert(activeMediaPlayers, {
 					handle = handle,
 					info = info,
@@ -388,7 +418,7 @@ local function updateUi(canInteract, fullControls, anyUrl)
 				local svHandle = NetworkGetEntityIsNetworked(object) and ObjToNet(object) or GetHandleFromCoords(mediaPos)
 				local distance = #(pos - mediaPos)
 
-				if fullControls or distance <= Config.maxDiscoveryDistance then
+				if permissions.manage or distance <= Config.maxDiscoveryDistance then
 					table.insert(usableMediaPlayers, {
 						handle = clHandle,
 						distance = distance,
@@ -408,10 +438,8 @@ local function updateUi(canInteract, fullControls, anyUrl)
 		activeMediaPlayers = json.encode(activeMediaPlayers),
 		usableMediaPlayers = json.encode(usableMediaPlayers),
 		presets = json.encode(Config.presets),
-		anyUrl = anyUrl,
 		maxDiscoveryDistance = Config.maxDiscoveryDistance,
-		canInteract = canInteract,
-		fullControls = fullControls,
+		permissions = permissions,
 		baseVolume = baseVolume
 	})
 end
@@ -578,6 +606,7 @@ end
 RegisterNUICallback("startup", function(data, cb)
 	loadSettings()
 
+	TriggerServerEvent("pmms:loadPermissions")
 	TriggerServerEvent("pmms:loadSettings")
 
 	cb {
@@ -842,12 +871,12 @@ RegisterNUICallback("setRange", function(data, cb)
 	cb({})
 end)
 
-AddEventHandler("pmms:sync", function(players, canInteract, fullControls, anyUrl)
+AddEventHandler("pmms:sync", function(players)
 	if syncIsEnabled then
 		mediaPlayers = players
 
 		if uiIsOpen or statusIsShown then
-			updateUi(canInteract, fullControls, anyUrl)
+			updateUi()
 		end
 	end
 end)
@@ -953,27 +982,28 @@ AddEventHandler("pmms:setBaseVolume", function(volume)
 	setBaseVolume(volume)
 end)
 
+AddEventHandler("pmms:loadPermissions", function(perms)
+	permissions = perms
+end)
+
 AddEventHandler("pmms:loadSettings", function(models, defaultMediaPlayers)
-	Config.models = models or {}
-
-	for _, defaultMediaPlayer in ipairs(defaultMediaPlayers) do
-		local dmp = GetDefaultMediaPlayer(Config.defaultMediaPlayers, defaultMediaPlayer.position)
-
-		if dmp then
-			dmp.label = defaultMediaPlayer.label
-			dmp.filter = defaultMediaPlayer.filter
-			dmp.volume = defaultMediaPlayer.volume
-			dmp.attenuation = defaultMediaPlayer.attenuation
-			dmp.diffRoomVolume = defaultMediaPlayer.diffRoomVolume
-			dmp.range = defaultMediaPlayer.range
-		else
-			table.insert(Config.defaultMediaPlayers, defaultMediaPlayer)
-		end
-	end
+	Config.models = models
+	Config.defaultMediaPlayers = defaultMediaPlayers
 end)
 
 AddEventHandler("pmms:notify", function(data)
 	notify(data)
+end)
+
+AddEventHandler("pmms:enableModel", function(model)
+	usableModels[model] = true
+end)
+AddEventHandler("pmms:disableModel", function(model)
+	usableModels[model] = nil
+end)
+
+AddEventHandler("pmms:refreshPermissions", function()
+	TriggerServerEvent("pmms:loadPermissions")
 end)
 
 AddEventHandler("onResourceStop", function(resource)
@@ -1032,6 +1062,8 @@ Citizen.CreateThread(function()
 	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "fix", "Reset all media players to fix issues.")
 
 	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "ctl", "Advanced media player control.")
+
+	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "refresh_perms", "Refresh permissions for all clients.")
 end)
 
 Citizen.CreateThread(function()

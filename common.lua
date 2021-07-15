@@ -18,9 +18,13 @@ function ToVector3(t)
 	return vector3(t.x, t.y, t.z)
 end
 
+function IsSameObject(coords1, coords2)
+	return #(coords1 - coords2) < 0.001
+end
+
 function GetDefaultMediaPlayer(list, coords)
 	for _, mediaPlayer in ipairs(list) do
-		if #(coords - mediaPlayer.position) < 0.001 then
+		if IsSameObject(coords, mediaPlayer.position) then
 			return mediaPlayer
 		end
 	end

@@ -550,7 +550,7 @@ function copyToClipboard(text) {
 	e.remove();
 }
 
-function createActiveMediaPlayerDiv(mediaPlayer, canInteract, fullControls, includeQueue) {
+function createActiveMediaPlayerDiv(mediaPlayer, permissions, includeQueue) {
 	var player = getPlayer(mediaPlayer.handle);
 
 	var div = document.createElement('div');
@@ -613,7 +613,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, canInteract, fullControls, incl
 		timeInput.className = 'active-media-player-time-slider disabled-range';
 	}
 
-	if (!canInteract || (mediaPlayer.info.locked && !fullControls) || !mediaPlayer.info.duration) {
+	if (!mediaPlayer.canInteract || (mediaPlayer.info.locked && !permissions.manage) || !mediaPlayer.info.duration) {
 		timeInput.disabled = true;
 	} else {
 		timeInput.addEventListener('input', event => {
@@ -667,7 +667,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, canInteract, fullControls, incl
 		});
 	}
 
-	if (!canInteract || (mediaPlayer.info.locked && !fullControls) || !mediaPlayer.info.duration) {
+	if (!mediaPlayer.canInteract || (mediaPlayer.info.locked && !permissions.manage) || !mediaPlayer.info.duration) {
 		seekBackwardButton.disabled = true;
 		seekForwardButton.disabled = true;
 	}
@@ -722,7 +722,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, canInteract, fullControls, incl
 			lock(mediaPlayer.handle);
 		});
 	}
-	if (!fullControls) {
+	if (!permissions.manage) {
 		lockedButton.disabled = true;
 	}
 
@@ -732,7 +732,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, canInteract, fullControls, incl
 	copyButton.addEventListener('click', event => {
 		copy(mediaPlayer.handle);
 	});
-	if (!canInteract || (mediaPlayer.info.locked && !fullControls)) {
+	if (!mediaPlayer.canInteract || (mediaPlayer.info.locked && !permissions.manage)) {
 		copyButton.disabled = true;
 	}
 
@@ -746,7 +746,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, canInteract, fullControls, incl
 	loopButton.addEventListener('click', event => {
 		setLoop(mediaPlayer.handle, !mediaPlayer.info.loop);
 	});
-	if (!canInteract || (mediaPlayer.info.locked && !fullControls) || !mediaPlayer.info.duration) {
+	if (!mediaPlayer.canInteract || (mediaPlayer.info.locked && !permissions.manage) || !mediaPlayer.info.duration) {
 		loopButton.disabled = true;
 	}
 
@@ -768,7 +768,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, canInteract, fullControls, incl
 		videoButton.innerHTML = '<i class="fas fa-video-slash"></i>';
 		videoButton.disabled = true;
 	}
-	if (!canInteract || (mediaPlayer.info.locked && !fullControls)) {
+	if (!mediaPlayer.canInteract || (mediaPlayer.info.locked && !permissions.manage)) {
 		videoButton.disabled = true;
 	}
 
@@ -785,7 +785,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, canInteract, fullControls, incl
 			mute(mediaPlayer.handle);
 		});
 	}
-	if (!canInteract || (mediaPlayer.info.locked && !fullControls)) {
+	if (!mediaPlayer.canInteract || (mediaPlayer.info.locked && !permissions.manage)) {
 		muteButton.disabled = true;
 	}
 
@@ -799,7 +799,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, canInteract, fullControls, incl
 	pauseResumeButton.addEventListener('click', event => {
 		pause(mediaPlayer.handle);
 	});
-	if (!canInteract || (mediaPlayer.info.locked && !fullControls) || !mediaPlayer.info.duration) {
+	if (!mediaPlayer.canInteract || (mediaPlayer.info.locked && !permissions.manage) || !mediaPlayer.info.duration) {
 		pauseResumeButton.disabled = true;
 	}
 
@@ -811,7 +811,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, canInteract, fullControls, incl
 			handle: mediaPlayer.handle
 		});
 	});
-	if (!canInteract || (mediaPlayer.info.locked && !fullControls)) {
+	if (!mediaPlayer.canInteract || (mediaPlayer.info.locked && !permissions.manage)) {
 		stopButton.disabled = true;
 	}
 
@@ -896,7 +896,7 @@ function updateUi(data) {
 		var queuesDiv = document.getElementById('queues');
 		activeMediaPlayersDiv.innerHTML = '';
 		activeMediaPlayers.forEach(mediaPlayer => {
-			var div = createActiveMediaPlayerDiv(mediaPlayer, data.canInteract, data.fullControls, true);
+			var div = createActiveMediaPlayerDiv(mediaPlayer, data.permissions, true);
 
 			if (div) {
 				activeMediaPlayersDiv.appendChild(div);
@@ -932,7 +932,7 @@ function updateUi(data) {
 		var presetKeys = Object.keys(presets).sort();
 
 		if (presetKeys.length > 0) {
-			if (data.anyUrl) {
+			if (data.permissions.anyUrl) {
 				presetSelect.innerHTML = '<option value="">&#xf0c1; Custom URL</option>';
 			} else {
 				presetSelect.innerHTML = '';
@@ -971,7 +971,7 @@ function updateUi(data) {
 
 		usableMediaPlayersSelect.innerHTML = '<option></option>';
 
-		if (!data.canInteract || usableMediaPlayers.length == 0) {
+		if (!data.permissions.interact || usableMediaPlayers.length == 0) {
 			usableMediaPlayersSelect.disabled = true;
 			presetSelect.disabled = true;
 			urlInput.disabled = true;
@@ -1050,7 +1050,7 @@ function updateUi(data) {
 				}
 			}
 
-			if (data.fullControls) {
+			if (data.permissions.manage) {
 				lockedCheckbox.disabled = false;
 
 				saveButton.disabled = false;
@@ -1089,7 +1089,7 @@ function updateUi(data) {
 			}
 		}
 
-		if (data.anyUrl) {
+		if (data.permissions.anyUrl) {
 			urlInput.style.display = 'inline-block';
 			document.getElementById('filter-container').style.display = 'inline-block';
 		} else {
@@ -1105,7 +1105,7 @@ function updateUi(data) {
 	statusDiv.innerHTML = '';
 	for (i = 0; i < activeMediaPlayers.length; ++i) {
 		if (activeMediaPlayers[i].distance >= 0 && activeMediaPlayers[i].distance <= activeMediaPlayers[i].info.range) {
-			var div = createActiveMediaPlayerDiv(activeMediaPlayers[i], data.canInteract, data.fullControls, false);
+			var div = createActiveMediaPlayerDiv(activeMediaPlayers[i], data.permissions, false);
 
 			if (div) {
 				statusDiv.appendChild(div);

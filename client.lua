@@ -1,7 +1,6 @@
 local mediaPlayers = {}
 local localMediaPlayers = {}
 
-local usableModels = {}
 local usableObjects = {}
 local personalMediaPlayers = {}
 
@@ -12,7 +11,6 @@ local syncIsEnabled = true
 
 local permissions = {}
 permissions.interact = false
-permissions.anyModel = false
 permissions.anyObject = false
 permissions.anyUrl = false
 permissions.manage = false
@@ -35,8 +33,6 @@ RegisterNetEvent("pmms:showBaseVolume")
 RegisterNetEvent("pmms:loadPermissions")
 RegisterNetEvent("pmms:loadSettings")
 RegisterNetEvent("pmms:notify")
-RegisterNetEvent("pmms:enableModel")
-RegisterNetEvent("pmms:disableModel")
 RegisterNetEvent("pmms:enableObject")
 RegisterNetEvent("pmms:disableObject")
 RegisterNetEvent("pmms:refreshPermissions")
@@ -99,10 +95,6 @@ end
 
 local function isMediaPlayer(object)
 	local model = GetEntityModel(object)
-
-	if not (permissions.anyModel or usableModels[model]) then
-		return false
-	end
 
 	if not (permissions.anyObject or usableObjects[object]) then
 		return false
@@ -395,7 +387,6 @@ local function updateUi()
 				-- Can the user interact with this particular media player?
 				local canInteract = permissions.manage or
 					(permissions.interact and
-						(permissions.anyModel or usableModels[model] ~= nil) and
 						(not objectExists or (permissions.anyObject or usableObjects[object] ~= nil)))
 
 				table.insert(activeMediaPlayers, {
@@ -628,14 +619,6 @@ local function getSvHandle(handle)
 	end
 end
 
-local function enableModel(model)
-	usableModels[model] = true
-end
-
-local function disableModel(model)
-	usableModels[model] = nil
-end
-
 local function enableObject(object)
 	usableObjects[object] = true
 end
@@ -663,8 +646,6 @@ local function deleteMediaPlayer(object)
 	DeleteObject(object)
 end
 
-exports("enableModel", enableModel)
-exports("disableModel", disableModel)
 exports("enableObject", enableObject)
 exports("disableObject", disableObject)
 exports("createMediaPlayer", createMediaPlayer)
@@ -1092,8 +1073,6 @@ AddEventHandler("pmms:notify", function(data)
 	notify(data)
 end)
 
-AddEventHandler("pmms:enableModel", enableModel)
-AddEventHandler("pmms:disableModel", disableModel)
 AddEventHandler("pmms:enableObject", enableObject)
 AddEventHandler("pmms:disableObject", disableObject)
 

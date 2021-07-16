@@ -70,7 +70,7 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from object
 
 # Exports
 
-## Server
+## Server-side
 
 ### startByNetworkId
 
@@ -159,3 +159,48 @@ exports.pmms:unmute(handle)
 ```
 
 Unmutes an active media player.
+
+## Client-side
+
+### enableObject
+
+```lua
+exports.pmms:enableObject(object)
+```
+
+Allows the player to use a particular object if they do not have the `pmms.anyObject` ace.
+
+
+### disableObject
+
+```lua
+exports.pmms:disableObject(object)
+```
+
+Disables the use of this object for a player without the `pmms.anyObject` ace.
+
+
+### createMediaPlayer
+
+```lua
+object = exports.pmms:createMediaPlayer(options)
+```
+
+Creates a new networked object which the player can use as a media player.
+
+#### createMediaPlayer options
+
+| Option     | Description                                                              |
+|------------|--------------------------------------------------------------------------|
+| `model`    | The object model to use. If omitted, `Config.defaultModel` will be used. |
+| `position` | A vector3 for the coordinates where the object will be spawned.          |
+| `rotation` | A vector3 for the orientation of the object.                             |
+
+
+### deleteMediaPlayer
+
+```lua
+exports.pmms:deleteMediaPlayer(object)
+```
+
+Deletes an object created by [createMediaPlayer](#createmediaplayer).

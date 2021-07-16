@@ -551,17 +551,16 @@ Config.presets = {
 -- 	A name to use for the media player in the UI instead of the handle.
 --
 -- spawn
--- 	If true, a new object will be spawned. The model, pitch, roll and yaw
--- 	properties must be given.
+-- 	If true, a new object will be spawned.
 --
 -- 	If false or omitted, an existing object is expected to exist at the
 -- 	x, y and z specified.
 --
 -- model
---  The object model to use for the media player, if one is to be spawned.
+-- 	The object model to use for the media player, if one is to be spawned.
 --
 -- rotation
---  A vector3 giving the rotation of the object, if one is to be spawned.
+-- 	A vector3 giving the rotation of the object, if one is to be spawned.
 --
 -- invisible
 -- 	If true, the object will be made invisible.
@@ -603,13 +602,13 @@ Config.presets = {
 -- 	The default size of the video screen above the object.
 --
 -- muted
---  Whether or not the default media player is muted.
+-- 	Whether or not the default media player is muted.
 --
 -- attenuation
---  The default sound attenuation multipliers used for this media player.
+-- 	The default sound attenuation multipliers used for this media player.
 --
 -- range
---  The default range used for this media player.
+-- 	The default range used for this media player.
 --
 Config.defaultMediaPlayers = {
 	--[[

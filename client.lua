@@ -2,6 +2,8 @@ local mediaPlayers = {}
 local localMediaPlayers = {}
 
 local usableModels = {}
+local usableObjects = {}
+local personalMediaPlayers = {}
 
 local baseVolume = 50
 local statusIsShown = false
@@ -11,6 +13,7 @@ local syncIsEnabled = true
 local permissions = {}
 permissions.interact = false
 permissions.anyModel = false
+permissions.anyObject = false
 permissions.anyUrl = false
 permissions.manage = false
 
@@ -34,6 +37,8 @@ RegisterNetEvent("pmms:loadSettings")
 RegisterNetEvent("pmms:notify")
 RegisterNetEvent("pmms:enableModel")
 RegisterNetEvent("pmms:disableModel")
+RegisterNetEvent("pmms:enableObject")
+RegisterNetEvent("pmms:disableObject")
 RegisterNetEvent("pmms:refreshPermissions")
 
 local function notify(args)
@@ -96,6 +101,10 @@ local function isMediaPlayer(object)
 	local model = GetEntityModel(object)
 
 	if not (permissions.anyModel or usableModels[model]) then
+		return false
+	end
+
+	if not (permissions.anyObject or usableObjects[object]) then
 		return false
 	end
 
@@ -384,7 +393,10 @@ local function updateUi()
 				end
 
 				-- Can the user interact with this particular media player?
-				local canInteract = permissions.manage or (permissions.interact and (permissions.anyModel or usableModels[model] ~= nil))
+				local canInteract = permissions.manage or
+					(permissions.interact and
+						(permissions.anyModel or usableModels[model] ~= nil) and
+						(not objectExists or (permissions.anyObject or usableObjects[object] ~= nil)))
 
 				table.insert(activeMediaPlayers, {
 					handle = handle,
@@ -444,8 +456,13 @@ local function updateUi()
 	})
 end
 
-local function createMediaPlayer(mediaPlayer)
-	local model = mediaPlayer.model or Config.defaultModel
+local function createMediaPlayerObject(options, networked)
+	local model = options.model or Config.defaultModel
+
+	if not IsModelInCdimage(model) then
+		print("Invalid model: " .. tostring(model))
+		return
+	end
 
 	RequestModel(model)
 
@@ -453,16 +470,24 @@ local function createMediaPlayer(mediaPlayer)
 		Citizen.Wait(0)
 	end
 
-	mediaPlayer.handle = CreateObjectNoOffset(model, mediaPlayer.position, false, false, false, false)
+	local object = CreateObjectNoOffset(model, options.position, networked, networked, false, false)
 
 	SetModelAsNoLongerNeeded(model)
 
-	SetEntityRotation(mediaPlayer.handle, mediaPlayer.rotation, 2)
-
-	if mediaPlayer.invisible then
-		SetEntityVisible(mediaPlayer.handle, false)
-		SetEntityCollision(mediaPlayer.handle, false, false)
+	if options.rotation then
+		SetEntityRotation(object, options.rotation, 2)
 	end
+
+	if options.invisible then
+		SetEntityVisible(object, false)
+		SetEntityCollision(object, false, false)
+	end
+
+	return object
+end
+
+local function createDefaultMediaPlayer(mediaPlayer)
+	mediaPlayer.handle = createMediaPlayerObject(mediaPlayer, false)
 end
 
 local function setMediaPlayerStartTime(handle, time)
@@ -603,6 +628,48 @@ local function getSvHandle(handle)
 	end
 end
 
+local function enableModel(model)
+	usableModels[model] = true
+end
+
+local function disableModel(model)
+	usableModels[model] = nil
+end
+
+local function enableObject(object)
+	usableObjects[object] = true
+end
+
+local function disableObject(object)
+	usableObjects[object] = nil
+
+	stopMediaPlayer(findHandle(object))
+end
+
+local function createMediaPlayer(options)
+	local object = createMediaPlayerObject(options, true)
+
+	personalMediaPlayers[object] = true
+	enableObject(object)
+
+	return object
+end
+
+local function deleteMediaPlayer(object)
+	personalMediaPlayers[object] = nil
+
+	disableObject(object)
+
+	DeleteObject(object)
+end
+
+exports("enableModel", enableModel)
+exports("disableModel", disableModel)
+exports("enableObject", enableObject)
+exports("disableObject", disableObject)
+exports("createMediaPlayer", createMediaPlayer)
+exports("deleteMediaPlayer", deleteMediaPlayer)
+
 RegisterNUICallback("startup", function(data, cb)
 	loadSettings()
 
@@ -660,7 +727,7 @@ RegisterNUICallback("pause", function(data, cb)
 end)
 
 RegisterNUICallback("stop", function(data, cb)
-	stopMediaPlayer(data.handle, true)
+	stopMediaPlayer(data.handle)
 	cb({})
 end)
 
@@ -1013,12 +1080,10 @@ AddEventHandler("pmms:notify", function(data)
 	notify(data)
 end)
 
-AddEventHandler("pmms:enableModel", function(model)
-	usableModels[model] = true
-end)
-AddEventHandler("pmms:disableModel", function(model)
-	usableModels[model] = nil
-end)
+AddEventHandler("pmms:enableModel", enableModel)
+AddEventHandler("pmms:disableModel", disableModel)
+AddEventHandler("pmms:enableObject", enableObject)
+AddEventHandler("pmms:disableObject", disableObject)
 
 AddEventHandler("pmms:refreshPermissions", function()
 	TriggerServerEvent("pmms:loadPermissions")
@@ -1033,6 +1098,10 @@ AddEventHandler("onResourceStop", function(resource)
 		if mediaPlayer.handle then
 			DeleteEntity(mediaPlayer.handle)
 		end
+	end
+
+	for object, _ in pairs(personalMediaPlayers) do
+		DeleteObject(object)
 	end
 
 	if uiIsOpen then
@@ -1207,7 +1276,7 @@ Citizen.CreateThread(function()
 				end
 
 				if nearby and not mediaPlayer.handle then
-					createMediaPlayer(mediaPlayer)
+					createDefaultMediaPlayer(mediaPlayer)
 				elseif not nearby and mediaPlayer.handle then
 					DeleteObject(mediaPlayer.handle)
 				end

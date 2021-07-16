@@ -525,9 +525,6 @@ local function removeObjectPermanently(coords)
 	return data
 end
 
-local function getPermissions(player)
-end
-
 exports("startByNetworkId", startMediaPlayerByNetworkId)
 exports("startByCoords", startMediaPlayerByCoords)
 exports("stop", removeMediaPlayer)
@@ -1009,10 +1006,11 @@ end)
 AddEventHandler("pmms:loadPermissions", function()
 	local permissions = {}
 
-	permissions.interact = IsPlayerAceAllowed(source, "pmms.interact")
-	permissions.anyModel = IsPlayerAceAllowed(source, "pmms.anyModel")
-	permissions.anyUrl   = IsPlayerAceAllowed(source, "pmms.anyUrl")
-	permissions.manage   = IsPlayerAceAllowed(source, "pmms.manage")
+	permissions.interact  = IsPlayerAceAllowed(source, "pmms.interact")
+	permissions.anyModel  = IsPlayerAceAllowed(source, "pmms.anyModel")
+	permissions.anyObject = IsPlayerAceAllowed(source, "pmms.anyObject")
+	permissions.anyUrl    = IsPlayerAceAllowed(source, "pmms.anyUrl")
+	permissions.manage    = IsPlayerAceAllowed(source, "pmms.manage")
 
 	TriggerClientEvent("pmms:loadPermissions", source, permissions)
 end)

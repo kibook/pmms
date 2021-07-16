@@ -1073,6 +1073,18 @@ end)
 
 AddEventHandler("pmms:loadSettings", function(models, defaultMediaPlayers)
 	Config.models = models
+
+	-- Keep local object handles of default media players
+	for _, dmp1 in ipairs(Config.defaultMediaPlayers) do
+		if dmp1.handle then
+			local dmp2 = GetDefaultMediaPlayer(defaultMediaPlayers, dmp1.position)
+
+			if dmp2 then
+				dmp2.handle = dmp1.handle
+			end
+		end
+	end
+
 	Config.defaultMediaPlayers = defaultMediaPlayers
 end)
 

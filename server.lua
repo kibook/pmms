@@ -44,15 +44,11 @@ local function dequeue(queue)
 	end
 end
 
-local function addToQueue(handle, source, url, volume, offset, filter, video)
+local function addToQueue(handle, source, options)
 	table.insert(mediaPlayers[handle].queue, {
 		source = source,
 		name = GetPlayerName(source),
-		url = url,
-		volume = volume,
-		offset = offset,
-		filter = filter,
-		video = video
+		options = options
 	})
 end
 
@@ -132,15 +128,19 @@ local function playNextInQueue(handle)
 			restrictedHandles[handle] = client
 
 			local options = {}
+
+			-- Copy properties of the current media player
 			for k, v in pairs(mediaPlayer) do
 				options[k] = v
 			end
 
-			options.url = next.url
-			options.volume = next.volume
-			options.offset = next.offset
-			options.filter = next.filter
-			options.video = next.video
+			-- Override these options with what the user specified
+			options.url = next.options.url
+			options.volume = next.options.volume
+			options.offset = next.options.offset
+			options.filter = next.options.filter
+			options.video = next.options.video
+			options.visualization = next.options.visualization
 
 			enqueue(syncQueue, function()
 				TriggerClientEvent("pmms:init", client, handle, options)
@@ -567,7 +567,7 @@ AddEventHandler("pmms:start", function(handle, options)
 	end
 
 	if mediaPlayers[handle] then
-		addToQueue(handle, source, options.url, options.volume, options.offset, options.filter, options.video)
+		addToQueue(handle, source, options)
 	else
 		if not IsPlayerAceAllowed(source, "pmms.interact") then
 			errorMessage(source, "You do not have permission to play a song on a media player")

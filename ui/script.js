@@ -838,7 +838,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, permissions, includeQueue) {
 
 		var queueHeadDiv = document.createElement('div');
 		queueHeadDiv.className = 'queue-head';
-		queueHeadDiv.innerHTML = '<div>Queue</div><div><i class="fas fa-clock"></i></div><div><i class="fas fa-filter"></i></div><div><i class="fas fa-video"></i></div><div><i class="fas fa-user"></i></div><div></div>';
+		queueHeadDiv.innerHTML = '<div>Queue</div><div><i class="fas fa-clock"></i></div><div><i class="fas fa-filter"></i></div><div><i class="fas fa-video"></i></div><div><i class="fas fa-signal"></i></div><div><i class="fas fa-user"></i></div><div></div>';
 
 		var queueBodyDiv = document.createElement('div');
 		queueBodyDiv.className = 'queue-body';
@@ -847,16 +847,28 @@ function createActiveMediaPlayerDiv(mediaPlayer, permissions, includeQueue) {
 			var entry = mediaPlayer.info.queue[i];
 
 			var urlDiv = document.createElement('div');
-			urlDiv.innerHTML = entry.url.substring(0, 40);
+			urlDiv.innerHTML = entry.options.url.substring(0, 40);
 
 			var offsetDiv = document.createElement('div');
-			offsetDiv.innerHTML = entry.offset;
+			offsetDiv.innerHTML = entry.options.offset;
 
 			var filterDiv = document.createElement('div');
-			filterDiv.innerHTML = entry.filter ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>';
+			filterDiv.innerHTML = entry.options.filter ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>';
 
 			var videoDiv = document.createElement('div');
-			videoDiv.innerHTML = entry.video ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>';
+			videoDiv.innerHTML = entry.options.video ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>';
+
+			var visualizationDiv = document.createElement('div');
+			if (entry.options.visualization) {
+				var v = entry.options.visualization;
+				if (audioVisualizations[v] && audioVisualizations[v].name) {
+					visualizationDiv.innerHTML = audioVisualizations[v].name;
+				} else {
+					visualizationDiv.innerHTML = v;
+				}
+			} else {
+				visualizationDiv.innerHTML = '<i class="fas fa-times"></i>';
+			}
 
 			var nameDiv = document.createElement('div');
 			nameDiv.innerHTML = entry.name;
@@ -875,6 +887,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, permissions, includeQueue) {
 			queueBodyDiv.appendChild(offsetDiv);
 			queueBodyDiv.appendChild(filterDiv);
 			queueBodyDiv.appendChild(videoDiv);
+			queueBodyDiv.appendChild(visualizationDiv);
 			queueBodyDiv.appendChild(nameDiv);
 			queueBodyDiv.appendChild(deleteButton);
 		}

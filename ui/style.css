@@ -196,9 +196,9 @@ option {
 }
 
 .active-media-player-queue {
-	grid-column: 2 / 8;
+	grid-column: 2 / 9;
 	display: grid;
-	grid-template-columns: repeat(6, max-content);
+	grid-template-columns: repeat(7, max-content);
 	grid-gap: 1vh 1vw;
 	align-items: baseline;
 	padding: 0 0 0.5vh 0;

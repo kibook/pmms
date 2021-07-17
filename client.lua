@@ -220,7 +220,7 @@ local function startMediaPlayer(handle, options)
 
 		options.model = GetEntityModel(entity)
 
-		if Config.models[model] then
+		if Config.models[options.model] then
 			options.renderTarget = Config.models[options.model].renderTarget
 		end
 
@@ -240,7 +240,7 @@ local function startMediaPlayer(handle, options)
 
 		options.model = GetEntityModel(handle)
 
-		if Config.models[model] then
+		if Config.models[options.model] then
 			options.renderTarget = Config.models[options.model].renderTarget
 		end
 

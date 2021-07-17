@@ -923,6 +923,7 @@ function updateUi(data) {
 		var diffRoomAttenuationInput = document.getElementById('diff-room-attenuation');
 		var diffRoomVolumeInput = document.getElementById('diff-room-volume');
 		var rangeInput = document.getElementById('range');
+		var isVehicleCheckbox = document.getElementById('is-vehicle');
 		var saveButton = document.getElementById('save');
 		var deleteButton = document.getElementById('delete');
 		var revertButton = document.getElementById('revert-settings');
@@ -986,6 +987,7 @@ function updateUi(data) {
 			diffRoomAttenuationInput.disabled = true;
 			diffRoomVolumeInput.disabled = true;
 			rangeInput.disabled = true;
+			isVehicleCheckbox.disabled = true;
 			deleteButton.disabled = true;
 			revertButton.disabled = true;
 
@@ -1079,6 +1081,7 @@ function updateUi(data) {
 			diffRoomAttenuationInput.disabled = false;
 			diffRoomVolumeInput.disabled = false;
 			rangeInput.disabled = false;
+			isVehicleCheckbox.disabled = false;
 			revertButton.disabled = false;
 
 			if (usableMediaPlayersSelect.value == '' || (presetSelect.value == '' && urlInput.value == '')) {
@@ -1157,6 +1160,7 @@ function startMediaPlayer() {
 	var diffRoomVolumeInput = document.getElementById('diff-room-volume');
 	var rangeInput = document.getElementById('range');
 	var visualizationSelect = document.getElementById('visualization');
+	var isVehicleCheckbox = document.getElementById('is-vehicle');
 
 	var handle = parseInt(handleInput.value);
 
@@ -1180,6 +1184,7 @@ function startMediaPlayer() {
 	var diffRoomVolume = parseFloat(diffRoomVolumeInput.value);
 	var range = parseFloat(rangeInput.value);
 	var visualization = visualizationSelect.value;
+	var isVehicle = isVehicleCheckbox.checked;
 
 	if (isNaN(volume)) {
 		volume = 100;
@@ -1230,7 +1235,8 @@ function startMediaPlayer() {
 			},
 			diffRoomVolume: diffRoomVolume,
 			range: range,
-			visualization: visualization
+			visualization: visualization,
+			isVehicle: isVehicle
 		}
 	});
 }
@@ -1271,7 +1277,7 @@ function setMediaPlayerDefaults(handle) {
 	sendMessage('setMediaPlayerDefaults', {
 		handle: handle
 	}).then(resp => resp.json()).then(resp => {
-		document.getElementById('save-label').value = resp.label;
+		document.getElementById('save-label').value = resp.label || '';
 
 		if (resp.filter != undefined) {
 			document.getElementById('filter').checked = resp.filter;
@@ -1302,6 +1308,8 @@ function setMediaPlayerDefaults(handle) {
 		} else {
 			document.getElementById('range').value = defaultRange;
 		}
+
+		document.getElementById('is-vehicle').checked = resp.isVehicle;
 	});
 }
 
@@ -1316,6 +1324,7 @@ function saveSettings(method) {
 	var diffRoomAttenuation = parseFloat(document.getElementById('diff-room-attenuation').value);
 	var diffRoomVolume = parseFloat(document.getElementById('diff-room-volume').value);
 	var range = parseFloat(document.getElementById('range').value);
+	var isVehicle = document.getElementById('is-vehicle').checked;
 
 	sendMessage('save', {
 		handle: handle,
@@ -1330,7 +1339,8 @@ function saveSettings(method) {
 			diffRoom: diffRoomAttenuation
 		},
 		diffRoomVolume: diffRoomVolume,
-		range: range
+		range: range,
+		isVehicle: isVehicle
 	});
 }
 
@@ -1339,13 +1349,13 @@ function updateSaveSettings(newModelMode) {
 		document.getElementById('save-model-container').style.display = 'block';
 		document.getElementById('save-render-target-container').style.display = 'block';
 		document.getElementById('save-server-model').style.display = 'none';
-		document.getElementById('save-server-object').style.display = 'none';
+		document.getElementById('save-server-entity').style.display = 'none';
 		document.getElementById('save-new-model').style.display = 'inline-block';
 	} else {
 		document.getElementById('save-model-container').style.display = 'none';
 		document.getElementById('save-render-target-container').style.display = 'none';
 		document.getElementById('save-server-model').style.display = 'inline-block';
-		document.getElementById('save-server-object').style.display = 'inline-block';
+		document.getElementById('save-server-entity').style.display = 'inline-block';
 		document.getElementById('save-new-model').style.display = 'none';
 	}
 }
@@ -1508,6 +1518,7 @@ window.addEventListener('load', () => {
 			document.getElementById('diff-room-volume').value = defaultDiffRoomVolume;
 			document.getElementById('range').value = defaultRange;
 			document.getElementById('volume').value = 100;
+			document.getElementById('is-vehicle').checked = false;
 		}
 	});
 
@@ -1607,6 +1618,17 @@ window.addEventListener('load', () => {
 			sendMessage('setVolume', {
 				handle: handle,
 				volume: parseInt(this.value)
+			});
+		}
+	});
+
+	document.getElementById('is-vehicle').addEventListener('input', function(event) {
+		var handle = parseInt(document.getElementById('usable-media-players').value);
+
+		if (!isNaN(handle)) {
+			sendMessage('setIsVehicle', {
+				handle: handle,
+				isVehicle: this.checked
 			});
 		}
 	});

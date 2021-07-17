@@ -1,6 +1,6 @@
 # pmms - FiveM/RedM synchronized media player
 
-pmms (Poodle's MultiMedia System) allows players to play music/video from objects such as phonographs, radios or TVs.
+pmms (Poodle's MultiMedia System) allows players to play music/video from entities such as phonographs, radios or TVs.
 
 # Features
 
@@ -8,17 +8,17 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from object
 
 - Synchronized between players.
 
-- Multiple objects can play different things at the same time.
+- Multiple entities can play different things at the same time.
 
-- Dynamic sound attenuation based on whether the player and object are in the same interior room.
+- Dynamic sound attenuation based on whether the player and entity are in the same interior room.
 
 - Optional immersive filter can be applied to any audio.
 
-- Play video on a TV screen with DUI (FiveM), or on a screen displayed above the object (RedM).
+- Play video on a TV screen with DUI (FiveM), or on a screen displayed above the entity (RedM).
 
-- Permissions system and ability to lock objects so only certain players can control them.
+- Permissions system and ability to lock entities so only certain players can control them.
 
-- Configure default objects which are spawned and play music/video automatically.
+- Configure default entities which are spawned and play music/video automatically.
 
 - Audio visualizations via [Wave.js](https://foobar404.github.io/Wave.js/#/).
 
@@ -78,7 +78,7 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from object
 handle = exports.pmms:startByNetworkId(netId, options)
 ```
 
-Starts playing something on a networked media player object, using its network ID.
+Starts playing something on a networked media player entity, using its network ID.
 
 #### Media player options
 
@@ -108,7 +108,7 @@ Starts playing something on a networked media player object, using its network I
 handle = exports.pmms:startByCoords(x, y, z, options)
 ```
 
-Starts playing something on a non-networked media player object, using its coordinates on the world map.
+Starts playing something on a non-networked media player entity, using its coordinates on the world map.
 
 Refer to [Media player options](#media-player-options).
 
@@ -162,45 +162,45 @@ Unmutes an active media player.
 
 ## Client-side
 
-### enableObject
+### enableEntity
 
 ```lua
-exports.pmms:enableObject(object)
+exports.pmms:enableEntity(entity)
 ```
 
-Allows the player to use a particular object if they do not have the `pmms.anyObject` ace.
+Allows the player to use a particular entity if they do not have the `pmms.anyEntity` ace.
 
 
-### disableObject
+### disableEntity
 
 ```lua
-exports.pmms:disableObject(object)
+exports.pmms:disableEntity(entity)
 ```
 
-Disables the use of this object for a player without the `pmms.anyObject` ace.
+Disables the use of this entity for a player without the `pmms.anyEntity` ace.
 
 
 ### createMediaPlayer
 
 ```lua
-object = exports.pmms:createMediaPlayer(options)
+entity = exports.pmms:createMediaPlayer(options)
 ```
 
-Creates a new networked object which the player can use as a media player.
+Creates a new networked entity which the player can use as a media player.
 
 #### createMediaPlayer options
 
 | Option     | Description                                                              |
 |------------|--------------------------------------------------------------------------|
-| `model`    | The object model to use. If omitted, `Config.defaultModel` will be used. |
-| `position` | A vector3 for the coordinates where the object will be spawned.          |
-| `rotation` | A vector3 for the orientation of the object.                             |
+| `model`    | The entity model to use. If omitted, `Config.defaultModel` will be used. |
+| `position` | A vector3 for the coordinates where the entity will be spawned.          |
+| `rotation` | A vector3 for the orientation of the entity.                             |
 
 
 ### deleteMediaPlayer
 
 ```lua
-exports.pmms:deleteMediaPlayer(object)
+exports.pmms:deleteMediaPlayer(entity)
 ```
 
-Deletes an object created by [createMediaPlayer](#createmediaplayer).
+Deletes an entity created by [createMediaPlayer](#createmediaplayer).

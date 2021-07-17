@@ -76,6 +76,10 @@
 					<i class="fas fa-volume-down"></i>
 					<input id="diff-room-volume" type="number" min="0" max="1" step="0.01" value="0.25">
 				</div>
+				<div id="is-vehicle-container">
+					<i class="fas fa-car"></i>
+					<input id="is-vehicle" type="checkbox">
+				</div>
 				<div id="visualization-container">
 					<i class="fas fa-signal"></i>
 					<select id="visualization">
@@ -117,9 +121,9 @@
 						<i class="fas fa-cubes"></i>
 						<span>Model</span>
 					</button>
-					<button id="save-server-object" class="save-method" data-save-method="server-object" style="display: none;">
+					<button id="save-server-entity" class="save-method" data-save-method="server-entity" style="display: none;">
 						<i class="fas fa-cube"></i>
-						<span>Object</span>
+						<span>Entity</span>
 					</button>
 					<button id="save-new-model" class="save-method" data-save-method="new-model">
 						<i class="fas fa-plus"></i>
@@ -137,9 +141,9 @@
 					<i class="fas fa-cubes"></i>
 					<span>Model</span>
 				</button>
-				<button id="delete-server-object" class="delete-method" data-delete-method="server-object">
+				<button id="delete-server-entity" class="delete-method" data-delete-method="server-entity">
 					<i class="fas fa-cube"></i>
-					<span>Object</span>
+					<span>Entity</span>
 				</button>
 				<button id="delete-cancel">
 					<i class="fas fa-times"></i>

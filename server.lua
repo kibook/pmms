@@ -12,6 +12,7 @@ RegisterNetEvent("pmms:setVolume")
 RegisterNetEvent("pmms:setAttenuation")
 RegisterNetEvent("pmms:setDiffRoomVolume")
 RegisterNetEvent("pmms:setRange")
+RegisterNetEvent("pmms:setIsVehicle")
 RegisterNetEvent("pmms:setStartTime")
 RegisterNetEvent("pmms:lock")
 RegisterNetEvent("pmms:unlock")
@@ -25,9 +26,9 @@ RegisterNetEvent("pmms:setLoop")
 RegisterNetEvent("pmms:next")
 RegisterNetEvent("pmms:removeFromQueue")
 RegisterNetEvent("pmms:saveModel")
-RegisterNetEvent("pmms:saveObject")
+RegisterNetEvent("pmms:saveEntity")
 RegisterNetEvent("pmms:deleteModel")
-RegisterNetEvent("pmms:deleteObject")
+RegisterNetEvent("pmms:deleteEntity")
 RegisterNetEvent("pmms:loadPermissions")
 RegisterNetEvent("pmms:loadSettings")
 
@@ -328,6 +329,7 @@ local function loadSettings()
 				Config.models[model].attenuation = info.attenuation
 				Config.models[model].diffRoomVolume = info.diffRoomVolume
 				Config.models[model].range = info.range
+				Config.models[model].isVehicle = info.isVehicle
 			else
 				Config.models[model] = info
 			end
@@ -349,6 +351,7 @@ local function loadSettings()
 				dmp.attenuation = defaultMediaPlayer.attenuation
 				dmp.diffRoomVolume = defaultMediaPlayer.diffRoomVolume
 				dmp.range = defaultMediaPlayer.range
+				dmp.isVehicle = defaultMediaPlayer.isVehicle
 			else
 				table.insert(Config.defaultMediaPlayers, defaultMediaPlayer)
 			end
@@ -375,6 +378,7 @@ local function addModel(model, data)
 		Config.models[model].attenuation = data.attenuation
 		Config.models[model].diffRoomVolume = data.diffRoomVolume
 		Config.models[model].range = data.range
+		Config.models[model].isVehicle = data.isVehicle
 	else
 		Config.models[model] = data
 	end
@@ -408,7 +412,7 @@ local function addModelPermanently(model, data)
 	SaveResourceFile(GetCurrentResourceName(), "models.json", json.encode(models), -1)
 end
 
-local function addObject(coords, data)
+local function addEntity(coords, data)
 	local defaultMediaPlayer = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords)
 
 	if defaultMediaPlayer then
@@ -422,6 +426,7 @@ local function addObject(coords, data)
 		defaultMediaPlayer.attenuation = data.attenuation
 		defaultMediaPlayer.diffRoomVolume = data.diffRoomVolume
 		defaultMediaPlayer.range = data.range
+		defaultMediaPlayer.isVehicle = data.isVehicle
 	else
 		table.insert(Config.defaultMediaPlayers, data)
 	end
@@ -429,12 +434,12 @@ local function addObject(coords, data)
 	syncSettings()
 end
 
-local function addObjectPermanently(coords, data)
+local function addEntityPermanently(coords, data)
 	data.handle = nil
 	data.method = nil
 	data.position = coords
 
-	addObject(coords, data)
+	addEntity(coords, data)
 
 	local defaultMediaPlayers = json.decode(LoadResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json"))
 
@@ -455,6 +460,7 @@ local function addObjectPermanently(coords, data)
 		defaultMediaPlayer.attenuation = data.attenuation
 		defaultMediaPlayer.diffRoomVolume = data.diffRoomVolume
 		defaultMediaPlayer.range = data.range
+		defaultMediaPlayer.isVehicle = data.isVehicle
 	else
 		table.insert(defaultMediaPlayers, data)
 	end
@@ -490,11 +496,11 @@ local function removeModelPermanently(model)
 	return data
 end
 
-local function removeObject(coords)
+local function removeEntity(coords)
 	local data
 
 	for i = 1, #Config.defaultMediaPlayers do
-		if IsSameObject(coords, Config.defaultMediaPlayers[i].position) then
+		if IsSameEntity(coords, Config.defaultMediaPlayers[i].position) then
 			data = table.remove(Config.defaultMediaPlayers, i)
 			break
 		end
@@ -505,15 +511,15 @@ local function removeObject(coords)
 	return data
 end
 
-local function removeObjectPermanently(coords)
-	local data = removeObject(coords)
+local function removeEntityPermanently(coords)
+	local data = removeEntity(coords)
 
 	local defaultMediaPlayers = json.decode(LoadResourceFile(GetCurrentResourceName(), "defaultMediaPlayers.json"))
 
 	if defaultMediaPlayers then
 		for i = 1, #defaultMediaPlayers do
 			local position = ToVector3(defaultMediaPlayers[i].position)
-			if IsSameObject(coords, position) then
+			if IsSameEntity(coords, position) then
 				table.remove(defaultMediaPlayers, i)
 				break
 			end
@@ -535,12 +541,12 @@ exports("mute", muteMediaPlayer)
 exports("unmute", unmuteMediaPlayer)
 exports("addModel", addModel)
 exports("addModelPermanently", addModelPermanently)
-exports("addObject", addObject)
-exports("addObjectPermanently", addObjectPermanently)
+exports("addEntity", addEntity)
+exports("addEntityPermanently", addEntityPermanently)
 exports("removeModel", removeModel)
 exports("removeModelPermanently", removeModelPermanently)
-exports("removeObject", removeObject)
-exports("removeObjectPermanently", removeObjectPermanently)
+exports("removeEntity", removeEntity)
+exports("removeEntityPermanently", removeEntityPermanently)
 
 AddEventHandler("pmms:start", function(handle, options)
 	if options.coords then
@@ -730,6 +736,24 @@ AddEventHandler("pmms:setRange", function(handle, range)
 	end
 
 	mediaPlayers[handle].range = Clamp(range, 0.0, Config.maxRange, Config.defaultRange)
+end)
+
+AddEventHandler("pmms:setIsVehicle", function(handle, isVehicle)
+	if not mediaPlayers[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to change the vehicle setting of media players")
+		return
+	end
+
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to change the vehicle setting of locked media players")
+		return
+	end
+
+	mediaPlayers[handle].isVehicle = isVehicle
 end)
 
 AddEventHandler("pmms:setStartTime", function(handle, time)
@@ -954,15 +978,15 @@ AddEventHandler("pmms:saveModel", function(model, data)
 	TriggerClientEvent("pmms:notify", source, {text = "Model \"" .. data.label .. "\" saved"})
 end)
 
-AddEventHandler("pmms:saveObject", function(coords, data)
+AddEventHandler("pmms:saveEntity", function(coords, data)
 	if not IsPlayerAceAllowed(source, "pmms.manage") then
-		errorMessage(source, "You do not have permission to save object defaults to the server")
+		errorMessage(source, "You do not have permission to save entity defaults to the server")
 		return
 	end
 
-	addObjectPermanently(coords, data)
+	addEntityPermanently(coords, data)
 
-	TriggerClientEvent("pmms:notify", source, {text = "Object \"" .. data.label .. "\" saved"})
+	TriggerClientEvent("pmms:notify", source, {text = "Entity \"" .. data.label .. "\" saved"})
 end)
 
 AddEventHandler("pmms:deleteModel", function(model)
@@ -982,19 +1006,19 @@ AddEventHandler("pmms:deleteModel", function(model)
 	end
 end)
 
-AddEventHandler("pmms:deleteObject", function(coords)
+AddEventHandler("pmms:deleteEntity", function(coords)
 	if not IsPlayerAceAllowed(source, "pmms.manage") then
-		errorMessage(source, "You do not have permission to delete object defaults from the server")
+		errorMessage(source, "You do not have permission to delete entity defaults from the server")
 		return
 	end
 
-	local data = removeObjectPermanently(coords)
+	local data = removeEntityPermanently(coords)
 
 	if data then
 		if data.label then
-			TriggerClientEvent("pmms:notify", source, {text = "Object \"" .. data.label .. "\" deleted"})
+			TriggerClientEvent("pmms:notify", source, {text = "Entity \"" .. data.label .. "\" deleted"})
 		else
-			TriggerClientEvent("pmms:notify", source, {text = "Object deleted"})
+			TriggerClientEvent("pmms:notify", source, {text = "Entity deleted"})
 		end
 	end
 end)
@@ -1007,7 +1031,7 @@ AddEventHandler("pmms:loadPermissions", function()
 	local permissions = {}
 
 	permissions.interact  = IsPlayerAceAllowed(source, "pmms.interact")
-	permissions.anyObject = IsPlayerAceAllowed(source, "pmms.anyObject")
+	permissions.anyEntity = IsPlayerAceAllowed(source, "pmms.anyEntity")
 	permissions.anyUrl    = IsPlayerAceAllowed(source, "pmms.anyUrl")
 	permissions.manage    = IsPlayerAceAllowed(source, "pmms.manage")
 
@@ -1035,7 +1059,8 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "play", funct
 		options.attenuation.diffRoom = tonumber(args[10]) or Config.defaultDiffRoomAttenuation
 		options.diffRoomVolume = tonumber(args[11]) or Config.defaultDiffRoomVolume
 		options.range = tonumber(args[12]) or Config.defaultRange
-		options.visualization = args[13]
+		options.isVehicle = args[13] and args[13] == "1"
+		options.visualization = args[14]
 
 		options.volume = 100
 
@@ -1087,7 +1112,7 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl stop <handle>")
 	elseif args[1] == "list" then
 		for handle, info in pairs(mediaPlayers) do
-			print(string.format("[%d] %s %s %d %d/%s %s %s %s %s %f %f %f %f %s %s %d %s",
+			print(string.format("[%d] %s %s %d %d/%s %s %s %s %s %f %f %f %f %s %s %d %s %s",
 				handle,
 				info.title,
 				info.filter and "filter" or "nofilter",
@@ -1105,7 +1130,8 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 				info.paused and "paused" or "playing",
 				info.label or "nolabel",
 				info.model or 0,
-				info.renderTarget or "nort"))
+				info.renderTarget or "nort",
+				info.isVehicle and "isveh" or "notveh"))
 		end
 	elseif args[1] == "lock" then
 		lockMediaPlayer(tonumber(args[2]))

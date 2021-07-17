@@ -3,7 +3,7 @@ Config = {}
 -- Whether the game is RDR2 or GTA V
 Config.isRDR = not TerraingridActivate
 
--- Max distance at which inactive media player objects appear
+-- Max distance at which inactive media player entities appear
 Config.maxDiscoveryDistance = 30.0
 
 -- Default sound attenuation multiplier when in the same room
@@ -24,25 +24,34 @@ Config.defaultDiffRoomVolume = 0.25
 -- Default size for the NUI video screen
 Config.defaultVideoSize = 30
 
--- Object models that media can be played on.
+-- Entity models that media can be played on.
 --
 -- Optional properties:
 --
 --	label
---		The label to use for this object in the UI.
+--		The label to use for this entity in the UI.
 --
 --	renderTarget
 --		If specified, video will be displayed on the render target with DUI,
---		rather than in a floating screen above the object.
+--		rather than in a floating screen above the entity.
 --
 --	filter
---		The default state of the filter for this type of object.
+--		The default state of the filter for this type of entity.
 --
 --	attenuation
---		The default sound attenuation multipliers for this type of object.
+--		The default sound attenuation multipliers for this type of entity.
 --
 --	range
---		The default range for this type of object
+--		The default range for this type of entity
+--
+--	isVehicle
+--		Whether to treat this type of entity as a vehicle, where being
+--		outside the vehicle counts as a "different room". You may want
+--		to set this for some vehicles with external speakers, so they
+--		are treated like objects instead.
+--
+--		If not specified, this will be determined automatically based
+--		on whether the entity is a vehicle or not.
 --
 -- Example:
 --
@@ -507,6 +516,16 @@ Config.models = {
 		label = "TV",
 		renderTarget = "tvscreen"
 	},
+	[`pbus2`] = {
+		attenuation = {sameRoom = 1.5, diffRoom = 6},
+		range = 100,
+		isVehicle = false
+	},
+	[`blimp3`] = {
+		attenuation = {sameRoom = 0.6, diffRoom = 6},
+		range = 150,
+		isVehicle = false
+	},
 }
 
 -- The default model to use for default media players if none is specified.
@@ -529,21 +548,21 @@ Config.defaultModel = Config.isRDR and `p_phonograph01x` or `prop_boombox_01`
 --
 -- video
 -- 	If true and the media specified is a video, the video will be displayed
--- 	above the object.
+-- 	above the entity.
 --
 Config.presets = {
 	--['1'] = {url = 'https://example.com/example.ogg', title = 'Example Preset', filter = true, video = false}
 }
 
--- These media player objects will be automatically spawned (if they do not
+-- These media player entities will be automatically spawned (if they do not
 -- exist) and can start playing something automatically when the resource
--- starts. When selecting one of these objects in the UI, certain settings,
+-- starts. When selecting one of these entities in the UI, certain settings,
 -- such as attenuation and range, will be applied automatically.
 --
 -- Mandatory properties:
 --
 -- position
--- 	A vector3 giving the position of the object.
+-- 	A vector3 giving the position of the entity.
 --
 -- Optional properties:
 --
@@ -551,19 +570,19 @@ Config.presets = {
 -- 	A name to use for the media player in the UI instead of the handle.
 --
 -- spawn
--- 	If true, a new object will be spawned.
+-- 	If true, a new entity will be spawned.
 --
--- 	If false or omitted, an existing object is expected to exist at the
+-- 	If false or omitted, an existing entity is expected to exist at the
 -- 	x, y and z specified.
 --
 -- model
--- 	The object model to use for the media player, if one is to be spawned.
+-- 	The entity model to use for the media player, if one is to be spawned.
 --
 -- rotation
--- 	A vector3 giving the rotation of the object, if one is to be spawned.
+-- 	A vector3 giving the rotation of the entity, if one is to be spawned.
 --
 -- invisible
--- 	If true, the object will be made invisible.
+-- 	If true, the entity will be made invisible.
 --
 -- url
 -- 	The URL or preset name of music to start playing on this media player
@@ -595,11 +614,11 @@ Config.presets = {
 --
 -- video
 -- 	If true and the media specified is a video, the video will be displayed
--- 	above the object. If a preset is specified, the video setting of the
+-- 	above the entity. If a preset is specified, the video setting of the
 -- 	preset will be used instead.
 --
 -- videoSize
--- 	The default size of the video screen above the object.
+-- 	The default size of the video screen above the entity.
 --
 -- muted
 -- 	Whether or not the default media player is muted.
@@ -635,7 +654,7 @@ Config.defaultMediaPlayers = {
 	]]
 }
 
--- Distance at which default media player objects spawn/despawn
+-- Distance at which default media player entities spawn/despawn
 Config.defaultMediaPlayerSpawnDistance = Config.maxRange + 10.0
 
 -- DUI configuration
@@ -746,3 +765,6 @@ Config.showNotifications = true
 
 -- How long on-screen notifications appear for, if enabled.
 Config.notificationDuration = 5000
+
+-- Allow using vehicles as media players. Enabled by default for GTA V, disabled for RDR2.
+Config.allowPlayingFromVehicles = not Config.isRDR

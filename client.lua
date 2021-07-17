@@ -1,7 +1,7 @@
 local mediaPlayers = {}
 local localMediaPlayers = {}
 
-local usableObjects = {}
+local usableEntities = {}
 local personalMediaPlayers = {}
 
 local baseVolume = 50
@@ -11,7 +11,7 @@ local syncIsEnabled = true
 
 local permissions = {}
 permissions.interact = false
-permissions.anyObject = false
+permissions.anyEntity = false
 permissions.anyUrl = false
 permissions.manage = false
 
@@ -33,8 +33,8 @@ RegisterNetEvent("pmms:showBaseVolume")
 RegisterNetEvent("pmms:loadPermissions")
 RegisterNetEvent("pmms:loadSettings")
 RegisterNetEvent("pmms:notify")
-RegisterNetEvent("pmms:enableObject")
-RegisterNetEvent("pmms:disableObject")
+RegisterNetEvent("pmms:enableEntity")
+RegisterNetEvent("pmms:disableEntity")
 RegisterNetEvent("pmms:refreshPermissions")
 
 local function notify(args)
@@ -89,34 +89,38 @@ local function enumerateEntities(firstFunc, nextFunc, endFunc)
 	end)
 end
 
+local function enumerateVehicles()
+	return enumerateEntities(FindFirstVehicle, FindNextVehicle, EndFindVehicle)
+end
+
 local function enumerateObjects()
 	return enumerateEntities(FindFirstObject, FindNextObject, EndFindObject)
 end
 
-local function isMediaPlayer(object)
-	local model = GetEntityModel(object)
+local function isMediaPlayer(entity)
+	local model = GetEntityModel(entity)
 
-	if not (permissions.anyObject or usableObjects[object]) then
+	if not (permissions.anyEntity or usableEntities[entity]) then
 		return false
 	end
 
 	return Config.models[model] ~= nil
 end
 
-local function getHandle(object)
-	return NetworkGetEntityIsNetworked(object) and ObjToNet(object) or object
+local function getHandle(entity)
+	return NetworkGetEntityIsNetworked(entity) and NetworkGetNetworkIdFromEntity(entity) or entity
 end
 
-local function findHandle(object)
-	if NetworkGetEntityIsNetworked(object) then
-		local netId = ObjToNet(object)
+local function findHandle(entity)
+	if NetworkGetEntityIsNetworked(entity) then
+		local netId = NetworkGetNetworkIdFromEntity(entity)
 
 		if mediaPlayers[netId] then
 			return netId
 		end
 	end
 
-	local handle = GetHandleFromCoords(GetEntityCoords(object))
+	local handle = GetHandleFromCoords(GetEntityCoords(entity))
 
 	if mediaPlayers[handle] then
 		return handle
@@ -131,9 +135,15 @@ local function forEachMediaPlayer(func)
 			func(object)
 		end
 	end
+
+	if Config.allowPlayingFromVehicles then
+		for vehicle in enumerateVehicles() do
+			func(vehicle)
+		end
+	end
 end
 
-local function getClosestMediaPlayerObject(centre, radius, listenerPos, range)
+local function getClosestMediaPlayerEntity(centre, radius, listenerPos, range)
 	if listenerPos and range and #(centre - listenerPos) > range then
 		return nil
 	end
@@ -141,13 +151,13 @@ local function getClosestMediaPlayerObject(centre, radius, listenerPos, range)
 	local min
 	local closest
 
-	forEachMediaPlayer(function(object)
-		local coords = GetEntityCoords(object)
+	forEachMediaPlayer(function(entity)
+		local coords = GetEntityCoords(entity)
 		local distance = #(centre - coords)
 
 		if distance <= radius and (not min or distance < min) then
 			min = distance
-			closest = object
+			closest = entity
 		end
 	end)
 
@@ -155,19 +165,35 @@ local function getClosestMediaPlayerObject(centre, radius, listenerPos, range)
 end
 
 local function getClosestMediaPlayer()
-	return getClosestMediaPlayerObject(GetEntityCoords(PlayerPedId()), Config.maxDiscoveryDistance)
+	return getClosestMediaPlayerEntity(GetEntityCoords(PlayerPedId()), Config.maxDiscoveryDistance)
 end
 
-local function getObjectLabel(handle, object)
-	local defaultMediaPlayer = GetDefaultMediaPlayer(Config.defaultMediaPlayers, GetEntityCoords(object))
+local function getEntityLabel(handle, entity)
+	local defaultMediaPlayer = GetDefaultMediaPlayer(Config.defaultMediaPlayers, GetEntityCoords(entity))
 
 	if defaultMediaPlayer and defaultMediaPlayer.label then
 		return defaultMediaPlayer.label
 	else
-		local model = GetEntityModel(object)
+		local entityType = GetEntityType(entity)
+		local model = GetEntityModel(entity)
 
-		if model and Config.models[model] then
+		if model and Config.models[model] and Config.models[model].label then
 			return Config.models[model].label
+		elseif entityType == 2 then
+			if model then
+				local displayName = GetDisplayNameFromVehicleModel(model)
+				local labelText = GetLabelText(displayName)
+
+				if labelText == "NULL" then
+					return displayName
+				else
+					return labelText
+				end
+			else
+				return "Veh " .. tostring(handle)
+			end
+		elseif entityType == 3 then
+			return "Obj " .. tostring(handle)
 		else
 			return tostring(handle)
 		end
@@ -190,19 +216,43 @@ local function startMediaPlayer(handle, options)
 	end
 
 	if NetworkDoesNetworkIdExist(handle) then
-		local object = NetToObj(handle)
+		local entity = NetworkGetEntityFromNetworkId(handle)
 
-		options.model = GetEntityModel(object)
-		options.renderTarget = Config.models[options.model].renderTarget
-		options.label = getObjectLabel(handle, object)
+		options.model = GetEntityModel(entity)
+
+		if Config.models[model] then
+			options.renderTarget = Config.models[options.model].renderTarget
+		end
+
+		options.label = getEntityLabel(handle, entity)
+
+		if options.isVehicle == nil then
+			if Config.models[options.model] then
+				options.isVehicle = Config.models[options.model].isVehicle
+			else
+				options.isVehicle = IsEntityAVehicle(entity)
+			end
+		end
 	elseif DoesEntityExist(handle) then
 		if not options.coords then
 			options.coords = GetEntityCoords(handle)
 		end
 
 		options.model = GetEntityModel(handle)
-		options.renderTarget = Config.models[options.model].renderTarget
-		options.label = getObjectLabel(handle, handle)
+
+		if Config.models[model] then
+			options.renderTarget = Config.models[options.model].renderTarget
+		end
+
+		options.label = getEntityLabel(handle, handle)
+
+		if options.isVehicle == nil then
+			if Config.models[options.model] then
+				options.isVehicle = Config.models[options.model].isVehicle
+			else
+				options.isVehicle = IsEntityAVehicle(handle)
+			end
+		end
 
 		handle = false
 	elseif options.coords then
@@ -338,26 +388,27 @@ local function listPresets()
 end
 
 local function updateUi()
-	local pos = GetEntityCoords(PlayerPedId())
+	local playerPed = PlayerPedId()
+	local pos = GetEntityCoords(playerPed)
 
 	local activeMediaPlayers = {}
 
 	for handle, info in pairs(mediaPlayers) do
-		local object
-		local objectExists
+		local entity
+		local entityExists
 
 		if info.coords then
-			object = localMediaPlayers[handle]
+			entity = localMediaPlayers[handle]
 		elseif NetworkDoesNetworkIdExist(handle) then
-			object = NetToObj(handle)
+			entity = NetworkGetEntityFromNetworkId(handle)
 		end
 
-		local objectExists = object and DoesEntityExist(object)
+		local entityExists = entity and DoesEntityExist(entity)
 
 		local mediaPos
 
-		if objectExists then
-			mediaPos = GetEntityCoords(object)
+		if entityExists then
+			mediaPos = GetEntityCoords(entity)
 		elseif info.coords then
 			mediaPos = info.coords
 		end
@@ -370,8 +421,8 @@ local function updateUi()
 
 				if info.label then
 					label = info.label
-				elseif objectExists then
-					label = getObjectLabel(handle, object)
+				elseif entityExists then
+					label = getEntityLabel(handle, entity)
 				else
 					label = getCoordsLabel(handle, mediaPos)
 				end
@@ -380,14 +431,14 @@ local function updateUi()
 
 				if info.model then
 					model = info.model
-				elseif objectExists then
-					model = GetEntityModel(object)
+				elseif entityExists then
+					model = GetEntityModel(entity)
 				end
 
 				-- Can the user interact with this particular media player?
 				local canInteract = permissions.manage or
 					(permissions.interact and
-						(not objectExists or (permissions.anyObject or usableObjects[object] ~= nil)))
+						(not entityExists or (permissions.anyEntity or usableEntities[entity] ~= nil)))
 
 				table.insert(activeMediaPlayers, {
 					handle = handle,
@@ -402,7 +453,8 @@ local function updateUi()
 				table.insert(activeMediaPlayers, {
 					handle = handle,
 					info = info,
-					distance = -1
+					distance = -1,
+					canInteract = true
 				})
 			end
 		end
@@ -413,20 +465,22 @@ local function updateUi()
 	local usableMediaPlayers = {}
 
 	if uiIsOpen then
-		forEachMediaPlayer(function(object)
-			local mediaPos = GetEntityCoords(object)
-			local clHandle = getHandle(object)
+		forEachMediaPlayer(function(entity)
+			local mediaPos = GetEntityCoords(entity)
+			local clHandle = getHandle(entity)
 
 			if clHandle then
-				local svHandle = NetworkGetEntityIsNetworked(object) and ObjToNet(object) or GetHandleFromCoords(mediaPos)
+				local svHandle = NetworkGetEntityIsNetworked(entity) and NetworkGetNetworkIdFromEntity(entity) or GetHandleFromCoords(mediaPos)
 				local distance = #(pos - mediaPos)
+				local isNearby = distance <= Config.maxDiscoveryDistance
+				local isActive = mediaPlayers[svHandle] ~= nil
 
-				if permissions.manage or distance <= Config.maxDiscoveryDistance then
+				if isNearby or (permissions.manage and isActive) then
 					table.insert(usableMediaPlayers, {
 						handle = clHandle,
 						distance = distance,
-						label = getObjectLabel(clHandle, object),
-						active = mediaPlayers[svHandle] ~= nil
+						label = getEntityLabel(clHandle, entity),
+						active = isActive
 					})
 				end
 			end
@@ -447,7 +501,7 @@ local function updateUi()
 	})
 end
 
-local function createMediaPlayerObject(options, networked)
+local function createMediaPlayerEntity(options, networked)
 	local model = options.model or Config.defaultModel
 
 	if not IsModelInCdimage(model) then
@@ -461,24 +515,24 @@ local function createMediaPlayerObject(options, networked)
 		Citizen.Wait(0)
 	end
 
-	local object = CreateObjectNoOffset(model, options.position, networked, networked, false, false)
+	local entity = CreateObjectNoOffset(model, options.position, networked, networked, false, false)
 
 	SetModelAsNoLongerNeeded(model)
 
 	if options.rotation then
-		SetEntityRotation(object, options.rotation, 2)
+		SetEntityRotation(entity, options.rotation, 2)
 	end
 
 	if options.invisible then
-		SetEntityVisible(object, false)
-		SetEntityCollision(object, false, false)
+		SetEntityVisible(entity, false)
+		SetEntityCollision(entity, false, false)
 	end
 
-	return object
+	return entity
 end
 
 local function createDefaultMediaPlayer(mediaPlayer)
-	mediaPlayer.handle = createMediaPlayerObject(mediaPlayer, false)
+	mediaPlayer.handle = createMediaPlayerEntity(mediaPlayer, false)
 end
 
 local function setMediaPlayerStartTime(handle, time)
@@ -549,31 +603,33 @@ local function getLocalMediaPlayer(coords, listenerPos, range)
 	local handle = GetHandleFromCoords(coords)
 
 	if not (localMediaPlayers[handle] and DoesEntityExist(localMediaPlayers[handle])) then
-		localMediaPlayers[handle] = getClosestMediaPlayerObject(coords, 1.0, listenerPos, range)
+		localMediaPlayers[handle] = getClosestMediaPlayerEntity(coords, 1.0, listenerPos, range)
 	end
 
 	return localMediaPlayers[handle]
 end
 
-local function getObjectModelAndRenderTarget(handle)
-	local object
+local function getEntityModelAndRenderTarget(handle)
+	local entity
 
 	if type(handle) == "vector3" then
-		object = getLocalMediaPlayer(handle, GetEntityCoords(PlayerPedId()), Config.maxRange)
+		entity = getLocalMediaPlayer(handle, GetEntityCoords(PlayerPedId()), Config.maxRange)
 	elseif NetworkDoesNetworkIdExist(handle) then
-		object = NetToObj(handle)
+		entity = NetworkGetEntityFromNetworkId(handle)
 	else
 		return
 	end
 
-	local model = GetEntityModel(object)
+	local model = GetEntityModel(entity)
 
 	if not model then
 		return
 	end
 
 	if Config.models[model] then
-		return object, model, Config.models[model].renderTarget
+		return entity, model, Config.models[model].renderTarget
+	else
+		return entity, model
 	end
 end
 
@@ -584,12 +640,12 @@ local function sendMediaMessage(handle, coords, data)
 		local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
 
 		if not duiBrowser then
-			local object, model, renderTarget = getObjectModelAndRenderTarget(coords or handle)
+			local entity, model, renderTarget = getEntityModelAndRenderTarget(coords or handle)
 
 			local mediaPos
 
-			if object then
-				mediaPos = GetEntityCoords(object)
+			if entity then
+				mediaPos = GetEntityCoords(entity)
 			elseif mediaPlayers[handle] then
 				mediaPos = mediaPlayers[handle].coords
 				model = mediaPlayers[handle].model
@@ -619,35 +675,35 @@ local function getSvHandle(handle)
 	end
 end
 
-local function enableObject(object)
-	usableObjects[object] = true
+local function enableEntity(entity)
+	usableEntities[entity] = true
 end
 
-local function disableObject(object)
-	usableObjects[object] = nil
+local function disableEntity(entity)
+	usableEntities[entity] = nil
 
-	stopMediaPlayer(findHandle(object))
+	stopMediaPlayer(findHandle(entity))
 end
 
 local function createMediaPlayer(options)
-	local object = createMediaPlayerObject(options, true)
+	local entity = createMediaPlayerEntity(options, true)
 
-	personalMediaPlayers[object] = true
-	enableObject(object)
+	personalMediaPlayers[entity] = true
+	enableEntity(entity)
 
-	return object
+	return entity
 end
 
-local function deleteMediaPlayer(object)
-	personalMediaPlayers[object] = nil
+local function deleteMediaPlayer(entity)
+	personalMediaPlayers[entity] = nil
 
-	disableObject(object)
+	disableEntity(entity)
 
-	DeleteObject(object)
+	DeleteEntity(entity)
 end
 
-exports("enableObject", enableObject)
-exports("disableObject", disableObject)
+exports("enableEntity", enableEntity)
+exports("disableEntity", disableEntity)
 exports("createMediaPlayer", createMediaPlayer)
 exports("deleteMediaPlayer", deleteMediaPlayer)
 
@@ -806,20 +862,20 @@ end)
 
 RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
 	local handle
-	local object
+	local entity
 	local coords
 
 	if NetworkDoesNetworkIdExist(data.handle) then
 		handle = data.handle
-		object = NetToObj(data.handle)
-		coords = GetEntityCoords(object)
+		entity = NetworkGetEntityFromNetworkId(data.handle)
+		coords = GetEntityCoords(entity)
 	elseif DoesEntityExist(data.handle) then
-		object = data.handle
-		coords = GetEntityCoords(object)
+		entity = data.handle
+		coords = GetEntityCoords(entity)
 		handle = GetHandleFromCoords(coords)
 	end
 
-	local defaults = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords) or Config.models[GetEntityModel(object)]
+	local defaults = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords) or Config.models[GetEntityModel(entity)]
 
 	local defaultsData = {}
 
@@ -832,10 +888,20 @@ RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
 	local handle = getSvHandle(data.handle)
 
 	if handle and mediaPlayers[handle] then
+		defaultsData.label = mediaPlayers[handle].label
 		defaultsData.volume = mediaPlayers[handle].volume
 		defaultsData.attenuation = mediaPlayers[handle].attenuation
 		defaultsData.diffRoomVolume = mediaPlayers[handle].diffRoomVolume
 		defaultsData.range = mediaPlayers[handle].range
+		defaultsData.isVehicle = mediaPlayers[handle].isVehicle
+	end
+
+	if not defaultsData.label then
+		defaultsData.label = getEntityLabel(handle, entity)
+	end
+
+	if defaultsData.isVehicle == nil then
+		defaultsData.isVehicle = IsEntityAVehicle(entity)
 	end
 
 	cb(defaultsData or {})
@@ -845,33 +911,33 @@ RegisterNUICallback("save", function(data, cb)
 	if data.method == "new-model" then
 		TriggerServerEvent("pmms:saveModel", GetHashKey(data.model), data)
 	else
-		local object
+		local entity
 
 		if NetworkDoesNetworkIdExist(data.handle) then
-			object = NetToObj(data.handle)
+			entity = NetworkGetEntityFromNetworkId(data.handle)
 		elseif DoesEntityExist(data.handle) then
-			object = data.handle
+			entity = data.handle
 		end
 
-		if not object then
+		if not entity then
 			return
 		end
 
 		if data.method == "client-model" or data.method == "server-model" then
-			local model = GetEntityModel(object)
+			local model = GetEntityModel(entity)
 
 			if data.method == "client-model" then
 				print("Client-side model saving is not implemented yet")
 			elseif data.method == "server-model" then
 				TriggerServerEvent("pmms:saveModel", model, data)
 			end
-		elseif data.method == "client-object" or data.method == "server-object" then
-			local coords = GetEntityCoords(object)
+		elseif data.method == "client-entity" or data.method == "server-entity" then
+			local coords = GetEntityCoords(entity)
 
-			if data.method == "client-object" then
-				print("Client-side object saving is not implemented yet")
-			elseif data.method == "server-object" then
-				TriggerServerEvent("pmms:saveObject", coords, data)
+			if data.method == "client-entity" then
+				print("Client-side entity saving is not implemented yet")
+			elseif data.method == "server-entity" then
+				TriggerServerEvent("pmms:saveEntity", coords, data)
 			end
 		end
 	end
@@ -919,19 +985,29 @@ RegisterNUICallback("setRange", function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback("setIsVehicle", function(data, cb)
+	local handle = getSvHandle(data.handle)
+
+	if handle and mediaPlayers[handle] then
+		TriggerServerEvent("pmms:setIsVehicle", handle, data.isVehicle)
+	end
+
+	cb({})
+end)
+
 RegisterNUICallback("delete", function(data, cb)
-	local object
+	local entity
 
 	if NetworkDoesNetworkIdExist(data.handle) then
-		object = NetToObj(data.handle)
+		entity = NetworkGetEntityFromNetworkId(data.handle)
 	elseif DoesEntityExist(data.handle) then
-		object = data.handle
+		entity = data.handle
 	end
 
 	if data.method == "server-model" then
-		TriggerServerEvent("pmms:deleteModel", GetEntityModel(object))
-	elseif data.method == "server-object" then
-		TriggerServerEvent("pmms:deleteObject", GetEntityCoords(object))
+		TriggerServerEvent("pmms:deleteModel", GetEntityModel(entity))
+	elseif data.method == "server-entity" then
+		TriggerServerEvent("pmms:deleteEntity", GetEntityCoords(entity))
 	end
 
 	cb({})
@@ -1055,7 +1131,7 @@ end)
 AddEventHandler("pmms:loadSettings", function(models, defaultMediaPlayers)
 	Config.models = models
 
-	-- Keep local object handles of default media players
+	-- Keep local entity handles of default media players
 	for _, dmp1 in ipairs(Config.defaultMediaPlayers) do
 		if dmp1.handle then
 			local dmp2 = GetDefaultMediaPlayer(defaultMediaPlayers, dmp1.position)
@@ -1073,8 +1149,8 @@ AddEventHandler("pmms:notify", function(data)
 	notify(data)
 end)
 
-AddEventHandler("pmms:enableObject", enableObject)
-AddEventHandler("pmms:disableObject", disableObject)
+AddEventHandler("pmms:enableEntity", enableEntity)
+AddEventHandler("pmms:disableEntity", disableEntity)
 
 AddEventHandler("pmms:refreshPermissions", function()
 	TriggerServerEvent("pmms:loadPermissions")
@@ -1091,8 +1167,8 @@ AddEventHandler("onResourceStop", function(resource)
 		end
 	end
 
-	for object, _ in pairs(personalMediaPlayers) do
-		DeleteObject(object)
+	for entity, _ in pairs(personalMediaPlayers) do
+		DeleteEntity(entity)
 	end
 
 	if uiIsOpen then
@@ -1132,7 +1208,7 @@ Citizen.CreateThread(function()
 	})
 
 	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "add", "Add or modify a media player model preset.", {
-		{name = "model", help = "The name of the object model"},
+		{name = "model", help = "The name of the entity model"},
 		{name = "label", help = "The label that appears for this model in the UI"},
 		{name = "renderTarget", help = "An optional name of a render target for this model"}
 	})
@@ -1152,22 +1228,22 @@ Citizen.CreateThread(function()
 		local duiToDraw = {}
 
 		for handle, info in pairs(mediaPlayers) do
-			local object
+			local entity
 
 			if info.coords then
-				object = localMediaPlayers[handle]
+				entity = localMediaPlayers[handle]
 			elseif NetworkDoesNetworkIdExist(handle) then
-				object = NetToObj(handle)
+				entity = NetworkGetEntityFromNetworkId(handle)
 			end
 
 			local data
 
-			local objectExists = object and DoesEntityExist(object)
+			local entityExists = entity and DoesEntityExist(entity)
 
 			local mediaPos
 
-			if objectExists then
-				mediaPos = GetEntityCoords(object)
+			if entityExists then
+				mediaPos = GetEntityCoords(entity)
 			elseif info.coords then
 				mediaPos = info.coords
 			end
@@ -1184,13 +1260,25 @@ Citizen.CreateThread(function()
 					camDistance = -1
 				end
 
+				local sameRoom
+
+				if entityExists then
+					if info.isVehicle then
+						sameRoom = IsPedInVehicle(ped, entity, false)
+					else
+						sameRoom = isInSameRoom(ped, entity)
+					end
+				else
+					sameRoom = false
+				end
+
 				data = {
 					type = "update",
 					handle = handle,
 					options = info,
 					volume = math.floor(info.volume * (baseVolume / 100)),
 					distance = distance,
-					sameRoom = objectExists and isInSameRoom(ped, object),
+					sameRoom = sameRoom,
 					camDistance = camDistance,
 					fov = viewerFov,
 					screenX = screenX,
@@ -1269,7 +1357,7 @@ Citizen.CreateThread(function()
 				if nearby and not mediaPlayer.handle then
 					createDefaultMediaPlayer(mediaPlayer)
 				elseif not nearby and mediaPlayer.handle then
-					DeleteObject(mediaPlayer.handle)
+					DeleteEntity(mediaPlayer.handle)
 				end
 			end
 		end

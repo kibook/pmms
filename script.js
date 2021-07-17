@@ -252,6 +252,13 @@ function initPlayer(id, handle, options) {
 					media.videoTracks = {length: 1};
 				} else if (media.hlsPlayer) {
 					media.videoTracks = media.hlsPlayer.videoTracks;
+				} else if (media.twitchPlayer) {
+					/* Auto-click Twitch mature content warning button. */
+					let button = media.twitchPlayer._iframe.contentWindow.document.querySelector('button[data-a-target="player-overlay-mature-accept"]');
+
+					if (button) {
+						button.click();
+					}
 				} else {
 					media.videoTracks = media.originalNode.videoTracks;
 				}

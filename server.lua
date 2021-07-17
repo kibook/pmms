@@ -75,6 +75,10 @@ local function addMediaPlayer(handle, options)
 	options.videoSize = Clamp(options.videoSize, 10, 100, Config.defaultVideoSize)
 	options.paused = false
 
+	if options.filter == nil then
+		options.filter = Config.enableFilterByDefault
+	end
+
 	if options.attenuation then
 		options.attenuation.sameRoom = Clamp(options.attenuation.sameRoom, 0.0, 10.0, Config.defaultSameRoomAttenuation)
 		options.attenuation.diffRoom = Clamp(options.attenuation.diffRoom, 0.0, 10.0, Config.defaultDiffRoomAttenuation)
@@ -1047,7 +1051,7 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "play", funct
 		local options = {}
 
 		options.url = args[1]
-		options.filter = args[2] ~= "0"
+		options.filter = args[2] and args[2] == "1"
 		options.loop = args[3] == "1"
 		options.offset = args[4]
 		options.locked = args[5] == "1"

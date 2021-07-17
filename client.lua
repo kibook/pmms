@@ -715,6 +715,7 @@ RegisterNUICallback("startup", function(data, cb)
 
 	cb {
 		isRDR = Config.isRDR,
+		enableFilterByDefault = Config.enableFilterByDefault,
 		defaultSameRoomAttenuation = Config.defaultSameRoomAttenuation,
 		defaultDiffRoomAttenuation = Config.defaultDiffRoomAttenuation,
 		defaultDiffRoomVolume = Config.defaultDiffRoomVolume,

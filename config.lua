@@ -21,6 +21,9 @@ Config.maxRange = 200.0
 -- Difference between the base volume in the same room and a different room
 Config.defaultDiffRoomVolume = 0.25
 
+-- Whether the filter options is enabled by default
+Config.enableFilterByDefault = Config.isRDR
+
 -- Default size for the NUI video screen
 Config.defaultVideoSize = 30
 

@@ -1446,6 +1446,8 @@ window.addEventListener('load', () => {
 		defaultDiffRoomVolume = resp.defaultDiffRoomVolume;
 		defaultRange = resp.defaultRange;
 
+		document.getElementById('filter').checked = resp.enableFilterByDefault;
+
 		document.getElementById('same-room-attenuation').value = defaultSameRoomAttenuation;
 		document.getElementById('diff-room-attenuation').value = defaultDiffRoomAttenuation;
 		document.getElementById('diff-room-volume').value = defaultDiffRoomVolume;

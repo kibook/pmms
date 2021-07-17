@@ -1116,7 +1116,7 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 		print("  " .. Config.commandPrefix .. Config.commandSeparator .. "ctl stop <handle>")
 	elseif args[1] == "list" then
 		for handle, info in pairs(mediaPlayers) do
-			print(string.format("[%d] %s %s %d %d/%s %s %s %s %s %f %f %f %f %s %s %d %s %s",
+			print(string.format("[%d] %s %s %d %d/%s %s %s %s %s %f %f %f %f %s %s %d %s %s %s",
 				handle,
 				info.title,
 				info.filter and "filter" or "nofilter",
@@ -1135,7 +1135,8 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "ctl", functi
 				info.label or "nolabel",
 				info.model or 0,
 				info.renderTarget or "nort",
-				info.isVehicle and "isveh" or "notveh"))
+				info.isVehicle and "isveh" or "notveh",
+				info.visualization or "novis"))
 		end
 	elseif args[1] == "lock" then
 		lockMediaPlayer(tonumber(args[2]))

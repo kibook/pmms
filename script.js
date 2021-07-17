@@ -197,6 +197,10 @@ function initPlayer(id, handle, options) {
 	player.src = options.url;
 	document.body.appendChild(player);
 
+	if (options.attenuation == null) {
+		options.attenuation = {sameRoom: 0, diffRoom: 0};
+	}
+
 	new MediaElement(id, {
 		error: function(media) {
 			hideLoadingIcon();

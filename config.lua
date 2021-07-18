@@ -1,7 +1,7 @@
 Config = {}
 
 -- Whether the game is RDR2 or GTA V
-Config.isRDR = GetConvar("gamename", "gta5") == "rdr3"
+Config.isRDR = GetGameName and GetGameName() == "redm" or GetConvar("gamename", "gta5") == "rdr3"
 
 -- Max distance at which inactive media player entities appear
 Config.maxDiscoveryDistance = 30.0

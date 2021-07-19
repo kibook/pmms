@@ -553,6 +553,11 @@ exports("removeEntity", removeEntity)
 exports("removeEntityPermanently", removeEntityPermanently)
 
 AddEventHandler("pmms:start", function(handle, options)
+	if not (options and options.url) then
+		errorMessage(source, "You must specify a URL to play.")
+		return
+	end
+
 	if options.coords then
 		handle = GetHandleFromCoords(options.coords)
 	end

@@ -516,7 +516,7 @@ local function updateUi()
 		end
 
 		for _, mediaPlayer in ipairs(Config.defaultMediaPlayers) do
-			if mediaPlayer.scaleform.standalone then
+			if mediaPlayer.scaleform and mediaPlayer.scaleform.standalone then
 				local svHandle = GetHandleFromCoords(mediaPlayer.position)
 
 				if not uniqueUsableMediaPlayers[svHandle] then

@@ -12,33 +12,6 @@ function Class:new()
 	return self()
 end
 
-ScaleformPool = Class()
-ScaleformPool.pool = {}
-
-function ScaleformPool:requestScaleform(name)
-	if not self.pool[name] or not HasScaleformMovieLoaded(self.pool[name]) then
-		self.pool[name] = RequestScaleformMovie(name)
-	end
-
-	return self.pool[name]
-end
-
-function ScaleformPool:loadScaleform(handle)
-	local timeout = GetGameTimer() + 5000
-
-	while not HasScaleformMovieLoaded(handle) and GetGameTimer() < timeout do
-		Citizen.Wait(0)
-	end
-
-	return HasScaleformMovieLoaded(handle)
-end
-
-function ScaleformPool:delete()
-	for name, handle in pairs(self.pool) do
-		SetScaleformMovieAsNoLongerNeeded(handle)
-	end
-end
-
 DuiBrowser = Class()
 
 DuiBrowser.initQueue = {}
@@ -119,14 +92,24 @@ function DuiBrowser:createTexture()
 	self.txn = CreateRuntimeTextureFromDuiHandle(self.txd, self.txnName, self.duiHandle)
 end
 
+function DuiBrowser:loadScaleform()
+	local timeout = GetGameTimer() + 5000
+
+	while not HasScaleformMovieLoaded(self.sfHandle) and GetGameTimer() < timeout do
+		Citizen.Wait(0)
+	end
+
+	return HasScaleformMovieLoaded(self.sfHandle)
+end
+
 function DuiBrowser:enableScaleform()
 	if self.sfHandle then
 		return
 	end
 
-	self.sfHandle = ScaleformPool:requestScaleform(self.sfName)
+	self.sfHandle = RequestScaleformMovie(self.sfName)
 
-	if ScaleformPool:loadScaleform(self.sfHandle) then
+	if self:loadScaleform() then
 		self:createTexture()
 
 		BeginScaleformMovieMethod(self.sfHandle, "SET_TEXTURE")
@@ -154,6 +137,7 @@ function DuiBrowser:disableScaleform()
 
 	DuiBrowser.scaleforms[self.sfName].browsers[self] = nil
 
+	SetScaleformMovieAsNoLongerNeeded(self.sfHandle)
 end
 
 function DuiBrowser:enable()
@@ -191,7 +175,7 @@ function DuiBrowser:new(mediaPlayerHandle, model, renderTarget, scaleform)
 		self:createTexture()
 
 		if self.scaleform then
-			self.sfName = "pmms_texture_renderer"
+			self.sfName = self.scaleform.name or Config.defaultScaleformName
 		end
 	end
 
@@ -331,10 +315,4 @@ end
 RegisterNUICallback("DuiBrowser:initDone", function(data, cb)
 	DuiBrowser.initQueue[data.handle] = true
 	cb({})
-end)
-
-AddEventHandler("onResourceStop", function(resourceName)
-	if GetCurrentResourceName() == resourceName then
-		ScaleformPool:delete()
-	end
 end)

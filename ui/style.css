@@ -321,6 +321,10 @@ mediaelementwrapper > video {
 	text-align: center;
 }
 
+#scaleform-name {
+	grid-column: 2 / 5;
+}
+
 #scaleform-position, #scaleform-rotation, #scaleform-scale, #scaleform-auto {
 	display: contents;
 }

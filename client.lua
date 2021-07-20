@@ -800,6 +800,7 @@ RegisterNUICallback("startup", function(data, cb)
 		defaultDiffRoomVolume = Config.defaultDiffRoomVolume,
 		defaultRange = Config.defaultRange,
 		maxRange = Config.maxRange,
+		defaultScaleformName = Config.defaultScaleformName,
 		defaultVideoSize = Config.defaultVideoSize,
 		audioVisualizations = Config.audioVisualizations
 	}

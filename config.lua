@@ -798,3 +798,6 @@ Config.notificationDuration = 5000
 
 -- Allow using vehicles as media players. Enabled by default for GTA V, disabled for RDR2.
 Config.allowPlayingFromVehicles = not Config.isRDR
+
+-- Default gfx used for scaleforms
+Config.defaultScaleformName = "pmms_texture_renderer"

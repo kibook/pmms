@@ -5,6 +5,7 @@ var defaultSameRoomAttenuation = 4.0;
 var defaultDiffRoomAttenuation = 6.0;
 var defaultDiffRoomVolume = 4.0;
 var defaultRange = 50;
+var defaultScaleformName = 'pmms_texture_renderer';
 var defaultVideoSize = 30;
 var audioVisualizations = {};
 
@@ -1169,6 +1170,90 @@ function toggleStatus() {
 	}
 }
 
+function getScaleformSettings(standalone) {
+	var nameInput = document.getElementById('scaleform-name');
+	var posXInput = document.getElementById('scaleform-position-x');
+	var posYInput = document.getElementById('scaleform-position-y');
+	var posZInput = document.getElementById('scaleform-position-z');
+	var rotXInput = document.getElementById('scaleform-rotation-x');
+	var rotYInput = document.getElementById('scaleform-rotation-y');
+	var rotZInput = document.getElementById('scaleform-rotation-z');
+	var scaleXInput = document.getElementById('scaleform-scale-x');
+	var scaleYInput = document.getElementById('scaleform-scale-y');
+	var scaleZInput = document.getElementById('scaleform-scale-z');
+
+	var name = nameInput.value;
+	var posX = parseFloat(posXInput.value);
+	var posY = parseFloat(posYInput.value);
+	var posZ = parseFloat(posZInput.value);
+	var rotX = parseFloat(rotXInput.value);
+	var rotY = parseFloat(rotYInput.value);
+	var rotZ = parseFloat(rotZInput.value);
+	var scaleX = parseFloat(scaleXInput.value);
+	var scaleY = parseFloat(scaleYInput.value);
+	var scaleZ = parseFloat(scaleZInput.value);
+
+	if (name == '') {
+		name = null;
+	}
+
+	if (isNaN(posX)) {
+		posX = 0;
+	}
+
+	if (isNaN(posY)) {
+		posY = 0;
+	}
+
+	if (isNaN(posZ)) {
+		posZ = 0;
+	}
+
+	if (isNaN(rotX)) {
+		rotX = 0;
+	}
+
+	if (isNaN(rotY)) {
+		rotY = 0;
+	}
+
+	if (isNaN(rotZ)) {
+		rotZ = 0;
+	}
+
+	if (isNaN(scaleX)) {
+		scaleX = 0;
+	}
+
+	if (isNaN(scaleY)) {
+		scaleY = 0;
+	}
+
+	if (isNaN(scaleZ)) {
+		scaleZ = 0;
+	}
+
+	return {
+		name: name,
+		position: {
+			x: posX,
+			y: posY,
+			z: posZ
+		},
+		rotation: {
+			x: rotX,
+			y: rotY,
+			z: rotZ
+		},
+		scale: {
+			x: scaleX,
+			y: scaleY,
+			z: scaleZ
+		},
+		standalone: standalone
+	};
+}
+
 function startMediaPlayer() {
 	var handleInput = document.getElementById('usable-media-players');
 	var presetSelect = document.getElementById('preset');
@@ -1218,80 +1303,7 @@ function startMediaPlayer() {
 	var standaloneScaleform = handleInput.options[handleInput.selectedIndex].getAttribute("data-standalone-scaleform") == "true";
 
 	if (scaleformCheckbox.checked || standaloneScaleform) {
-		var posXInput = document.getElementById('scaleform-position-x');
-		var posYInput = document.getElementById('scaleform-position-y');
-		var posZInput = document.getElementById('scaleform-position-z');
-		var rotXInput = document.getElementById('scaleform-rotation-x');
-		var rotYInput = document.getElementById('scaleform-rotation-y');
-		var rotZInput = document.getElementById('scaleform-rotation-z');
-		var scaleXInput = document.getElementById('scaleform-scale-x');
-		var scaleYInput = document.getElementById('scaleform-scale-y');
-		var scaleZInput = document.getElementById('scaleform-scale-z');
-
-		var posX = parseFloat(posXInput.value);
-		var posY = parseFloat(posYInput.value);
-		var posZ = parseFloat(posZInput.value);
-		var rotX = parseFloat(rotXInput.value);
-		var rotY = parseFloat(rotYInput.value);
-		var rotZ = parseFloat(rotZInput.value);
-		var scaleX = parseFloat(scaleXInput.value);
-		var scaleY = parseFloat(scaleYInput.value);
-		var scaleZ = parseFloat(scaleZInput.value);
-
-		if (isNaN(posX)) {
-			posX = 0;
-		}
-
-		if (isNaN(posY)) {
-			posY = 0;
-		}
-
-		if (isNaN(posZ)) {
-			posZ = 0;
-		}
-
-		if (isNaN(rotX)) {
-			rotX = 0;
-		}
-
-		if (isNaN(rotY)) {
-			rotY = 0;
-		}
-
-		if (isNaN(rotZ)) {
-			rotZ = 0;
-		}
-
-		if (isNaN(scaleX)) {
-			scaleX = 0;
-		}
-
-		if (isNaN(scaleY)) {
-			scaleY = 0;
-		}
-
-		if (isNaN(scaleZ)) {
-			scaleZ = 0;
-		}
-
-		scaleform = {
-			position: {
-				x: posX,
-				y: posY,
-				z: posZ
-			},
-			rotation: {
-				x: rotX,
-				y: rotY,
-				z: rotZ
-			},
-			scale: {
-				x: scaleX,
-				y: scaleY,
-				z: scaleZ
-			},
-			standalone: standaloneScaleform
-		}
+		scaleform = getScaleformSettings(standaloneScaleform);
 	}
 
 	if (isNaN(volume)) {
@@ -1426,6 +1438,7 @@ function setMediaPlayerDefaults(handle) {
 
 		if (resp.scaleform) {
 			var scaleform = JSON.parse(resp.scaleform);
+			document.getElementById('scaleform-name').value = scaleform.name;
 			document.getElementById('scaleform-position-x').value = scaleform.position.x;
 			document.getElementById('scaleform-position-y').value = scaleform.position.y;
 			document.getElementById('scaleform-position-z').value = scaleform.position.z;
@@ -1466,80 +1479,7 @@ function saveSettings(method) {
 	var standaloneScaleform = usableMediaPlayers.options[usableMediaPlayers.selectedIndex].getAttribute("data-standalone-scaleform") == "true";
 
 	if (scaleformEnabled || standaloneScaleform) {
-		var posXInput = document.getElementById('scaleform-position-x');
-		var posYInput = document.getElementById('scaleform-position-y');
-		var posZInput = document.getElementById('scaleform-position-z');
-		var rotXInput = document.getElementById('scaleform-rotation-x');
-		var rotYInput = document.getElementById('scaleform-rotation-y');
-		var rotZInput = document.getElementById('scaleform-rotation-z');
-		var scaleXInput = document.getElementById('scaleform-scale-x');
-		var scaleYInput = document.getElementById('scaleform-scale-y');
-		var scaleZInput = document.getElementById('scaleform-scale-z');
-
-		var posX = parseFloat(posXInput.value);
-		var posY = parseFloat(posYInput.value);
-		var posZ = parseFloat(posZInput.value);
-		var rotX = parseFloat(rotXInput.value);
-		var rotY = parseFloat(rotYInput.value);
-		var rotZ = parseFloat(rotZInput.value);
-		var scaleX = parseFloat(scaleXInput.value);
-		var scaleY = parseFloat(scaleYInput.value);
-		var scaleZ = parseFloat(scaleZInput.value);
-
-		if (isNaN(posX)) {
-			posX = 0;
-		}
-
-		if (isNaN(posY)) {
-			posY = 0;
-		}
-
-		if (isNaN(posZ)) {
-			posZ = 0;
-		}
-
-		if (isNaN(rotX)) {
-			rotX = 0;
-		}
-
-		if (isNaN(rotY)) {
-			rotY = 0;
-		}
-
-		if (isNaN(rotZ)) {
-			rotZ = 0;
-		}
-
-		if (isNaN(scaleX)) {
-			scaleX = 0;
-		}
-
-		if (isNaN(scaleY)) {
-			scaleY = 0;
-		}
-
-		if (isNaN(scaleZ)) {
-			scaleZ = 0;
-		}
-
-		scaleform = {
-			position: {
-				x: posX,
-				y: posY,
-				z: posZ
-			},
-			rotation: {
-				x: rotX,
-				y: rotY,
-				z: rotZ
-			},
-			scale: {
-				x: scaleX,
-				y: scaleY,
-				z: scaleZ
-			},
-			standalone: standaloneScaleform || isNaN(handle)
-		};
+		scaleform = getScaleformSettings(standaloneScaleform || isNaN(handle));
 	}
 
 	if (model == '') {
@@ -1715,6 +1655,8 @@ window.addEventListener('load', () => {
 			option.innerHTML = audioVisualizations[key].name;
 			visualizationSelect.appendChild(option);
 		});
+
+		document.getElementById('scaleform-name').value = resp.defaultScaleformName;
 	});
 
 	var ui = document.getElementById('ui');
@@ -1924,79 +1866,7 @@ window.addEventListener('load', () => {
 			return;
 		}
 
-		var posXInput = document.getElementById('scaleform-position-x');
-		var posYInput = document.getElementById('scaleform-position-y');
-		var posZInput = document.getElementById('scaleform-position-z');
-		var rotXInput = document.getElementById('scaleform-rotation-x');
-		var rotYInput = document.getElementById('scaleform-rotation-y');
-		var rotZInput = document.getElementById('scaleform-rotation-z');
-		var scaleXInput = document.getElementById('scaleform-scale-x');
-		var scaleYInput = document.getElementById('scaleform-scale-y');
-		var scaleZInput = document.getElementById('scaleform-scale-z');
-
-		var posX = parseFloat(posXInput.value);
-		var posY = parseFloat(posYInput.value);
-		var posZ = parseFloat(posZInput.value);
-		var rotX = parseFloat(rotXInput.value);
-		var rotY = parseFloat(rotYInput.value);
-		var rotZ = parseFloat(rotZInput.value);
-		var scaleX = parseFloat(scaleXInput.value);
-		var scaleY = parseFloat(scaleYInput.value);
-		var scaleZ = parseFloat(scaleZInput.value);
-
-		if (isNaN(posX)) {
-			posX = 0;
-		}
-
-		if (isNaN(posY)) {
-			posY = 0;
-		}
-
-		if (isNaN(posZ)) {
-			posZ = 0;
-		}
-
-		if (isNaN(rotX)) {
-			rotX = 0;
-		}
-
-		if (isNaN(rotY)) {
-			rotY = 0;
-		}
-
-		if (isNaN(rotZ)) {
-			rotZ = 0;
-		}
-
-		if (isNaN(scaleX)) {
-			scaleX = 0;
-		}
-
-		if (isNaN(scaleY)) {
-			scaleY = 0;
-		}
-
-		if (isNaN(scaleZ)) {
-			scaleZ = 0;
-		}
-
-		var scaleform = {
-			position: {
-				x: posX,
-				y: posY,
-				z: posZ
-			},
-			rotation: {
-				x: rotX,
-				y: rotY,
-				z: rotZ
-			},
-			scale: {
-				x: scaleX,
-				y: scaleY,
-				z: scaleZ
-			}
-		}
+		var scaleform = getScaleformSettings();
 
 		sendMessage('setScaleform', {
 			handle: handle,

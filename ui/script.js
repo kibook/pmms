@@ -937,6 +937,7 @@ function updateUi(data) {
 		var diffRoomVolumeInput = document.getElementById('diff-room-volume');
 		var rangeInput = document.getElementById('range');
 		var isVehicleCheckbox = document.getElementById('is-vehicle');
+		var scaleformCheckbox = document.getElementById('scaleform');
 		var saveButton = document.getElementById('save');
 		var deleteButton = document.getElementById('delete');
 		var revertButton = document.getElementById('revert-settings');
@@ -986,7 +987,7 @@ function updateUi(data) {
 
 		usableMediaPlayersSelect.innerHTML = '<option></option>';
 
-		if (!data.permissions.interact || usableMediaPlayers.length == 0) {
+		if ((!data.permissions.interact || usableMediaPlayers.length == 0) && !scaleformCheckbox.checked) {
 			usableMediaPlayersSelect.disabled = true;
 			presetSelect.disabled = true;
 			urlInput.disabled = true;
@@ -1083,7 +1084,9 @@ function updateUi(data) {
 				deleteButton.disabled = true;
 			}
 
-			usableMediaPlayersSelect.disabled = false;
+			if (usableMediaPlayers.length > 0) {
+				usableMediaPlayersSelect.disabled = false;
+			}
 			presetSelect.disabled = false;
 			volumeInput.disabled = false;
 			offsetInput.disabled = false;
@@ -1097,7 +1100,7 @@ function updateUi(data) {
 			isVehicleCheckbox.disabled = false;
 			revertButton.disabled = false;
 
-			if (usableMediaPlayersSelect.value == '' || (presetSelect.value == '' && urlInput.value == '')) {
+			if ((usableMediaPlayersSelect.value == '' && !scaleformCheckbox.checked) || (presetSelect.value == '' && urlInput.value == '')) {
 				playButton.disabled = true;
 			} else {
 				playButton.disabled = false;
@@ -1174,6 +1177,7 @@ function startMediaPlayer() {
 	var rangeInput = document.getElementById('range');
 	var visualizationSelect = document.getElementById('visualization');
 	var isVehicleCheckbox = document.getElementById('is-vehicle');
+	var scaleformCheckbox = document.getElementById('scaleform');
 
 	var handle = parseInt(handleInput.value);
 
@@ -1198,6 +1202,84 @@ function startMediaPlayer() {
 	var range = parseFloat(rangeInput.value);
 	var visualization = visualizationSelect.value;
 	var isVehicle = isVehicleCheckbox.checked;
+
+	var scaleform;
+
+	if (scaleformCheckbox.checked) {
+		var posXInput = document.getElementById('scaleform-position-x');
+		var posYInput = document.getElementById('scaleform-position-y');
+		var posZInput = document.getElementById('scaleform-position-z');
+		var rotXInput = document.getElementById('scaleform-rotation-x');
+		var rotYInput = document.getElementById('scaleform-rotation-y');
+		var rotZInput = document.getElementById('scaleform-rotation-z');
+		var scaleXInput = document.getElementById('scaleform-scale-x');
+		var scaleYInput = document.getElementById('scaleform-scale-y');
+		var scaleZInput = document.getElementById('scaleform-scale-z');
+
+		var posX = parseFloat(posXInput.value);
+		var posY = parseFloat(posYInput.value);
+		var posZ = parseFloat(posZInput.value);
+		var rotX = parseFloat(rotXInput.value);
+		var rotY = parseFloat(rotYInput.value);
+		var rotZ = parseFloat(rotZInput.value);
+		var scaleX = parseFloat(scaleXInput.value);
+		var scaleY = parseFloat(scaleYInput.value);
+		var scaleZ = parseFloat(scaleZInput.value);
+
+		if (isNaN(posX)) {
+			posX = 0;
+		}
+
+		if (isNaN(posY)) {
+			posY = 0;
+		}
+
+		if (isNaN(posZ)) {
+			posZ = 0;
+		}
+
+		if (isNaN(rotX)) {
+			rotX = 0;
+		}
+
+		if (isNaN(rotY)) {
+			rotY = 0;
+		}
+
+		if (isNaN(rotZ)) {
+			rotZ = 0;
+		}
+
+		if (isNaN(scaleX)) {
+			scaleX = 0;
+		}
+
+		if (isNaN(scaleY)) {
+			scaleY = 0;
+		}
+
+		if (isNaN(scaleZ)) {
+			scaleZ = 0;
+		}
+
+		scaleform = {
+			position: {
+				x: posX,
+				y: posY,
+				z: posZ
+			},
+			rotation: {
+				x: rotX,
+				y: rotY,
+				z: rotZ
+			},
+			scale: {
+				x: scaleX,
+				y: scaleY,
+				z: scaleZ
+			}
+		}
+	}
 
 	if (isNaN(volume)) {
 		volume = 100;
@@ -1249,7 +1331,8 @@ function startMediaPlayer() {
 			diffRoomVolume: diffRoomVolume,
 			range: range,
 			visualization: visualization,
-			isVehicle: isVehicle
+			isVehicle: isVehicle,
+			scaleform: scaleform
 		}
 	});
 }
@@ -1323,6 +1406,19 @@ function setMediaPlayerDefaults(handle) {
 		}
 
 		document.getElementById('is-vehicle').checked = resp.isVehicle;
+
+		if (resp.scaleform) {
+			var scaleform = JSON.parse(resp.scaleform);
+			document.getElementById('scaleform-position-x').value = scaleform.position.x;
+			document.getElementById('scaleform-position-y').value = scaleform.position.y;
+			document.getElementById('scaleform-position-z').value = scaleform.position.z;
+			document.getElementById('scaleform-rotation-x').value = scaleform.rotation.x;
+			document.getElementById('scaleform-rotation-y').value = scaleform.rotation.y;
+			document.getElementById('scaleform-rotation-z').value = scaleform.rotation.z;
+			document.getElementById('scaleform-scale-x').value = scaleform.scale.x;
+			document.getElementById('scaleform-scale-y').value = scaleform.scale.y;
+			document.getElementById('scaleform-scale-z').value = scaleform.scale.z;
+		}
 	});
 }
 
@@ -1647,4 +1743,127 @@ window.addEventListener('load', () => {
 			});
 		}
 	});
+
+	document.getElementById('scaleform').addEventListener('input', function(event) {
+		document.getElementById('scaleform-settings').style.display = this.checked ? 'grid' : 'none';
+	});
+
+	document.getElementById('scaleform-auto-my-position').addEventListener('click', function(event) {
+		sendMessage('getScaleformSettingsFromMyPosition').then(resp => resp.json()).then(resp => {
+			var data = JSON.parse(resp);
+			document.getElementById('scaleform-position-x').value = data.position.x;
+			document.getElementById('scaleform-position-y').value = data.position.y;
+			document.getElementById('scaleform-position-z').value = data.position.z;
+			document.getElementById('scaleform-rotation-x').value = data.rotation.x;
+			document.getElementById('scaleform-rotation-y').value = data.rotation.y;
+			document.getElementById('scaleform-rotation-z').value = data.rotation.z;
+		});
+	});
+
+	document.getElementById('scaleform-auto-entity').addEventListener('click', function(event) {
+		var handle = parseInt(document.getElementById('usable-media-players').value);
+
+		if (isNaN(handle)) {
+			return;
+		}
+
+		sendMessage('getScaleformSettingsFromEntity', {
+			handle: handle
+		}).then(resp => resp.json()).then(resp => {
+			var data = JSON.parse(resp);
+			document.getElementById('scaleform-position-x').value = data.position.x;
+			document.getElementById('scaleform-position-y').value = data.position.y;
+			document.getElementById('scaleform-position-z').value = data.position.z;
+			document.getElementById('scaleform-rotation-x').value = data.rotation.x;
+			document.getElementById('scaleform-rotation-y').value = data.rotation.y;
+			document.getElementById('scaleform-rotation-z').value = data.rotation.z;
+		});
+	});
+
+	document.querySelectorAll('.scaleform-setting').forEach(e => e.addEventListener('input', function(event) {
+		var handle = parseInt(document.getElementById('usable-media-players').value);
+
+		if (isNaN(handle)) {
+			return;
+		}
+
+		var posXInput = document.getElementById('scaleform-position-x');
+		var posYInput = document.getElementById('scaleform-position-y');
+		var posZInput = document.getElementById('scaleform-position-z');
+		var rotXInput = document.getElementById('scaleform-rotation-x');
+		var rotYInput = document.getElementById('scaleform-rotation-y');
+		var rotZInput = document.getElementById('scaleform-rotation-z');
+		var scaleXInput = document.getElementById('scaleform-scale-x');
+		var scaleYInput = document.getElementById('scaleform-scale-y');
+		var scaleZInput = document.getElementById('scaleform-scale-z');
+
+		var posX = parseFloat(posXInput.value);
+		var posY = parseFloat(posYInput.value);
+		var posZ = parseFloat(posZInput.value);
+		var rotX = parseFloat(rotXInput.value);
+		var rotY = parseFloat(rotYInput.value);
+		var rotZ = parseFloat(rotZInput.value);
+		var scaleX = parseFloat(scaleXInput.value);
+		var scaleY = parseFloat(scaleYInput.value);
+		var scaleZ = parseFloat(scaleZInput.value);
+
+		if (isNaN(posX)) {
+			posX = 0;
+		}
+
+		if (isNaN(posY)) {
+			posY = 0;
+		}
+
+		if (isNaN(posZ)) {
+			posZ = 0;
+		}
+
+		if (isNaN(rotX)) {
+			rotX = 0;
+		}
+
+		if (isNaN(rotY)) {
+			rotY = 0;
+		}
+
+		if (isNaN(rotZ)) {
+			rotZ = 0;
+		}
+
+		if (isNaN(scaleX)) {
+			scaleX = 0;
+		}
+
+		if (isNaN(scaleY)) {
+			scaleY = 0;
+		}
+
+		if (isNaN(scaleZ)) {
+			scaleZ = 0;
+		}
+
+		var scaleform = {
+			position: {
+				x: posX,
+				y: posY,
+				z: posZ
+			},
+			rotation: {
+				x: rotX,
+				y: rotY,
+				z: rotZ
+			},
+			scale: {
+				x: scaleX,
+				y: scaleY,
+				z: scaleZ
+			}
+		}
+
+		sendMessage('setScaleform', {
+			handle: handle,
+			scaleform: scaleform
+		});
+	}));
 });

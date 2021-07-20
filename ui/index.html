@@ -80,6 +80,10 @@
 					<i class="fas fa-car"></i>
 					<input id="is-vehicle" type="checkbox">
 				</div>
+				<div id="scaleform-container">
+					<i class="fas fa-tv"></i>
+					<input id="scaleform" type="checkbox">
+				</div>
 				<div id="visualization-container">
 					<i class="fas fa-signal"></i>
 					<select id="visualization">
@@ -149,6 +153,35 @@
 					<i class="fas fa-times"></i>
 					<span>Cancel</span>
 				</button>
+			</div>
+			<div id="scaleform-settings" style="display: none;">
+				<div id="scaleform-title">Scaleform</div>
+				<div id="scaleform-position">
+					<i class="fas fa-map-marker-alt"></i>
+					<input id="scaleform-position-x" type="number" placeholder="x" class="scaleform-setting" min="-16000" max="16000" step="0.01">
+					<input id="scaleform-position-y" type="number" placeholder="y" class="scaleform-setting" min="-16000" max="16000" step="0.01">
+					<input id="scaleform-position-z" type="number" placeholder="z" class="scaleform-setting" min="-16000" max="16000" step="0.01">
+				</div>
+				<div id="scaleform-rotation">
+					<i class="fas fa-compass"></i>
+					<input id="scaleform-rotation-x" type="number" placeholder="x" class="scaleform-setting" min="0" max="360" step="0.1">
+					<input id="scaleform-rotation-y" type="number" placeholder="y" class="scaleform-setting" min="0" max="360" step="0.1">
+					<input id="scaleform-rotation-z" type="number" placeholder="z" class="scaleform-setting" min="0" max="360" step="0.1">
+				</div>
+				<div id="scaleform-scale">
+					<i class="fas fa-arrows-alt"></i>
+					<input id="scaleform-scale-x" type="number" placeholder="x" class="scaleform-setting" min="0" max="1" step="0.01">
+					<input id="scaleform-scale-y" type="number" placeholder="y" class="scaleform-setting" min="0" max="1" step="0.01">
+					<input id="scaleform-scale-z" type="number" placeholder="z" class="scaleform-setting" min="0" max="1" step="0.01">
+				</div>
+				<div id="scaleform-auto">
+					<button id="scaleform-auto-my-position">
+						<i class="fas fa-street-view"></i>
+					</button>
+					<button id="scaleform-auto-entity">
+						<i class="fas fa-cube"></i>
+					</button>
+				</div>
 			</div>
 			<div id="base-volume-container">
 				<i class="fas fa-volume-off"></i>

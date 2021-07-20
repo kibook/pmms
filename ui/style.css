@@ -267,7 +267,7 @@ option {
 
 #advanced-settings {
 	display: grid;
-	grid-template-columns: repeat(12, max-content);
+	grid-template-columns: repeat(13, max-content);
 	grid-gap: 0.5vh 0.5vw;
 }
 
@@ -305,6 +305,32 @@ mediaelementwrapper > video {
 	align-items: end;
 	padding: 0.5vh 0.5vw;
 	margin: auto;
+}
+
+#scaleform-settings {
+	display: grid;
+	grid-template-columns: repeat(4, max-content);
+	grid-gap: 0.5vh 0.5vw;
+	align-items: end;
+	padding: 0.5vh 0.5vw;
+	margin: auto;
+}
+
+#scaleform-title {
+	grid-column: 1 / 5;
+	text-align: center;
+}
+
+#scaleform-position, #scaleform-rotation, #scaleform-scale, #scaleform-auto {
+	display: contents;
+}
+
+#scaleform-auto-my-position {
+	grid-column: 2;
+}
+
+.scaleform-setting {
+	text-align: center;
 }
 
 .notifications {

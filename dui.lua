@@ -12,11 +12,39 @@ function Class:new()
 	return self()
 end
 
+ScaleformPool = Class()
+ScaleformPool.pool = {}
+
+function ScaleformPool:requestScaleform(name)
+	if not self.pool[name] or not HasScaleformMovieLoaded(self.pool[name])then
+		self.pool[name] = RequestScaleformMovie(name)
+	end
+
+	return self.pool[name]
+end
+
+function ScaleformPool:loadScaleform(handle)
+	local timeout = GetGameTimer() + 5000
+
+	while not HasScaleformMovieLoaded(handle) and GetGameTimer() < timeout do
+		Citizen.Wait(0)
+	end
+
+	return HasScaleformMovieLoaded(handle)
+end
+
+function ScaleformPool:delete()
+	for name, handle in pairs(self.pool) do
+		SetScaleformMovieAsNoLongerNeeded(handle)
+	end
+end
+
 DuiBrowser = Class()
 
 DuiBrowser.initQueue = {}
 DuiBrowser.pool = {}
 DuiBrowser.renderTargets = {}
+DuiBrowser.scaleforms = {}
 
 function DuiBrowser:createNamedRendertargetForModel(model, name)
 	local handle = 0
@@ -55,6 +83,10 @@ function DuiBrowser:waitForConnection()
 end
 
 function DuiBrowser:enableRenderTarget()
+	if not self.renderTarget then
+		return
+	end
+
 	if self.renderTargetHandle then
 		return
 	end
@@ -65,6 +97,10 @@ function DuiBrowser:enableRenderTarget()
 end
 
 function DuiBrowser:disableRenderTarget()
+	if not self.renderTarget then
+		return
+	end
+
 	if not self.renderTargetHandle then
 		return
 	end
@@ -76,21 +112,89 @@ function DuiBrowser:disableRenderTarget()
 	DuiBrowser.renderTargets[self.renderTarget].browsers[self] = nil
 end
 
-function DuiBrowser:new(mediaPlayerHandle, model, renderTarget)
+function DuiBrowser:createTexture()
+	self.txdName = "pmms_txd_" .. tostring(self.mediaPlayerHandle)
+	self.txnName = "video"
+	self.txd = CreateRuntimeTxd(self.txdName)
+	self.txn = CreateRuntimeTextureFromDuiHandle(self.txd, self.txnName, self.duiHandle)
+end
+
+function DuiBrowser:enableScaleform()
+	if self.sfHandle then
+		return
+	end
+
+	self.sfHandle = ScaleformPool:requestScaleform(self.sfName)
+
+	if ScaleformPool:loadScaleform(self.sfHandle) then
+		self:createTexture()
+
+		BeginScaleformMovieMethod(self.sfHandle, "SET_TEXTURE")
+		ScaleformMovieMethodAddParamTextureNameString(self.txdName)
+		ScaleformMovieMethodAddParamTextureNameString(self.txnName)
+		ScaleformMovieMethodAddParamInt(0)
+		ScaleformMovieMethodAddParamInt(0)
+		ScaleformMovieMethodAddParamInt(Config.dui.screenWidth)
+		ScaleformMovieMethodAddParamInt(Config.dui.screenHeight)
+
+		EndScaleformMovieMethod()
+
+		DuiBrowser.scaleforms[self.sfName].browsers[self] = true
+	else
+		print("Failed to load scaleform")
+	end
+end
+
+function DuiBrowser:disableScaleform()
+	if not self.sfHandle then
+		return
+	end
+
+	--SetScaleformMovieAsNoLongerNeeded(self.sfHandle)
+
+	self.sfHandle = nil
+
+	DuiBrowser.scaleforms[self.sfName].browsers[self] = nil
+
+end
+
+function DuiBrowser:enable()
+	if self.renderTarget then
+		self:enableRenderTarget()
+	elseif self.scaleform then
+		self:enableScaleform()
+	end
+end
+
+function DuiBrowser:disable()
+	if self.renderTarget then
+		self:disableRenderTarget()
+	elseif self.scaleform then
+		self:disableScaleform()
+	end
+end
+
+function DuiBrowser:new(mediaPlayerHandle, model, renderTarget, scaleform)
 	local self = Class.new(self)
 
 	self.mediaPlayerHandle = mediaPlayerHandle
 	self.model = model
-	self.renderTarget = renderTarget
+
+	if scaleform then
+		self.scaleform = scaleform
+	else
+		self.renderTarget = renderTarget
+	end
 
 	self.duiObject = CreateDui(Config.dui.url .. "?resourceName=" .. GetCurrentResourceName(), Config.dui.screenWidth, Config.dui.screenHeight)
-	self.handle = GetDuiHandle(self.duiObject)
+	self.duiHandle = GetDuiHandle(self.duiObject)
 
-	if self.renderTarget then
-		self.txdName = "pmms_txd_" .. tostring(mediaPlayerHandle)
-		self.txnName = "video"
-		self.txd = CreateRuntimeTxd(self.txdName)
-		self.txn = CreateRuntimeTextureFromDuiHandle(self.txd, self.txnName, self.handle)
+	if self.renderTarget or self.scaleform then
+		self:createTexture()
+
+		if self.scaleform then
+			self.sfName = "pmms_texture_renderer"
+		end
 	end
 
 	if self:waitForConnection() then
@@ -99,6 +203,13 @@ function DuiBrowser:new(mediaPlayerHandle, model, renderTarget)
 		if self.renderTarget then
 			if not DuiBrowser.renderTargets[self.renderTarget] then
 				DuiBrowser.renderTargets[self.renderTarget] = {
+					disabled = false,
+					browsers = {}
+				}
+			end
+		elseif self.scaleform then
+			if not DuiBrowser.scaleforms[self.sfName] then
+				DuiBrowser.scaleforms[self.sfName] = {
 					disabled = false,
 					browsers = {}
 				}
@@ -113,24 +224,39 @@ function DuiBrowser:new(mediaPlayerHandle, model, renderTarget)
 end
 
 function DuiBrowser:renderFrame(drawSprite)
-	if DuiBrowser.renderTargets[self.renderTarget].disabled then
-		return
+	if self.renderTarget then
+		if DuiBrowser.renderTargets[self.renderTarget].disabled then
+			return
+		end
+
+		self:enableRenderTarget()
+
+		SetTextRenderId(self.renderTargetHandle)
+		Set_2dLayer(4)
+		SetScriptGfxDrawBehindPausemenu(1)
+
+		DrawRect(0.5, 0.5, 1.0, 1.0, 0, 0, 0, 255)
+
+		if drawSprite then
+			DrawSprite(self.txdName, self.txnName, 0.5, 0.5, 1.0, 1.0, 0.0, 255, 255, 255, 255)
+		end
+
+		SetTextRenderId(GetDefaultScriptRendertargetRenderId())
+		SetScriptGfxDrawBehindPausemenu(0)
+	elseif self.scaleform then
+		if DuiBrowser.scaleforms[self.sfName].disabled then
+			return
+		end
+
+		self:enableScaleform()
+
+		DrawScaleformMovie_3dSolid(self.sfHandle,
+			self.scaleform.position,
+			self.scaleform.rotation,
+			2.0, 2.0, 1.0,
+			self.scaleform.scale,
+			2)
 	end
-
-	self:enableRenderTarget()
-
-	SetTextRenderId(self.renderTargetHandle)
-	Set_2dLayer(4)
-	SetScriptGfxDrawBehindPausemenu(1)
-
-	DrawRect(0.5, 0.5, 1.0, 1.0, 0, 0, 0, 255)
-
-	if drawSprite then
-		DrawSprite(self.txdName, self.txnName, 0.5, 0.5, 1.0, 1.0, 0.0, 255, 255, 255, 255)
-	end
-
-	SetTextRenderId(GetDefaultScriptRendertargetRenderId())
-	SetScriptGfxDrawBehindPausemenu(0)
 end
 
 function DuiBrowser:draw()
@@ -159,6 +285,22 @@ function DuiBrowser:isAvailable()
 	return IsDuiAvailable(self.duiObject)
 end
 
+function DuiBrowser:isDrawable()
+	return self.renderTarget ~= nil or self.scaleform ~= nil
+end
+
+function DuiBrowser:getDrawableName()
+	if self.renderTarget then
+		return self.renderTarget
+	elseif self.scaleform then
+		return self.sfName
+	end
+end
+
+function DuiBrowser:setScaleform(scaleform)
+	self.scaleform = scaleform
+end
+
 function DuiBrowser:resetPool()
 	for handle, duiBrowser in pairs(DuiBrowser.pool) do
 		duiBrowser:delete()
@@ -181,10 +323,20 @@ function DuiBrowser:delete()
 		for duiBrowser, _ in pairs(DuiBrowser.renderTargets[self.renderTarget].browsers) do
 			duiBrowser:disableRenderTarget()
 		end
+	elseif self.scaleform then
+		for duiBrowser, _ in pairs(DuiBrowser.scaleforms[self.sfName].browsers) do
+			duiBrowser:disableScaleform()
+		end
 	end
 end
 
 RegisterNUICallback("DuiBrowser:initDone", function(data, cb)
 	DuiBrowser.initQueue[data.handle] = true
 	cb({})
+end)
+
+AddEventHandler("onResourceStop", function(resourceName)
+	if GetCurrentResourceName() == resourceName then
+		ScaleformPool:delete()
+	end
 end)

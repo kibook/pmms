@@ -13,6 +13,7 @@ RegisterNetEvent("pmms:setAttenuation")
 RegisterNetEvent("pmms:setDiffRoomVolume")
 RegisterNetEvent("pmms:setRange")
 RegisterNetEvent("pmms:setIsVehicle")
+RegisterNetEvent("pmms:setScaleform")
 RegisterNetEvent("pmms:setStartTime")
 RegisterNetEvent("pmms:lock")
 RegisterNetEvent("pmms:unlock")
@@ -88,6 +89,12 @@ local function addMediaPlayer(handle, options)
 	options.diffRoomVolume = Clamp(options.diffRoomVolume, 0.0, 1.0, Config.defaultDiffRoomVolume)
 
 	options.range = Clamp(options.range, 0, Config.maxRange, Config.defaultRange)
+
+	if options.scaleform then
+		options.scaleform.position = ToVector3(options.scaleform.position)
+		options.scaleform.rotation = ToVector3(options.scaleform.rotation)
+		options.scaleform.scale = ToVector3(options.scaleform.scale)
+	end
 
 	if not options.queue then
 		options.queue = {}
@@ -222,6 +229,12 @@ local function startMediaPlayerByCoords(x, y, z, options)
 	addMediaPlayer(handle, options)
 
 	return handle
+end
+
+local function startMediaPlayerScaleform(scaleform, options)
+	options.scaleform = scaleform
+	options.scaleform.standalone = true
+	return startMediaPlayerByCoords(scaleform.position.x, scaleform.position.y, scaleform.position.z, options)
 end
 
 local function errorMessage(player, message)
@@ -537,6 +550,7 @@ end
 
 exports("startByNetworkId", startMediaPlayerByNetworkId)
 exports("startByCoords", startMediaPlayerByCoords)
+exports("startScaleform", startMediaPlayerScaleform)
 exports("stop", removeMediaPlayer)
 exports("pause", pauseMediaPlayer)
 exports("lock", lockMediaPlayer)
@@ -763,6 +777,30 @@ AddEventHandler("pmms:setIsVehicle", function(handle, isVehicle)
 	end
 
 	mediaPlayers[handle].isVehicle = isVehicle
+end)
+
+AddEventHandler("pmms:setScaleform", function(handle, scaleform)
+	if not mediaPlayers[handle] then
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to change scaleform settings of media players")
+		return
+	end
+
+	if mediaPlayers[handle].locked and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to change scaleform settings of locked media players")
+		return
+	end
+
+	if mediaPlayers[handle].scaleform.standalone then
+		scaleform.standalone = true
+		mediaPlayers[handle].scaleform = scaleform
+		mediaPlayers[handle].coords = scaleform.position
+	else
+		mediaPlayers[handle].scaleform = scaleform
+	end
 end)
 
 AddEventHandler("pmms:setStartTime", function(handle, time)

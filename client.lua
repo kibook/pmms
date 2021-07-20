@@ -224,7 +224,9 @@ local function startMediaPlayer(handle, options)
 			options.renderTarget = Config.models[options.model].renderTarget
 		end
 
-		options.label = getEntityLabel(handle, entity)
+		if not options.label then
+			options.label = getEntityLabel(handle, entity)
+		end
 
 		if options.isVehicle == nil then
 			if Config.models[options.model] then
@@ -244,7 +246,9 @@ local function startMediaPlayer(handle, options)
 			options.renderTarget = Config.models[options.model].renderTarget
 		end
 
-		options.label = getEntityLabel(handle, handle)
+		if not options.label then
+			options.label = getEntityLabel(handle, handle)
+		end
 
 		if options.isVehicle == nil then
 			if Config.models[options.model] then
@@ -256,7 +260,9 @@ local function startMediaPlayer(handle, options)
 
 		handle = false
 	elseif options.coords then
-		options.label = getCoordsLabel(handle, options.coords)
+		if not options.label then
+			options.label = getCoordsLabel(handle, options.coords)
+		end
 
 		handle = false
 	end
@@ -486,6 +492,17 @@ local function updateUi()
 			end
 		end)
 
+		for _, mediaPlayer in ipairs(activeMediaPlayers) do
+			if mediaPlayer.info.scaleform and mediaPlayer.info.scaleform.standalone then
+				table.insert(usableMediaPlayers, {
+					handle = mediaPlayer.handle,
+					distance = mediaPlayer.distance,
+					label = mediaPlayer.label,
+					active = true
+				})
+			end
+		end
+
 		table.sort(usableMediaPlayers, sortByDistance)
 	end
 
@@ -640,6 +657,14 @@ local function sendMediaMessage(handle, coords, data)
 		local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
 
 		if not duiBrowser then
+			local scaleform
+
+			if mediaPlayers[handle] and mediaPlayers[handle].scaleform then
+				scaleform = mediaPlayers[handle].scaleform
+			else
+				scaleform = data.options and data.options.scaleform
+			end
+
 			local entity, model, renderTarget = getEntityModelAndRenderTarget(coords or handle)
 
 			local mediaPos
@@ -650,18 +675,24 @@ local function sendMediaMessage(handle, coords, data)
 				mediaPos = mediaPlayers[handle].coords
 				model = mediaPlayers[handle].model
 				renderTarget = mediaPlayers[handle].renderTarget
+			elseif data.options and data.options.coords then
+				mediaPos = data.options.coords
 			end
 
-			if mediaPos and model then
+			if mediaPos and (model or scaleform) then
 				local ped, listenPos, viewerPos, viewerFov = getListenerAndViewerInfo()
 
 				if #(viewerPos - mediaPos) < (data.range or Config.maxRange) then
-					duiBrowser = DuiBrowser:new(handle, model, renderTarget)
+					duiBrowser = DuiBrowser:new(handle, model, renderTarget, scaleform)
 				end
 			end
 		end
 
 		if duiBrowser then
+			if data.options and data.options.scaleform then
+				duiBrowser:setScaleform(data.options.scaleform)
+			end
+
 			duiBrowser:sendMessage(data)
 		end
 	end
@@ -672,6 +703,8 @@ local function getSvHandle(handle)
 		return handle
 	elseif DoesEntityExist(handle) then
 		return GetHandleFromCoords(GetEntityCoords(handle))
+	else
+		return handle
 	end
 end
 
@@ -739,6 +772,12 @@ RegisterNUICallback("init", function(data, cb)
 			data.options.coords = ToVector3(data.options.coords)
 		end
 
+		if data.options.scaleform then
+			data.options.scaleform.position = ToVector3(data.options.scaleform.position)
+			data.options.scaleform.rotation = ToVector3(data.options.scaleform.rotation)
+			data.options.scaleform.scale = ToVector3(data.options.scaleform.scale)
+		end
+
 		TriggerServerEvent("pmms:init", data.handle, data.options)
 	end
 	cb({})
@@ -755,7 +794,23 @@ RegisterNUICallback("playError", function(data, cb)
 end)
 
 RegisterNUICallback("play", function(data, cb)
+	if data.options.scaleform then
+		data.options.scaleform.position = ToVector3(data.options.scaleform.position)
+		data.options.scaleform.rotation = ToVector3(data.options.scaleform.rotation)
+		data.options.scaleform.scale = ToVector3(data.options.scaleform.scale)
+
+		if not data.handle then
+			data.options.coords = data.options.scaleform.position
+			data.options.scaleform.standalone = true
+
+			if not data.options.label then
+				data.options.label = "Scaleform"
+			end
+		end
+	end
+
 	startMediaPlayer(data.handle, data.options)
+
 	cb({})
 end)
 
@@ -895,6 +950,7 @@ RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
 		defaultsData.diffRoomVolume = mediaPlayers[handle].diffRoomVolume
 		defaultsData.range = mediaPlayers[handle].range
 		defaultsData.isVehicle = mediaPlayers[handle].isVehicle
+		defaultsData.scaleform = json.encode(mediaPlayers[handle].scaleform)
 	end
 
 	if not defaultsData.label then
@@ -996,6 +1052,20 @@ RegisterNUICallback("setIsVehicle", function(data, cb)
 	cb({})
 end)
 
+RegisterNUICallback("setScaleform", function(data, cb)
+	local handle = getSvHandle(data.handle)
+
+	if handle and mediaPlayers[handle] then
+		data.scaleform.position = ToVector3(data.scaleform.position)
+		data.scaleform.rotation = ToVector3(data.scaleform.rotation)
+		data.scaleform.scale = ToVector3(data.scaleform.scale)
+
+		TriggerServerEvent("pmms:setScaleform", handle, data.scaleform)
+	end
+
+	cb {}
+end)
+
 RegisterNUICallback("delete", function(data, cb)
 	local entity
 
@@ -1012,6 +1082,36 @@ RegisterNUICallback("delete", function(data, cb)
 	end
 
 	cb({})
+end)
+
+RegisterNUICallback("getScaleformSettingsFromMyPosition", function(data, cb)
+	local ped = PlayerPedId()
+
+	local pos = GetEntityCoords(ped)
+	local rot = GetEntityRotation(ped)
+
+	cb(json.encode({
+		position = pos,
+		rotation = rot
+	}))
+end)
+
+RegisterNUICallback("getScaleformSettingsFromEntity", function(data, cb)
+	local entity
+
+	if NetworkDoesNetworkIdExist(data.handle) then
+		entity = NetworkGetEntityFromNetworkId(data.handle)
+	else
+		entity = data.handle
+	end
+
+	local pos = GetEntityCoords(entity)
+	local rot = GetEntityRotation(entity)
+
+	cb(json.encode({
+		position = pos,
+		rotation = rot
+	}))
 end)
 
 AddEventHandler("pmms:sync", function(players)
@@ -1269,6 +1369,8 @@ Citizen.CreateThread(function()
 					else
 						sameRoom = isInSameRoom(ped, entity)
 					end
+				elseif info.scaleform and info.scaleform.standalone then
+					sameRoom = true
 				else
 					sameRoom = false
 				end
@@ -1292,12 +1394,15 @@ Citizen.CreateThread(function()
 
 				local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
 
-				if duiBrowser and duiBrowser.renderTarget then
+				if duiBrowser and duiBrowser:isDrawable() then
+					local name = duiBrowser:getDrawableName()
+
 					if distance < info.range then
-						if not duiToDraw[duiBrowser.renderTarget] then
-							duiToDraw[duiBrowser.renderTarget] = {}
+						if not duiToDraw[name] then
+							duiToDraw[name] = {}
 						end
-						table.insert(duiToDraw[duiBrowser.renderTarget], {
+
+						table.insert(duiToDraw[name], {
 							duiBrowser = duiBrowser,
 							distance = distance
 						})
@@ -1321,13 +1426,13 @@ Citizen.CreateThread(function()
 			sendMediaMessage(handle, info.coords, data)
 		end
 
-		for renderTarget, items in pairs(duiToDraw) do
+		for _, items in pairs(duiToDraw) do
 			table.sort(items, function(a, b)
 				return a.distance < b.distance
 			end)
 
 			for i = 2, #items do
-				items[i].duiBrowser:disableRenderTarget()
+				items[i].duiBrowser:disable()
 			end
 
 			items[1].duiBrowser:draw()
@@ -1342,7 +1447,7 @@ Citizen.CreateThread(function()
 		local myPos = GetEntityCoords(PlayerPedId())
 
 		for handle, info in pairs(mediaPlayers) do
-			if info.coords then
+			if info.coords and not (info.scaleform and info.scaleform.standalone) then
 				getLocalMediaPlayer(info.coords, myPos, info.range)
 			end
 		end

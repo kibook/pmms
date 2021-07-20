@@ -1197,6 +1197,12 @@ RegisterNUICallback("getScaleformSettingsFromEntity", function(data, cb)
 	}))
 end)
 
+RegisterNUICallback("fix", function(data, cb)
+	TriggerEvent("pmms:reset")
+
+	cb {}
+end)
+
 AddEventHandler("pmms:sync", function(players)
 	if syncIsEnabled then
 		mediaPlayers = players

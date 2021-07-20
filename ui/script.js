@@ -1873,4 +1873,8 @@ window.addEventListener('load', () => {
 			scaleform: scaleform
 		});
 	}));
+
+	document.getElementById('fix').addEventListener('click', function(event) {
+		sendMessage('fix');
+	});
 });

@@ -1034,6 +1034,16 @@ function updateUi(data) {
 					option.selected = true;
 				}
 
+				if (mediaPlayer.standaloneScaleform) {
+					option.setAttribute("data-standalone-scaleform", "true");
+				}
+
+				if (mediaPlayer.coords) {
+					option.setAttribute("data-coords-x", mediaPlayer.coords.x);
+					option.setAttribute("data-coords-y", mediaPlayer.coords.y);
+					option.setAttribute("data-coords-z", mediaPlayer.coords.z);
+				}
+
 				usableMediaPlayersSelect.appendChild(option);
 			});
 
@@ -1205,7 +1215,9 @@ function startMediaPlayer() {
 
 	var scaleform;
 
-	if (scaleformCheckbox.checked) {
+	var standaloneScaleform = handleInput.options[handleInput.selectedIndex].getAttribute("data-standalone-scaleform") == "true";
+
+	if (scaleformCheckbox.checked || standaloneScaleform) {
 		var posXInput = document.getElementById('scaleform-position-x');
 		var posYInput = document.getElementById('scaleform-position-y');
 		var posZInput = document.getElementById('scaleform-position-z');
@@ -1277,7 +1289,8 @@ function startMediaPlayer() {
 				x: scaleX,
 				y: scaleY,
 				z: scaleZ
-			}
+			},
+			standalone: standaloneScaleform
 		}
 	}
 
@@ -1310,6 +1323,10 @@ function startMediaPlayer() {
 	} else {
 		video = true;
 		filter = false;
+	}
+
+	if (standaloneScaleform) {
+		handle = null;
 	}
 
 	sendMessage('play', {
@@ -1418,12 +1435,20 @@ function setMediaPlayerDefaults(handle) {
 			document.getElementById('scaleform-scale-x').value = scaleform.scale.x;
 			document.getElementById('scaleform-scale-y').value = scaleform.scale.y;
 			document.getElementById('scaleform-scale-z').value = scaleform.scale.z;
+
+			document.getElementById('scaleform').checked = true;
+			document.getElementById('scaleform-settings').style.display = 'grid';
+		} else {
+			document.getElementById('scaleform').checked = false;
+			document.getElementById('scaleform-settings').style.display = 'none';
 		}
 	});
 }
 
 function saveSettings(method) {
-	var handle = parseInt(document.getElementById('usable-media-players').value);
+	var usableMediaPlayers = document.getElementById('usable-media-players');
+
+	var handle = parseInt(usableMediaPlayers.value);
 	var model = document.getElementById('save-model').value;
 	var renderTarget = document.getElementById('save-render-target').value;
 	var label = document.getElementById('save-label').value;
@@ -1434,6 +1459,96 @@ function saveSettings(method) {
 	var diffRoomVolume = parseFloat(document.getElementById('diff-room-volume').value);
 	var range = parseFloat(document.getElementById('range').value);
 	var isVehicle = document.getElementById('is-vehicle').checked;
+	var scaleformEnabled = document.getElementById('scaleform').checked;
+
+	var scaleform;
+
+	var standaloneScaleform = usableMediaPlayers.options[usableMediaPlayers.selectedIndex].getAttribute("data-standalone-scaleform") == "true";
+
+	if (scaleformEnabled || standaloneScaleform) {
+		var posXInput = document.getElementById('scaleform-position-x');
+		var posYInput = document.getElementById('scaleform-position-y');
+		var posZInput = document.getElementById('scaleform-position-z');
+		var rotXInput = document.getElementById('scaleform-rotation-x');
+		var rotYInput = document.getElementById('scaleform-rotation-y');
+		var rotZInput = document.getElementById('scaleform-rotation-z');
+		var scaleXInput = document.getElementById('scaleform-scale-x');
+		var scaleYInput = document.getElementById('scaleform-scale-y');
+		var scaleZInput = document.getElementById('scaleform-scale-z');
+
+		var posX = parseFloat(posXInput.value);
+		var posY = parseFloat(posYInput.value);
+		var posZ = parseFloat(posZInput.value);
+		var rotX = parseFloat(rotXInput.value);
+		var rotY = parseFloat(rotYInput.value);
+		var rotZ = parseFloat(rotZInput.value);
+		var scaleX = parseFloat(scaleXInput.value);
+		var scaleY = parseFloat(scaleYInput.value);
+		var scaleZ = parseFloat(scaleZInput.value);
+
+		if (isNaN(posX)) {
+			posX = 0;
+		}
+
+		if (isNaN(posY)) {
+			posY = 0;
+		}
+
+		if (isNaN(posZ)) {
+			posZ = 0;
+		}
+
+		if (isNaN(rotX)) {
+			rotX = 0;
+		}
+
+		if (isNaN(rotY)) {
+			rotY = 0;
+		}
+
+		if (isNaN(rotZ)) {
+			rotZ = 0;
+		}
+
+		if (isNaN(scaleX)) {
+			scaleX = 0;
+		}
+
+		if (isNaN(scaleY)) {
+			scaleY = 0;
+		}
+
+		if (isNaN(scaleZ)) {
+			scaleZ = 0;
+		}
+
+		scaleform = {
+			position: {
+				x: posX,
+				y: posY,
+				z: posZ
+			},
+			rotation: {
+				x: rotX,
+				y: rotY,
+				z: rotZ
+			},
+			scale: {
+				x: scaleX,
+				y: scaleY,
+				z: scaleZ
+			},
+			standalone: standaloneScaleform || isNaN(handle)
+		};
+	}
+
+	if (model == '') {
+		model = null;
+	}
+
+	if (renderTarget == '') {
+		renderTarget = null;
+	}
 
 	sendMessage('save', {
 		handle: handle,
@@ -1449,7 +1564,8 @@ function saveSettings(method) {
 		},
 		diffRoomVolume: diffRoomVolume,
 		range: range,
-		isVehicle: isVehicle
+		isVehicle: isVehicle,
+		scaleform: scaleform
 	});
 }
 
@@ -1500,11 +1616,32 @@ function showNotification(data) {
 }
 
 function deleteSettings(method) {
-	var handle = parseInt(document.getElementById('usable-media-players').value);
+	var usableMediaPlayers = document.getElementById('usable-media-players');
+
+	var handle = parseInt(usableMediaPlayers.value);
+
+	var coords;
+
+	var selected = usableMediaPlayers.options[usableMediaPlayers.selectedIndex];
+
+	if (selected) {
+		var x = parseFloat(selected.getAttribute("data-coords-x"));
+		var y = parseFloat(selected.getAttribute("data-coords-y"));
+		var z = parseFloat(selected.getAttribute("data-coords-z"));
+
+		if (!(isNaN(x) || isNaN(y) || isNaN(z))) {
+			coords = {
+				x: x,
+				y: y,
+				z: z
+			}
+		}
+	}
 
 	sendMessage('delete', {
 		handle: handle,
-		method: method
+		method: method,
+		coords: coords
 	});
 }
 
@@ -1654,7 +1791,7 @@ window.addEventListener('load', () => {
 
 	document.getElementById('usable-media-players').addEventListener('input', function(event) {
 		if (this.value == '') {
-			updateSaveSettings(true);
+			updateSaveSettings(!document.getElementById('scaleform').checked);
 		} else {
 			updateSaveSettings(false);
 			setMediaPlayerDefaults(parseInt(this.value));
@@ -1662,7 +1799,7 @@ window.addEventListener('load', () => {
 	});
 
 	document.getElementById('save').addEventListener('click', function(event) {
-		updateSaveSettings(document.getElementById('usable-media-players').value == '');
+		updateSaveSettings(document.getElementById('usable-media-players').value == '' && !document.getElementById('scaleform').checked);
 		document.getElementById('save-settings').style.display = 'grid';
 	});
 

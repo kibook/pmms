@@ -56,6 +56,14 @@ local function notify(args)
 	})
 end
 
+local function doesEntityExist(entity)
+	if type(entity) ~= "number" or entity < 0 or entity > 999999999 then
+		return false
+	else
+		return DoesEntityExist(entity)
+	end
+end
+
 local entityEnumerator = {
 	__gc = function(enum)
 		if enum.destructor and enum.handle then
@@ -194,8 +202,10 @@ local function getEntityLabel(handle, entity)
 			end
 		elseif entityType == 3 then
 			return "Obj " .. tostring(handle)
-		else
+		elseif handle then
 			return tostring(handle)
+		else
+			return false
 		end
 	end
 end
@@ -205,8 +215,10 @@ local function getCoordsLabel(handle, coords)
 
 	if defaultMediaPlayer and defaultMediaPlayer.label then
 		return defaultMediaPlayer.label
-	else
+	elseif handle then
 		return tostring(handle)
+	else
+		return false
 	end
 end
 
@@ -235,7 +247,7 @@ local function startMediaPlayer(handle, options)
 				options.isVehicle = IsEntityAVehicle(entity)
 			end
 		end
-	elseif DoesEntityExist(handle) then
+	elseif doesEntityExist(handle) then
 		if not options.coords then
 			options.coords = GetEntityCoords(handle)
 		end
@@ -409,7 +421,7 @@ local function updateUi()
 			entity = NetworkGetEntityFromNetworkId(handle)
 		end
 
-		local entityExists = entity and DoesEntityExist(entity)
+		local entityExists = doesEntityExist(entity)
 
 		local mediaPos
 
@@ -471,6 +483,8 @@ local function updateUi()
 	local usableMediaPlayers = {}
 
 	if uiIsOpen then
+		local uniqueUsableMediaPlayers = {}
+
 		forEachMediaPlayer(function(entity)
 			local mediaPos = GetEntityCoords(entity)
 			local clHandle = getHandle(entity)
@@ -482,25 +496,57 @@ local function updateUi()
 				local isActive = mediaPlayers[svHandle] ~= nil
 
 				if isNearby or (permissions.manage and isActive) then
-					table.insert(usableMediaPlayers, {
-						handle = clHandle,
+					uniqueUsableMediaPlayers[clHandle] = {
 						distance = distance,
 						label = getEntityLabel(clHandle, entity),
 						active = isActive
-					})
+					}
 				end
 			end
 		end)
 
 		for _, mediaPlayer in ipairs(activeMediaPlayers) do
-			if mediaPlayer.info.scaleform and mediaPlayer.info.scaleform.standalone then
-				table.insert(usableMediaPlayers, {
-					handle = mediaPlayer.handle,
+			if mediaPlayer.info.scaleform and mediaPlayer.info.scaleform.standalone and not uniqueUsableMediaPlayers[mediaPlayer.handle] then
+				uniqueUsableMediaPlayers[mediaPlayer.handle] = {
 					distance = mediaPlayer.distance,
 					label = mediaPlayer.label,
 					active = true
-				})
+				}
 			end
+		end
+
+		for _, mediaPlayer in ipairs(Config.defaultMediaPlayers) do
+			if mediaPlayer.scaleform.standalone then
+				local svHandle = GetHandleFromCoords(mediaPlayer.position)
+
+				if not uniqueUsableMediaPlayers[svHandle] then
+					local distance = #(pos - mediaPlayer.position)
+					local isNearby = distance <= Config.maxDiscoveryDistance
+					local label = getCoordsLabel(svHandle, mediaPlayer.position)
+					local isActive = mediaPlayers[svHandle] ~= nil
+
+					if isNearby or (permissions.manage and isActive) then
+						uniqueUsableMediaPlayers[svHandle] = {
+							distance = distance,
+							label = label,
+							active = isActive,
+							standaloneScaleform = true,
+							coords = mediaPlayer.position
+						}
+					end
+				end
+			end
+		end
+
+		for handle, info in pairs(uniqueUsableMediaPlayers) do
+			table.insert(usableMediaPlayers, {
+				handle = handle,
+				distance = info.distance,
+				label = info.label,
+				active = info.active,
+				standaloneScaleform = info.standaloneScaleform,
+				coords = info.coords
+			})
 		end
 
 		table.sort(usableMediaPlayers, sortByDistance)
@@ -619,7 +665,7 @@ end
 local function getLocalMediaPlayer(coords, listenerPos, range)
 	local handle = GetHandleFromCoords(coords)
 
-	if not (localMediaPlayers[handle] and DoesEntityExist(localMediaPlayers[handle])) then
+	if not doesEntityExist(localMediaPlayers[handle]) then
 		localMediaPlayers[handle] = getClosestMediaPlayerEntity(coords, 1.0, listenerPos, range)
 	end
 
@@ -701,7 +747,7 @@ end
 local function getSvHandle(handle)
 	if NetworkDoesNetworkIdExist(handle) then
 		return handle
-	elseif DoesEntityExist(handle) then
+	elseif doesEntityExist(handle) then
 		return GetHandleFromCoords(GetEntityCoords(handle))
 	else
 		return handle
@@ -799,13 +845,10 @@ RegisterNUICallback("play", function(data, cb)
 		data.options.scaleform.rotation = ToVector3(data.options.scaleform.rotation)
 		data.options.scaleform.scale = ToVector3(data.options.scaleform.scale)
 
-		if not data.handle then
+		if not data.handle or data.handle == -1 then
+			data.handle = false
 			data.options.coords = data.options.scaleform.position
 			data.options.scaleform.standalone = true
-
-			if not data.options.label then
-				data.options.label = "Scaleform"
-			end
 		end
 	end
 
@@ -921,17 +964,34 @@ RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
 	local entity
 	local coords
 
-	if NetworkDoesNetworkIdExist(data.handle) then
-		handle = data.handle
-		entity = NetworkGetEntityFromNetworkId(data.handle)
-		coords = GetEntityCoords(entity)
-	elseif DoesEntityExist(data.handle) then
-		entity = data.handle
-		coords = GetEntityCoords(entity)
-		handle = GetHandleFromCoords(coords)
+	if data.handle > 0 then
+		if NetworkDoesNetworkIdExist(data.handle) then
+			handle = data.handle
+			entity = NetworkGetEntityFromNetworkId(data.handle)
+			coords = GetEntityCoords(entity)
+		elseif doesEntityExist(data.handle) then
+			entity = data.handle
+			coords = GetEntityCoords(entity)
+			handle = GetHandleFromCoords(coords)
+		end
 	end
 
-	local defaults = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords) or Config.models[GetEntityModel(entity)]
+	if not handle then
+		handle = data.handle
+	end
+
+	local defaults
+
+	if entity and coords then
+		defaults = GetDefaultMediaPlayer(Config.defaultMediaPlayers, coords) or Config.models[GetEntityModel(entity)]
+	else
+		for _, dmp in ipairs(Config.defaultMediaPlayers) do
+			if GetHandleFromCoords(dmp.position) == handle then
+				defaults = dmp
+				break
+			end
+		end
+	end
 
 	local defaultsData = {}
 
@@ -950,21 +1010,31 @@ RegisterNUICallback("setMediaPlayerDefaults", function(data, cb)
 		defaultsData.diffRoomVolume = mediaPlayers[handle].diffRoomVolume
 		defaultsData.range = mediaPlayers[handle].range
 		defaultsData.isVehicle = mediaPlayers[handle].isVehicle
-		defaultsData.scaleform = json.encode(mediaPlayers[handle].scaleform)
+		defaultsData.scaleform = mediaPlayers[handle].scaleform
 	end
 
-	if not defaultsData.label then
+	if not defaultsData.label and entity then
 		defaultsData.label = getEntityLabel(handle, entity)
 	end
 
-	if defaultsData.isVehicle == nil then
+	if defaultsData.isVehicle == nil and entity then
 		defaultsData.isVehicle = IsEntityAVehicle(entity)
+	end
+
+	if defaultsData.scaleform then
+		defaultsData.scaleform = json.encode(defaultsData.scaleform)
 	end
 
 	cb(defaultsData or {})
 end)
 
 RegisterNUICallback("save", function(data, cb)
+	if data.scaleform then
+		data.scaleform.position = ToVector3(data.scaleform.position)
+		data.scaleform.rotation = ToVector3(data.scaleform.rotation)
+		data.scaleform.scale = ToVector3(data.scaleform.scale)
+	end
+
 	if data.method == "new-model" then
 		TriggerServerEvent("pmms:saveModel", GetHashKey(data.model), data)
 	else
@@ -972,29 +1042,35 @@ RegisterNUICallback("save", function(data, cb)
 
 		if NetworkDoesNetworkIdExist(data.handle) then
 			entity = NetworkGetEntityFromNetworkId(data.handle)
-		elseif DoesEntityExist(data.handle) then
+		elseif doesEntityExist(data.handle) then
 			entity = data.handle
 		end
 
-		if not entity then
-			return
-		end
-
 		if data.method == "client-model" or data.method == "server-model" then
-			local model = GetEntityModel(entity)
+			if entity then
+				local model = GetEntityModel(entity)
 
-			if data.method == "client-model" then
-				print("Client-side model saving is not implemented yet")
-			elseif data.method == "server-model" then
-				TriggerServerEvent("pmms:saveModel", model, data)
+				if data.method == "client-model" then
+					print("Client-side model saving is not implemented yet")
+				elseif data.method == "server-model" then
+					TriggerServerEvent("pmms:saveModel", model, data)
+				end
 			end
 		elseif data.method == "client-entity" or data.method == "server-entity" then
-			local coords = GetEntityCoords(entity)
+			local coords
 
-			if data.method == "client-entity" then
-				print("Client-side entity saving is not implemented yet")
-			elseif data.method == "server-entity" then
-				TriggerServerEvent("pmms:saveEntity", coords, data)
+			if entity then
+				coords = GetEntityCoords(entity)
+			elseif data.scaleform then
+				coords = data.scaleform.position
+			end
+
+			if coords then
+				if data.method == "client-entity" then
+					print("Client-side entity saving is not implemented yet")
+				elseif data.method == "server-entity" then
+					TriggerServerEvent("pmms:saveEntity", coords, data)
+				end
 			end
 		end
 	end
@@ -1060,6 +1136,8 @@ RegisterNUICallback("setScaleform", function(data, cb)
 		data.scaleform.rotation = ToVector3(data.scaleform.rotation)
 		data.scaleform.scale = ToVector3(data.scaleform.scale)
 
+		local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
+
 		TriggerServerEvent("pmms:setScaleform", handle, data.scaleform)
 	end
 
@@ -1067,18 +1145,22 @@ RegisterNUICallback("setScaleform", function(data, cb)
 end)
 
 RegisterNUICallback("delete", function(data, cb)
-	local entity
+	local model, coords
 
 	if NetworkDoesNetworkIdExist(data.handle) then
-		entity = NetworkGetEntityFromNetworkId(data.handle)
-	elseif DoesEntityExist(data.handle) then
-		entity = data.handle
+		local entity = NetworkGetEntityFromNetworkId(data.handle)
+		model = GetEntityModel(entity)
+		coords = GetEntityCoords(entity)
+	elseif doesEntityExist(data.handle) then
+		coords = GetEntityCoords(data.handle)
+	elseif data.coords then
+		coords = ToVector3(data.coords)
 	end
 
-	if data.method == "server-model" then
-		TriggerServerEvent("pmms:deleteModel", GetEntityModel(entity))
-	elseif data.method == "server-entity" then
-		TriggerServerEvent("pmms:deleteEntity", GetEntityCoords(entity))
+	if data.method == "server-model" and model then
+		TriggerServerEvent("pmms:deleteModel", model)
+	elseif data.method == "server-entity" and coords then
+		TriggerServerEvent("pmms:deleteEntity", coords)
 	end
 
 	cb({})
@@ -1339,7 +1421,7 @@ Citizen.CreateThread(function()
 
 			local data
 
-			local entityExists = entity and DoesEntityExist(entity)
+			local entityExists = doesEntityExist(entity)
 
 			local mediaPos
 
@@ -1456,7 +1538,7 @@ Citizen.CreateThread(function()
 			if mediaPlayer.spawn then
 				local nearby = #(myPos - mediaPlayer.position) <= Config.defaultMediaPlayerSpawnDistance
 
-				if mediaPlayer.handle and not DoesEntityExist(mediaPlayer.handle) then
+				if mediaPlayer.handle and not doesEntityExist(mediaPlayer.handle) then
 					mediaPlayer.handle = nil
 				end
 

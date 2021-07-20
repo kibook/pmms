@@ -632,6 +632,24 @@ Config.presets = {
 -- range
 -- 	The default range used for this media player.
 --
+-- scaleform
+-- 	If specified, video will be displayed on a separate 3D scaleform
+-- 	screen. Scaleforms have the following properties:
+--
+-- 	position
+-- 		A vector3 for the coordinates of the top-left edge of the
+-- 		scaleform.
+--
+-- 	rotation
+-- 		A vector3 for the orientation of the scaleform.
+--
+-- 	scale
+-- 		A vector3 for the size of the scaleform.
+--
+-- 	standalone
+-- 		If true, then this scaleform is not associated with an object,
+-- 		and can be used by itself.
+--
 Config.defaultMediaPlayers = {
 	--[[
 	{
@@ -651,8 +669,17 @@ Config.defaultMediaPlayers = {
 		video = false,
 		videoSize = 30,
 		muted = false,
-		attenuation = {sameRoom = 4, diffRoom = 6},
-		range = 30
+		attenuation = {
+			sameRoom = 4,
+			diffRoom = 6
+		},
+		range = 30,
+		scaleform = {
+			position = vector3(153.9, -988.7, 36.9),
+			rotation = vector3(0, 0, 20),
+			scale = vector3(0.6, 0.344, 0),
+			standalone = false
+		}
 	}
 	]]
 }

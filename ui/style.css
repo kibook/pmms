@@ -265,7 +265,7 @@ option {
 	font-family: Helvetica, FontAwesome;
 }
 
-#advanced-settings {
+#main-advanced-settings {
 	display: grid;
 	grid-template-columns: repeat(13, max-content);
 	grid-gap: 0.5vh 0.5vw;

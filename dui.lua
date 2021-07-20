@@ -16,7 +16,7 @@ ScaleformPool = Class()
 ScaleformPool.pool = {}
 
 function ScaleformPool:requestScaleform(name)
-	if not self.pool[name] or not HasScaleformMovieLoaded(self.pool[name])then
+	if not self.pool[name] or not HasScaleformMovieLoaded(self.pool[name]) then
 		self.pool[name] = RequestScaleformMovie(name)
 	end
 
@@ -149,8 +149,6 @@ function DuiBrowser:disableScaleform()
 	if not self.sfHandle then
 		return
 	end
-
-	--SetScaleformMovieAsNoLongerNeeded(self.sfHandle)
 
 	self.sfHandle = nil
 

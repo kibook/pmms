@@ -94,6 +94,10 @@ local function addMediaPlayer(handle, options)
 		options.scaleform.position = ToVector3(options.scaleform.position)
 		options.scaleform.rotation = ToVector3(options.scaleform.rotation)
 		options.scaleform.scale = ToVector3(options.scaleform.scale)
+
+		if not options.label then
+			options.label = "Scaleform"
+		end
 	end
 
 	if not options.queue then
@@ -359,6 +363,12 @@ local function loadSettings()
 		for _, defaultMediaPlayer in ipairs(defaultMediaPlayers) do
 			defaultMediaPlayer.position = ToVector3(defaultMediaPlayer.position)
 
+			if defaultMediaPlayer.scaleform then
+				defaultMediaPlayer.scaleform.position = ToVector3(defaultMediaPlayer.scaleform.position)
+				defaultMediaPlayer.scaleform.rotation = ToVector3(defaultMediaPlayer.scaleform.rotation)
+				defaultMediaPlayer.scaleform.scale = ToVector3(defaultMediaPlayer.scaleform.scale)
+			end
+
 			local dmp = GetDefaultMediaPlayer(Config.defaultMediaPlayers, defaultMediaPlayer.position)
 
 			if dmp then
@@ -369,6 +379,7 @@ local function loadSettings()
 				dmp.diffRoomVolume = defaultMediaPlayer.diffRoomVolume
 				dmp.range = defaultMediaPlayer.range
 				dmp.isVehicle = defaultMediaPlayer.isVehicle
+				dmp.scaleform = defaultMediaPlayer.scaleform
 			else
 				table.insert(Config.defaultMediaPlayers, defaultMediaPlayer)
 			end
@@ -396,6 +407,7 @@ local function addModel(model, data)
 		Config.models[model].diffRoomVolume = data.diffRoomVolume
 		Config.models[model].range = data.range
 		Config.models[model].isVehicle = data.isVehicle
+		Config.models[model].scaleform = data.scaleform
 	else
 		Config.models[model] = data
 	end
@@ -444,6 +456,7 @@ local function addEntity(coords, data)
 		defaultMediaPlayer.diffRoomVolume = data.diffRoomVolume
 		defaultMediaPlayer.range = data.range
 		defaultMediaPlayer.isVehicle = data.isVehicle
+		defaultMediaPlayer.scaleform = data.scaleform
 	else
 		table.insert(Config.defaultMediaPlayers, data)
 	end
@@ -466,6 +479,12 @@ local function addEntityPermanently(coords, data)
 
 	for _, defaultMediaPlayer in ipairs(defaultMediaPlayers) do
 		defaultMediaPlayer.position = ToVector3(defaultMediaPlayer.position)
+
+		if defaultMediaPlayer.scaleform then
+			defaultMediaPlayer.scaleform.position = ToVector3(defaultMediaPlayer.scaleform.position)
+			defaultMediaPlayer.scaleform.rotation = ToVector3(defaultMediaPlayer.scaleform.rotation)
+			defaultMediaPlayer.scaleform.scale = ToVector3(defaultMediaPlayer.scaleform.scale)
+		end
 	end
 
 	defaultMediaPlayer = GetDefaultMediaPlayer(defaultMediaPlayers, coords)
@@ -478,6 +497,7 @@ local function addEntityPermanently(coords, data)
 		defaultMediaPlayer.diffRoomVolume = data.diffRoomVolume
 		defaultMediaPlayer.range = data.range
 		defaultMediaPlayer.isVehicle = data.isVehicle
+		defaultMediaPlayer.scaleform = data.scaleform
 	else
 		table.insert(defaultMediaPlayers, data)
 	end

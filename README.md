@@ -110,7 +110,28 @@ handle = exports.pmms:startByCoords(x, y, z, options)
 
 Starts playing something on a non-networked media player entity, using its coordinates on the world map.
 
-Refer to [Media player options](#media-player-options).
+For `options`, refer to [Media player options](#media-player-options).
+
+### startScaleform
+
+```lua
+handle = exports.pmms:startScaleform(scaleform, options)
+```
+
+Starts playing something on a standalone scaleform screen.
+
+For `options`, refer to [Media player options](#media-player-options).
+
+#### Scaleform options
+
+`scaleform` is a table of options for the scaleform screen.
+
+| Option     | Description                                                    |
+|------------|----------------------------------------------------------------|
+| `name`     | The name of the scaleform (.gfx filename minus extension).     |
+| `position` | A `vector3` for the coordinates of the top-left of the screen. |
+| `rotation` | A `vector3` for the orientation of the screen.                 |
+| `scale`    | A `vector3` for the scale of the screen.                       |
 
 ### stop
 

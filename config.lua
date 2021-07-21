@@ -695,8 +695,16 @@ Config.dui = {}
 
 -- The URL for the DUI server.
 --
--- To host your own server:
--- 	git clone --branch gh-pages https://github.com/kibook/pmms
+-- Most people can just use the default server. If you do want to host your own
+-- server, there two options:
+--
+-- 	a. Using GitHub Pages:
+-- 		Fork https://github.com/kibook/pmms on GitHub. You will then
+-- 		have a server at https://<your username>.github.io/pmms.
+--
+-- 	b. Using your own web server:
+-- 		git clone --branch gh-pages https://github.com/kibook/pmms
+--
 Config.dui.url = "https://kibook.github.io/pmms"
 
 -- The screen width of the DUI browser

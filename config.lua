@@ -636,6 +636,9 @@ Config.presets = {
 -- 	If specified, video will be displayed on a separate 3D scaleform
 -- 	screen. Scaleforms have the following properties:
 --
+--	name
+--		The name of the scaleform (.gfx filename minus extension).
+--
 -- 	position
 -- 		A vector3 for the coordinates of the top-left edge of the
 -- 		scaleform.

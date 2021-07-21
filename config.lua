@@ -714,7 +714,7 @@ Config.dui.screenWidth = 1280
 Config.dui.screenHeight = 720
 
 -- Time to wait on a connection to the DUI server
-Config.dui.timeout = 15000
+Config.dui.timeout = 30000
 
 -- Prefix for commands
 Config.commandPrefix = "pmms"

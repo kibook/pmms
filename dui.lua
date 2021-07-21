@@ -36,22 +36,25 @@ function DuiBrowser:createNamedRendertargetForModel(model, name)
 end
 
 function DuiBrowser:waitForConnection()
-	DuiBrowser.initQueue[self.mediaPlayerHandle] = false
+	self.initDone = false
+
+	DuiBrowser.initQueue[self.mediaPlayerHandle] = self
 
 	local timeout = GetGameTimer() + Config.dui.timeout
 
-	while not DuiBrowser.initQueue[self.mediaPlayerHandle] and GetGameTimer() < timeout do
+	while not DuiBrowser.initQueue[self.mediaPlayerHandle].initDone and GetGameTimer() < timeout do
 		self:sendMessage({type = "DuiBrowser:init", handle = self.mediaPlayerHandle})
 		Citizen.Wait(100)
 	end
 
-	if not DuiBrowser.initQueue[self.mediaPlayerHandle] then
-		print(("Failed to connect to %s within %d ms"):format(Config.dui.url, Config.dui.timeout))
-	end
-
 	DuiBrowser.initQueue[self.mediaPlayerHandle] = nil
 
-	return true
+	if self.initDone then
+		return true
+	else
+		print(("Failed to connect to %s within %d ms"):format(Config.dui.url, Config.dui.timeout))
+		return false
+	end
 end
 
 function DuiBrowser:enableRenderTarget()
@@ -123,7 +126,7 @@ function DuiBrowser:enableScaleform()
 
 		DuiBrowser.scaleforms[self.sfName].browsers[self] = true
 	else
-		print("Failed to load scaleform")
+		print(("Failed to load scaleform %s"):format(self.sfName))
 	end
 end
 
@@ -157,6 +160,10 @@ end
 
 function DuiBrowser:new(mediaPlayerHandle, model, renderTarget, scaleform)
 	local self = Class.new(self)
+
+	if DuiBrowser.initQueue[mediaPlayerHandle] then
+		return DuiBrowser.initQueue[mediaPlayerHandle]
+	end
 
 	self.mediaPlayerHandle = mediaPlayerHandle
 	self.model = model
@@ -201,6 +208,7 @@ function DuiBrowser:new(mediaPlayerHandle, model, renderTarget, scaleform)
 	else
 		DuiBrowser.pool[self.mediaPlayerHandle] = nil
 		DestroyDui(self.duiObject)
+		return nil
 	end
 end
 
@@ -312,6 +320,8 @@ function DuiBrowser:delete()
 end
 
 RegisterNUICallback("DuiBrowser:initDone", function(data, cb)
-	DuiBrowser.initQueue[data.handle] = true
+	if DuiBrowser.initQueue[data.handle] then
+		DuiBrowser.initQueue[data.handle].initDone = true
+	end
 	cb({})
 end)

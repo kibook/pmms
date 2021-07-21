@@ -618,15 +618,15 @@ AddEventHandler("pmms:start", function(handle, options)
 			return
 		end
 
-		if url == "random" then
-			url = getRandomPreset()
+		if options.url == "random" then
+			options.url = getRandomPreset()
 		end
 
-		if Config.presets[url] then
-			options.url    = Config.presets[options.url].url
+		if Config.presets[options.url] then
 			options.title  = Config.presets[options.url].title
 			options.filter = Config.presets[options.url].filter or false
 			options.video  = Config.presets[options.url].video or options.visualization ~= nil
+			options.url    = Config.presets[options.url].url
 
 			TriggerClientEvent("pmms:start", source, handle, options)
 		elseif IsPlayerAceAllowed(source, "pmms.anyUrl") then

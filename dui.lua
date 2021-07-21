@@ -38,21 +38,20 @@ end
 function DuiBrowser:waitForConnection()
 	DuiBrowser.initQueue[self.mediaPlayerHandle] = false
 
-	local timeWaited = 0
+	local timeout = GetGameTimer() + Config.dui.timeout
 
-	while not DuiBrowser.initQueue[self.mediaPlayerHandle] and timeWaited < 5000 do
+	while not DuiBrowser.initQueue[self.mediaPlayerHandle] and GetGameTimer() < timeout do
 		self:sendMessage({type = "DuiBrowser:init", handle = self.mediaPlayerHandle})
 		Citizen.Wait(100)
-		timeWaited = timeWaited + 100
 	end
 
-	if DuiBrowser.initQueue[self.mediaPlayerHandle] then
-		DuiBrowser.initQueue[self.mediaPlayerHandle] = nil
-		return true
-	else
-		TriggerEvent("pmms:error", "Failed to connect to " .. Config.dui.url)
-		return false
+	if not DuiBrowser.initQueue[self.mediaPlayerHandle] then
+		print(("Failed to connect to %s within %d ms"):format(Config.dui.url, Config.dui.timeout))
 	end
+
+	DuiBrowser.initQueue[self.mediaPlayerHandle] = nil
+
+	return true
 end
 
 function DuiBrowser:enableRenderTarget()

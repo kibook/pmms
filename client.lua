@@ -1141,9 +1141,9 @@ RegisterNUICallback("setScaleform", function(data, cb)
 		data.scaleform.rotation = ToVector3(data.scaleform.rotation)
 		data.scaleform.scale = ToVector3(data.scaleform.scale)
 
-		local duiBrowser = DuiBrowser:getBrowserForHandle(handle)
-
 		TriggerServerEvent("pmms:setScaleform", handle, data.scaleform)
+
+		mediaPlayers[handle].scaleform = data.scaleform
 	end
 
 	cb {}

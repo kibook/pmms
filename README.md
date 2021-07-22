@@ -14,7 +14,9 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from entiti
 
 - Optional immersive filter can be applied to any audio.
 
-- Play video on a TV screen with DUI (FiveM), or on a screen displayed above the entity (RedM).
+- Play video on a TV screen or scaleform with DUI (FiveM), or on a screen displayed above the entity (RedM).
+
+- Play audio inside or outside of vehicles.
 
 - Permissions system and ability to lock entities so only certain players can control them.
 

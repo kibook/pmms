@@ -1,4 +1,5 @@
 const maxTimeDifference = 2;
+const tooltipDelay = 750;
 
 var isRDR = true;
 var defaultSameRoomAttenuation = 4.0;
@@ -8,6 +9,8 @@ var defaultRange = 50;
 var defaultScaleformName = 'pmms_texture_renderer';
 var defaultVideoSize = 30;
 var audioVisualizations = {};
+
+var tooltipsEnabled = true;
 
 function sendMessage(name, params) {
 	return fetch('https://' + GetParentResourceName() + '/' + name, {
@@ -589,6 +592,9 @@ function createActiveMediaPlayerDiv(mediaPlayer, permissions, includeQueue) {
 	urlCopyButton.innerHTML = '<i class="fas fa-link"></i>';
 	urlCopyButton.addEventListener('click', event => {
 		copyToClipboard(mediaPlayer.info.url);
+		sendMessage('notify', {
+			text: 'URL copied to clipboard!'
+		});
 	});
 
 	titleDiv.appendChild(titleSpan);
@@ -781,7 +787,7 @@ function createActiveMediaPlayerDiv(mediaPlayer, permissions, includeQueue) {
 			unmute(mediaPlayer.handle);
 		});
 	} else {
-		muteButton.innerHTML = '<i class="fas fa-volume-off"></i>';
+		muteButton.innerHTML = '<i class="fas fa-volume-up"></i>';
 		muteButton.addEventListener('click', event => {
 			mute(mediaPlayer.handle);
 		});
@@ -1589,6 +1595,16 @@ function resetPlayers() {
 	document.querySelectorAll('.player').forEach(player => removePlayer(player));
 }
 
+function showTooltip(tooltip, event) {
+	tooltip.style.top = event.pageY + 'px';
+	tooltip.style.left = event.pageX + 'px';
+	tooltip.style.display = 'block';
+}
+
+function hideTooltip(tooltip) {
+	tooltip.style.display = 'none';
+}
+
 window.addEventListener('message', event => {
 	switch (event.data.type) {
 		case 'init':
@@ -1657,6 +1673,9 @@ window.addEventListener('load', () => {
 		});
 
 		document.getElementById('scaleform-name').value = resp.defaultScaleformName;
+
+		tooltipsEnabled = resp.tooltipsEnabled;
+		document.getElementById('toggle-tips').checked = tooltipsEnabled;
 	});
 
 	var ui = document.getElementById('ui');
@@ -1876,5 +1895,30 @@ window.addEventListener('load', () => {
 
 	document.getElementById('fix').addEventListener('click', function(event) {
 		sendMessage('fix');
+	});
+
+	document.querySelectorAll(".tooltip").forEach(tooltip => {
+		tooltip.parentNode.addEventListener('mouseover', function(event) {
+			if (tooltipsEnabled) {
+				let delay = setTimeout(() => {
+					showTooltip(tooltip, event);
+					this.onmouseout = () => hideTooltip(tooltip);
+				}, tooltipDelay);
+
+				this.onmouseout = () => clearTimeout(delay);
+			}
+		});
+
+		tooltip.onmouseover = () => hideTooltip(tooltip);
+
+		document.body.appendChild(tooltip);
+	});
+
+	document.getElementById('toggle-tips').addEventListener('input', function(event) {
+		tooltipsEnabled = this.checked;
+
+		sendMessage('toggleTips', {
+			enabled: this.checked
+		});
 	});
 });

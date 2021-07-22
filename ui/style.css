@@ -12,7 +12,7 @@ html, body {
 	background: none;
 	padding: 0;
 	margin: 0;
-	font-family: Helvetica;
+	font-family: Helvetica, "Font Awesome 5 Free";
 	font-size: 2vh;
 	overflow: hidden;
 }
@@ -138,6 +138,10 @@ option {
 	white-space: nowrap;
 }
 
+#attenuation-container > div {
+	display: inline-block;
+}
+
 #active-media-players-container {
 	overflow-y: auto;
 }
@@ -241,6 +245,7 @@ option {
 #base-volume-container {
 	display: flex;
 	align-items: center;
+	padding: 0.5vh 0 0.5vh 0;
 }
 
 #base-volume-container i, #base-volume-container div {
@@ -257,17 +262,13 @@ option {
 	opacity: 0.9;
 }
 
-#preset {
-	font-family: Helvetica, FontAwesome;
-}
-
-#usable-media-players {
-	font-family: Helvetica, FontAwesome;
+#usable-media-players-container, #presets-container {
+	display: contents;
 }
 
 #main-advanced-settings {
 	display: grid;
-	grid-template-columns: repeat(14, max-content);
+	grid-template-columns: repeat(15, max-content);
 	grid-gap: 0.5vh 0.5vw;
 }
 
@@ -321,6 +322,10 @@ mediaelementwrapper > video {
 	text-align: center;
 }
 
+#scaleform-name-container {
+	display: contents;
+}
+
 #scaleform-name {
 	grid-column: 2 / 5;
 }
@@ -351,7 +356,6 @@ mediaelementwrapper > video {
 	background-color: rgba(0, 0, 0, 0.5);
 	color: white;
 	text-align: center;
-	font-family: Arial;
 	margin: 0.5vh 0.5vw 0.5vh 0.5vw;
 	border-radius: 0.5vw;
 }
@@ -367,4 +371,46 @@ mediaelementwrapper > video {
 .notification .text {
 	padding: 0.5vh 0.5vw 0.5vh 0.5vw;
 	font-size: 1.7vh;
+}
+
+.tooltip {
+	display: none;
+	position: fixed;
+	background-color: #000;
+	color: white;
+	padding: 0.5vh 0.5vw;
+	border-radius: 10px;
+	transform: translate(0.5vw, 1vh);
+	font-size: 1.5vh;
+}
+
+.tooltip-title {
+	font-weight: bold;
+	font-size: 2vh;
+	padding-bottom: 0.5vh;
+}
+
+.tooltip-title:before {
+	content: "\f059\a0";
+}
+
+.tooltip-para {
+	padding-top: 0.5vh;
+}
+
+.icon-descriptions {
+	display: grid;
+	grid-template-columns: auto auto;
+	grid-gap: 0.5vh 0.5vw;
+	align-items: end;
+	padding-top: 0.5vh;
+}
+
+.literal {
+	font-family: monospace;
+	color: rgba(255, 255, 255, 0.5);
+}
+
+.icon {
+	font-weight: 900;
 }

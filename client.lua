@@ -8,6 +8,7 @@ local baseVolume = 50
 local statusIsShown = false
 local uiIsOpen = false
 local syncIsEnabled = true
+local tooltipsEnabled = true
 
 local permissions = {}
 permissions.interact = false
@@ -635,6 +636,8 @@ local function loadSettings()
 	if showStatus == 1 then
 		toggleStatus()
 	end
+
+	tooltipsEnabled = GetResourceKvpInt("tooltipsEnabled") ~= 0
 end
 
 local function enableVideo(handle)
@@ -802,7 +805,8 @@ RegisterNUICallback("startup", function(data, cb)
 		maxRange = Config.maxRange,
 		defaultScaleformName = Config.defaultScaleformName,
 		defaultVideoSize = Config.defaultVideoSize,
-		audioVisualizations = Config.audioVisualizations
+		audioVisualizations = Config.audioVisualizations,
+		tooltipsEnabled = tooltipsEnabled
 	}
 end)
 
@@ -1199,6 +1203,24 @@ end)
 
 RegisterNUICallback("fix", function(data, cb)
 	TriggerEvent("pmms:reset")
+
+	cb {}
+end)
+
+RegisterNUICallback("toggleTips", function(data, cb)
+	tooltipsEnabled = data.enabled
+
+	SetResourceKvpInt("tooltipsEnabled", tooltipsEnabled and 1 or 0)
+
+	cb {}
+end)
+
+RegisterNUICallback("notify", function(data, cb)
+	notify {
+		title = data.title,
+		text = data.text,
+		duration = data.duration
+	}
 
 	cb {}
 end)

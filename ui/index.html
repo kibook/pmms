@@ -15,39 +15,109 @@
 				<img src="loading.svg">
 			</div>
 			<div id="active-media-players-container">
+				<div class="tooltip">
+					<div class="tooltip-title">Active media players</div>
+					<div class="tooltip-para">A list of nearby active media players.</div>
+					<div class="icon-descriptions">
+						<div class="icon">&#xf0c1;</div>
+						<div>Copy the URL of the media to your clipboard.</div>
+						<div class="icon">&#xf04a; / &#xf04e;</div>
+						<div>Seek backwards/forwards 10 seconds.</div>
+						<div class="icon">&#xf051;</div>
+						<div>Play the next item in the queue.</div>
+						<div class="icon">&#xf023; / &#xf09c;</div>
+						<div>Media player is locked/unlocked. Click to toggle.</div>
+						<div class="icon">&#xf24d;</div>
+						<div>Copy what's currently playing to another media player.</div>
+						<div class="icon">&#xf079; / &#xf061;</div>
+						<div>Looping is on/off. Click to toggle.</div>
+						<div class="icon">&#xf03d; / &#xf4e2;</div>
+						<div>Video is on/off (RedM only).</div>
+						<div class="icon">&#xf028; / &#xf6a9;</div>
+						<div>Sound is on/off.</div>
+						<div class="icon">&#xf04c; / &#xf04b;</div>
+						<div>Pause/resume the media player.</div>
+						<div class="icon">&#xf04d;</div>
+						<div>Stop the media player.</div>
+					</div>
+				</div>
 				<div id="active-media-players"></div>
 			</div>
 			<div id="start-media-player" class="start-on-enter">
-				<select id="usable-media-players"></select>
-				<select id="preset"></select>
+				<div id="usable-media-players-container">
+					<div class="tooltip">
+						<div class="tooltip-title">Usable media players</div>
+						<div class="tooltip-para">A list of nearby media players you can play things on.</div>
+					</div>
+					<select id="usable-media-players"></select>
+				</div>
+				<div id="presets-container">
+					<div class="tooltip">
+						<div class="tooltip-title">Presets</div>
+						<div class="tooltip-para">A list of preset media you can play.</div>
+					</div>
+					<select id="preset"></select>
+				</div>
 				<div id="url-container">
+					<div class="tooltip">
+						<div class="tooltip-title">Media URL</div>
+						<div class="tooltip-para">The URL of the media you want to play.</div>
+					</div>
 					<input id="url" type="text" placeholder="Enter URL...">
 				</div>
 				<div id="loop-container">
+					<div class="tooltip">
+						<div class="tooltip-title">Loop</div>
+						<div class="tooltip-para">If checked, the media will be played in a loop.</div>
+					</div>
 					<i class="fas fa-retweet"></i>
 					<input id="loop" type="checkbox">
 				</div>
 				<div id="filter-container">
+					<div class="tooltip">
+						<div class="tooltip-title">Filter</div>
+						<div class="tooltip-para">Enables an immersive filter for audio and video.</div>
+					</div>
 					<i class="fas fa-filter"></i>
 					<input id="filter" type="checkbox" checked>
 				</div>
 				<div id="muted-container">
+					<div class="tooltip">
+						<div class="tooltip-title">Mute</div>
+						<div class="tooltip-para">If checked, the sound will be muted.</div>
+					</div>
 					<i class="fas fa-volume-mute"></i>
 					<input id="muted" type="checkbox">
 				</div>
 				<div id="video-container">
+					<div class="tooltip">
+						<div class="tooltip-title">Video</div>
+						<div class="tooltip-para">If checked, video will be enabled (RedM only)</div>
+					</div>
 					<i class="fas fa-video"></i>
 					<input id="video" type="checkbox" disabled>
 					<input hidden id="video-size" type="number" min="10" max="100" step="10" value="30" disabled>
 				</div>
 				<div id="locked-container">
+					<div class="tooltip">
+						<div class="tooltip-title">Lock</div>
+						<div class="tooltip-para">If checked, this media player will be locked, so only managers can control it.</div>
+					</div>
 					<i class="fas fa-lock"></i>
 					<input id="locked" type="checkbox">
 				</div>
 				<button id="advanced-settings-button" class="control-button">
+					<div class="tooltip">
+						<div class="tooltip-title">Advanced settings</div>
+						<div class="tooltip-para">Toggles the display of the advanced settings section.</div>
+					</div>
 					<i class="fas fa-sliders-h"></i>
 				</button>
 				<div id="play-button-container">
+					<div class="tooltip">
+						<div class="tooltip-title">Play</div>
+						<div class="tooltip-para">Starts playing the selected media.</div>
+					</div>
 					<button id="play-button" class="control-button">
 						<i class="fas fa-play"></i>
 					</button>
@@ -56,76 +126,171 @@
 			<div id="advanced-settings" style="display: none;" class="start-on-enter">
 				<div id="main-advanced-settings">
 					<div id="offset-container">
+						<div class="tooltip">
+							<div class="tooltip-title">Start time</div>
+							<div class="tooltip-para">A time offset to start playing the media at.</div>
+							<div class="tooltip-para">Can be given in seconds (for example, <span class="literal">120</span>) or a timecode in the form of hh:mm:ss (for example, <span class="literal">00:02:00</span>).</div>
+						</div>
 						<i class="fas fa-clock"></i>
 						<input id="offset" type="text" size="8" value="00:00:00">
 					</div>
 					<div id="attenuation-container">
-						<i class="fas fa-door-closed"></i>
-						<input id="same-room-attenuation" class="set-attenuation" type="number" min="0" max="10" step="0.1" value="4">
-						<i class="fas fa-door-open"></i>
-						<input id="diff-room-attenuation" class="set-attenuation" type="number" min="0" max="10" step="0.1" value="6">
+						<div>
+							<div class="tooltip">
+								<div class="tooltip-title">Same room attenuation</div>
+								<div class="tooltip-para">The rate at which the sound fades while in the same room as the media player.</div>
+								<div class="tooltip-para">A value of <span class="literal">0</span> means the sound will not fade.</div>
+							</div>
+							<i class="fas fa-door-closed"></i>
+							<input id="same-room-attenuation" class="set-attenuation" type="number" min="0" max="10" step="0.1" value="4">
+						</div>
+						<div>
+							<div class="tooltip">
+								<div class="tooltip-title">Different room attenuation</div>
+								<div class="tooltip-para">The rate at which the sound fades while in a different than from the media player.</div>
+								<div class="tooltip-para">A value of <span class="literal">0</span> means the sound will not fade.</div>
+							</div>
+							<i class="fas fa-door-open"></i>
+							<input id="diff-room-attenuation" class="set-attenuation" type="number" min="0" max="10" step="0.1" value="6">
+						</div>
 					</div>
 					<div id="range-container">
+						<div class="tooltip">
+							<div class="tooltip-title">Range</div>
+							<div class="tooltip-para">The distance the media player is visible/audible for.</div>
+						</div>
 						<i class="fas fa-walking"></i>
 						<input id="range" type="number" min="5" max="200" step="5" value="50"/>
 					</div>
 					<div id="volume-container">
+						<div class="tooltip">
+							<div class="tooltip-title">Volume</div>
+							<div class="tooltip-para">The base volume of the media player.</div>
+						</div>
 						<i class="fas fa-volume-up"></i>
 						<input id="volume" type="number" min="0" max="100" step="5" value="100">
 					</div>
 					<div id="diff-room-volume-container">
+						<div class="tooltip">
+							<div class="tooltip-title">Different room volume</div>
+							<div class="tooltip-para">The ratio by which the base volume of the media player is decreased when entering a different room.</div>
+							<div class="tooltip-para">A value of <span class="literal">1</span> means the volume will be the same even when entering a different room.</div>
+						</div>
 						<i class="fas fa-volume-down"></i>
 						<input id="diff-room-volume" type="number" min="0" max="1" step="0.01" value="0.25">
 					</div>
 					<div id="is-vehicle-container">
+						<div class="tooltip">
+							<div class="tooltip-title">Vehicle mode</div>
+							<div class="tooltip-para">If checked, the entity is treated as a vehicle, meaning being inside the vehicle counts as being in the same room, and being outside it counts as being in a different room.</div>
+							<div class="tooltip-para">Uncheck this to play the sound outside the vehicle.</div>
+						</div>
 						<i class="fas fa-car"></i>
 						<input id="is-vehicle" type="checkbox">
 					</div>
 					<div id="scaleform-container">
+						<div class="tooltip">
+							<div class="tooltip-title">Use scaleform</div>
+							<div class="tooltip-para">Play the media on a scaleform instead of the render target on an object.</div>
+						</div>
 						<i class="fas fa-tv"></i>
 						<input id="scaleform" type="checkbox">
 					</div>
 					<div id="visualization-container">
+						<div class="tooltip">
+							<div class="tooltip-title">Audio visualization</div>
+							<div class="tooltip-para">Display an audio visualization instead of video.</div>
+						</div>
 						<i class="fas fa-signal"></i>
 						<select id="visualization">
 							<option></option>
 						</select>
 					</div>
 					<button id="save" class="control-button">
+						<div class="tooltip">
+							<div class="tooltip-title">Save settings</div>
+							<div class="tooltip-para">Add a new model, or save the selected settings for a model or entity.</div>
+						</div>
 						<i class="fas fa-save"></i>
 					</button>
 					<button id="delete" class="control-button">
+						<div class="tooltip">
+							<div class="tooltip-title">Delete settings</div>
+							<div class="tooltip-para">Delete saved settings for a model or entity.</div>
+						</div>
 						<i class="fas fa-trash-alt"></i>
 					</button>
 					<button id="revert-settings" class="control-button">
+						<div class="tooltip">
+							<div class="tooltip-title">Reset settings</div>
+							<div class="tooltip-para">Reset the settings to those saved for the selected model or entity.</div>
+						</div>
 						<i class="fas fa-undo"></i>
 					</button>
 					<button id="restore-ui-position" class="control-button">
+						<div class="tooltip">
+							<div class="tooltip-title">Reset UI position</div>
+							<div class="tooltip-para">Resets the position of the UI to the centre of the screen.</div>
+						</div>
 						<i class="fas fa-window-restore"></i>
 					</button>
 					<button id="fix" class="control-button">
+						<div class="tooltip">
+							<div class="tooltip-title">Reset media players</div>
+							<div class="tooltip-para">Resets all media players, which can fix some issues.</div>
+						</div>
 						<i class="fas fa-sync"></i>
 					</button>
+					<div id="toggle-tips-container">
+						<div class="tooltip">
+							<div class="tooltip-title">Tooltips</div>
+							<div class="tooltip-para">Enable or disable these tooltips.</div>
+						</div>
+						<i class="fas fa-question-circle"></i>
+						<input id="toggle-tips" type="checkbox">
+					</div>
 					<button id="toggle-status" class="control-button">
+						<div class="tooltip">
+							<div class="tooltip-title">Status display</div>
+							<div class="tooltip-para">Toggles the display of the status bar, which shows the current status of the nearest media player.</div>
+						</div>
 						<i class="fas fa-info-circle"></i>
 					</button>
 				</div>
 				<div id="scaleform-settings" style="display: none;">
 					<div id="scaleform-title">Scaleform Settings</div>
-					<input id="scaleform-name" type="text" placeholder="Name">
+					<div id="scaleform-name-container">
+						<div class="tooltip">
+							<div class="tooltip-title">Scaleform name</div>
+							<div class="tooltip-para">The name of the scaleform (.gfx filename minus extension).</div>
+						</div>
+						<input id="scaleform-name" type="text" placeholder="Name">
+					</div>
 					<div id="scaleform-position">
+						<div class="tooltip">
+							<div class="tooltip-title">Scaleform position</div>
+							<div class="tooltip-para">The XYZ coordinates where the scaleform will be drawn.</div>
+						</div>
 						<i class="fas fa-map-marker-alt"></i>
 						<input id="scaleform-position-x" type="number" placeholder="x" class="scaleform-setting" min="-16000" max="16000" step="0.01">
 						<input id="scaleform-position-y" type="number" placeholder="y" class="scaleform-setting" min="-16000" max="16000" step="0.01">
 						<input id="scaleform-position-z" type="number" placeholder="z" class="scaleform-setting" min="-16000" max="16000" step="0.01">
 					</div>
 					<div id="scaleform-rotation">
+						<div class="tooltip">
+							<div class="tooltip-title">Scaleform rotation</div>
+							<div class="tooltip-para">The XYZ rotation of the scaleform.</div>
+						</div>
 						<i class="fas fa-compass"></i>
 						<input id="scaleform-rotation-x" type="number" placeholder="x" class="scaleform-setting" min="0" max="360" step="0.1">
 						<input id="scaleform-rotation-y" type="number" placeholder="y" class="scaleform-setting" min="0" max="360" step="0.1">
 						<input id="scaleform-rotation-z" type="number" placeholder="z" class="scaleform-setting" min="0" max="360" step="0.1">
 					</div>
 					<div id="scaleform-scale">
+						<div class="tooltip">
+							<div class="tooltip-title">Scaleform scale</div>
+							<div class="tooltip-para">The XYZ scale of the scaleform.</div>
+						</div>
 						<i class="fas fa-arrows-alt"></i>
 						<input id="scaleform-scale-x" type="number" placeholder="x" class="scaleform-setting" min="0" max="1" step="0.01" value="0.1">
 						<input id="scaleform-scale-y" type="number" placeholder="y" class="scaleform-setting" min="0" max="1" step="0.01" value="0.05">
@@ -133,9 +298,17 @@
 					</div>
 					<div id="scaleform-auto">
 						<button id="scaleform-auto-my-position">
+							<div class="tooltip">
+								<div class="tooltip-title">My position</div>
+								<div class="tooltip-para">Set the scaleform position and rotation to your current position and rotation.</div>
+							</div>
 							<i class="fas fa-street-view"></i>
 						</button>
 						<button id="scaleform-auto-entity">
+							<div class="tooltip">
+								<div class="tooltip-title">Entity position</div>
+								<div class="tooltip-param">Set the scaleform position and rotation to the position and rotation of the selected media player entity.</div>
+							</div>
 							<i class="fas fa-cube"></i>
 						</button>
 					</div>
@@ -190,6 +363,10 @@
 				</div>
 			</div>
 			<div id="base-volume-container">
+				<div class="tooltip">
+					<div class="tooltip-title">Personal volume</div>
+					<div class="tooltip-para">Sets your personal base volume for all media players.</div>
+				</div>
 				<i class="fas fa-volume-off"></i>
 				<div id="base-volume">100</div>
 				<input id="set-base-volume" type="range" min="0" max="100" step="1" value="100">

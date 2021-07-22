@@ -1160,10 +1160,15 @@ function updateUi(data) {
 
 function showUi() {
 	document.getElementById('ui').style.display = 'flex';
+
+	document.getElementById('tooltips').style.display = 'block';
 }
 
 function hideUi() {
 	document.getElementById('ui').style.display = 'none';
+
+	document.getElementById('tooltips').style.display = 'none';
+	document.querySelectorAll('.tooltip').forEach(hideTooltip);
 }
 
 function toggleStatus() {
@@ -1600,8 +1605,11 @@ function resetPlayers() {
 }
 
 function showTooltip(tooltip, event) {
+	document.querySelectorAll('.tooltip').forEach(hideTooltip);
+
 	tooltip.style.top = event.pageY + 'px';
 	tooltip.style.left = event.pageX + 'px';
+
 	tooltip.style.display = 'block';
 }
 
@@ -1912,6 +1920,9 @@ window.addEventListener('load', () => {
 		sendMessage('fix');
 	});
 
+	let tooltips = document.createElement('div');
+	tooltips.id = 'tooltips';
+
 	document.querySelectorAll(".tooltip").forEach(tooltip => {
 		tooltip.parentNode.addEventListener('mouseover', function(event) {
 			if (tooltipsEnabled) {
@@ -1926,8 +1937,10 @@ window.addEventListener('load', () => {
 
 		tooltip.onmouseover = () => hideTooltip(tooltip);
 
-		document.body.appendChild(tooltip);
+		tooltips.appendChild(tooltip);
 	});
+
+	document.body.appendChild(tooltips);
 
 	document.getElementById('toggle-tips').addEventListener('input', function(event) {
 		tooltipsEnabled = this.checked;

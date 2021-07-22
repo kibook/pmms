@@ -653,6 +653,10 @@ Config.presets = {
 -- 		If true, then this scaleform is not associated with an object,
 -- 		and can be used by itself.
 --
+-- 	attached
+-- 		If true, the scaleform's position and rotation are relative
+-- 		to the entity it is associated with (when not standalone).
+--
 Config.defaultMediaPlayers = {
 	--[[
 	{
@@ -681,7 +685,8 @@ Config.defaultMediaPlayers = {
 			position = vector3(153.9, -988.7, 36.9),
 			rotation = vector3(0, 0, 20),
 			scale = vector3(0.6, 0.344, 0),
-			standalone = false
+			standalone = false,
+			attached = false
 		}
 	}
 	]]

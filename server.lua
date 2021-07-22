@@ -351,6 +351,7 @@ local function loadSettings()
 				Config.models[model].diffRoomVolume = info.diffRoomVolume
 				Config.models[model].range = info.range
 				Config.models[model].isVehicle = info.isVehicle
+				Config.models[model].scaleform = info.scaleform
 			else
 				Config.models[model] = info
 			end

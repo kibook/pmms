@@ -1187,6 +1187,7 @@ function getScaleformSettings(standalone) {
 	var scaleXInput = document.getElementById('scaleform-scale-x');
 	var scaleYInput = document.getElementById('scaleform-scale-y');
 	var scaleZInput = document.getElementById('scaleform-scale-z');
+	var attachedInput = document.getElementById('scaleform-attached');
 
 	var name = nameInput.value;
 	var posX = parseFloat(posXInput.value);
@@ -1198,6 +1199,7 @@ function getScaleformSettings(standalone) {
 	var scaleX = parseFloat(scaleXInput.value);
 	var scaleY = parseFloat(scaleYInput.value);
 	var scaleZ = parseFloat(scaleZInput.value);
+	var attached = attachedInput.checked;
 
 	if (name == '') {
 		name = null;
@@ -1256,7 +1258,8 @@ function getScaleformSettings(standalone) {
 			y: scaleY,
 			z: scaleZ
 		},
-		standalone: standalone
+		standalone: standalone,
+		attached: attached
 	};
 }
 
@@ -1454,6 +1457,7 @@ function setMediaPlayerDefaults(handle) {
 			document.getElementById('scaleform-scale-x').value = scaleform.scale.x;
 			document.getElementById('scaleform-scale-y').value = scaleform.scale.y;
 			document.getElementById('scaleform-scale-z').value = scaleform.scale.z;
+			document.getElementById('scaleform-attached').checked = scaleform.attached;
 
 			document.getElementById('scaleform').checked = true;
 			document.getElementById('scaleform-settings').style.display = 'grid';
@@ -1855,6 +1859,7 @@ window.addEventListener('load', () => {
 			document.getElementById('scaleform-rotation-x').value = data.rotation.x;
 			document.getElementById('scaleform-rotation-y').value = data.rotation.y;
 			document.getElementById('scaleform-rotation-z').value = data.rotation.z;
+			document.getElementById('scaleform-attached').checked = false;
 		});
 	});
 
@@ -1875,6 +1880,7 @@ window.addEventListener('load', () => {
 			document.getElementById('scaleform-rotation-x').value = data.rotation.x;
 			document.getElementById('scaleform-rotation-y').value = data.rotation.y;
 			document.getElementById('scaleform-rotation-z').value = data.rotation.z;
+			document.getElementById('scaleform-attached').checked = false;
 		});
 	});
 
@@ -1890,6 +1896,15 @@ window.addEventListener('load', () => {
 		sendMessage('setScaleform', {
 			handle: handle,
 			scaleform: scaleform
+		}).then(resp => resp.json()).then(resp => {
+			if (resp.scaleform) {
+				document.getElementById('scaleform-position-x').value = resp.scaleform.position.x;
+				document.getElementById('scaleform-position-y').value = resp.scaleform.position.y;
+				document.getElementById('scaleform-position-z').value = resp.scaleform.position.z;
+				document.getElementById('scaleform-rotation-x').value = resp.scaleform.rotation.x;
+				document.getElementById('scaleform-rotation-y').value = resp.scaleform.rotation.y;
+				document.getElementById('scaleform-rotation-z').value = resp.scaleform.rotation.z;
+			}
 		});
 	}));
 

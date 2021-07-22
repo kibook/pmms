@@ -338,6 +338,10 @@ mediaelementwrapper > video {
 	grid-column: 2;
 }
 
+#scaleform-attached-container {
+	text-align: center;
+}
+
 .scaleform-setting {
 	text-align: center;
 }

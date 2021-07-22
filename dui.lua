@@ -240,8 +240,8 @@ function DuiBrowser:renderFrame(drawSprite)
 		self:enableScaleform()
 
 		DrawScaleformMovie_3dSolid(self.sfHandle,
-			self.scaleform.position,
-			self.scaleform.rotation,
+			self.scaleform.finalPosition or self.scaleform.position,
+			self.scaleform.finalRotation or self.scaleform.rotation,
 			2.0, 2.0, 1.0,
 			self.scaleform.scale,
 			2)

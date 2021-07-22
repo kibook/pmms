@@ -1136,17 +1136,42 @@ end)
 RegisterNUICallback("setScaleform", function(data, cb)
 	local handle = getSvHandle(data.handle)
 
+	local response = {}
+
 	if handle and mediaPlayers[handle] then
 		data.scaleform.position = ToVector3(data.scaleform.position)
 		data.scaleform.rotation = ToVector3(data.scaleform.rotation)
 		data.scaleform.scale = ToVector3(data.scaleform.scale)
+
+		if mediaPlayers[handle].scaleform and data.scaleform.attached ~= mediaPlayers[handle].scaleform.attached then
+			if data.scaleform.attached then
+				data.scaleform.position = vector3(0, 0, 0)
+				data.scaleform.rotation = vector3(0, 0, 0)
+			elseif mediaPlayers[handle].scaleform.attached then
+				data.scaleform.position = mediaPlayers[handle].scaleform.finalPosition
+				data.scaleform.rotation = mediaPlayers[handle].scaleform.finalRotation
+			end
+
+			response.scaleform = {
+				position = {
+					x = data.scaleform.position.x,
+					y = data.scaleform.position.y,
+					z = data.scaleform.position.z
+				},
+				rotation = {
+					x = data.scaleform.rotation.x,
+					y = data.scaleform.rotation.y,
+					z = data.scaleform.rotation.z
+				}
+			}
+		end
 
 		TriggerServerEvent("pmms:setScaleform", handle, data.scaleform)
 
 		mediaPlayers[handle].scaleform = data.scaleform
 	end
 
-	cb {}
+	cb(response)
 end)
 
 RegisterNUICallback("delete", function(data, cb)
@@ -1484,6 +1509,28 @@ Citizen.CreateThread(function()
 					sameRoom = true
 				else
 					sameRoom = false
+				end
+
+				if info.scaleform and info.scaleform.attached then
+					if entityExists and NetworkGetEntityIsNetworked(entity) then
+						local mediaRot = GetEntityRotation(entity, 0)
+
+						local r = math.rad(mediaRot.z)
+						local cosr = math.cos(r)
+						local sinr = math.sin(r)
+
+						local posX = (info.scaleform.position.x * cosr - info.scaleform.position.y * sinr) + mediaPos.x
+						local posY = (info.scaleform.position.y * cosr + info.scaleform.position.x * sinr) + mediaPos.y
+						local posZ = info.scaleform.position.z + mediaPos.z
+
+						info.scaleform.finalPosition = vector3(posX, posY, posZ)
+
+						-- FIXME: This really only works for the Z rotation (yaw)
+						info.scaleform.finalRotation = -(mediaRot + info.scaleform.rotation)
+					elseif info.scaleform.finalPosition and info.scaleform.finalRotation then
+						info.scaleform.finalPosition = nil
+						info.scaleform.finalRotation = nil
+					end
 				end
 
 				data = {

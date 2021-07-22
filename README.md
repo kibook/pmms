@@ -28,7 +28,7 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from entiti
 |-|-|-|
 |[![Attenuation Example](https://i.imgur.com/BTkglVYm.jpg)](https://imgur.com/BTkglVY)| [![Phonograph Filter](https://i.imgur.com/L8sWpOCm.jpg)](https://imgur.com/L8sWpOC) | [![Video](https://i.imgur.com/2jRYlSem.jpg)](https://imgur.com/2jRYlSe) |
 |[![FiveM basic audio](https://i.imgur.com/CofS0VPm.jpg)](https://imgur.com/CofS0VP)|[![FiveM DUI example](https://i.imgur.com/ndZwPvDm.jpg)](https://imgur.com/ndZwPvD)|[![DUI render target proximity](https://i.imgur.com/m2KddI6m.jpg)](https://imgur.com/m2KddI6)|
-| |[![Audio Visualizations](https://i.imgur.com/4E42m4tm.jpg)](https://imgur.com/4E42m4t)| |
+|[![Audio Visualizations](https://i.imgur.com/4E42m4tm.jpg)](https://imgur.com/4E42m4t)|[![Vehicle modes](https://i.imgur.com/gkx5oRym.jpg)](https://imgur.com/gkx5oRy)|[![Scaleform adjustment](https://i.imgur.com/AcAiGzzm.jpg)](https://imgur.com/AcAiGzz)|
 
 # Installing
 

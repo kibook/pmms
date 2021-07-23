@@ -1,7 +1,7 @@
 Config = {}
 
 -- Whether the game is RDR2 or GTA V
-Config.isRDR = GetGameName and GetGameName() == "redm" or GetConvar("gamename", "gta5") == "rdr3"
+Config.isRDR = IsDuplicityVersion() and GetConvar("gamename", "gta5") == "rdr3" or not TerraingridActivate
 
 -- Max distance at which inactive media player entities appear
 Config.maxDiscoveryDistance = 30.0

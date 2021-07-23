@@ -266,6 +266,10 @@ option {
 	display: contents;
 }
 
+#preset {
+	font-family: Helvetica, FontAwesome;
+}
+
 #main-advanced-settings {
 	display: grid;
 	grid-template-columns: repeat(15, max-content);

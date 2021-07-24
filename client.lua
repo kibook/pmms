@@ -637,7 +637,7 @@ local function loadSettings()
 		toggleStatus()
 	end
 
-	tooltipsEnabled = GetResourceKvpInt("tooltipsEnabled") ~= 0
+	tooltipsEnabled = GetResourceKvpString("tooltipsEnabled") ~= "no"
 end
 
 local function enableVideo(handle)
@@ -1235,7 +1235,7 @@ end)
 RegisterNUICallback("toggleTips", function(data, cb)
 	tooltipsEnabled = data.enabled
 
-	SetResourceKvpInt("tooltipsEnabled", tooltipsEnabled and 1 or 0)
+	SetResourceKvp("tooltipsEnabled", tooltipsEnabled and "yes" or "no")
 
 	cb {}
 end)

@@ -569,6 +569,14 @@ local function removeEntityPermanently(coords)
 	return data
 end
 
+local function getMediaPlayerInfo(handle)
+	return mediaPlayers[handle]
+end
+
+local function getAllMediaPlayers()
+	return mediaPlayers
+end
+
 exports("startByNetworkId", startMediaPlayerByNetworkId)
 exports("startByCoords", startMediaPlayerByCoords)
 exports("startScaleform", startMediaPlayerScaleform)
@@ -586,6 +594,8 @@ exports("removeModel", removeModel)
 exports("removeModelPermanently", removeModelPermanently)
 exports("removeEntity", removeEntity)
 exports("removeEntityPermanently", removeEntityPermanently)
+exports("getMediaPlayerInfo", getMediaPlayerInfo)
+exports("getAllMediaPlayers", getAllMediaPlayers)
 
 AddEventHandler("pmms:start", function(handle, options)
 	if not (options and options.url) then

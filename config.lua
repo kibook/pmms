@@ -820,3 +820,6 @@ Config.allowPlayingFromVehicles = not Config.isRDR
 
 -- Default gfx used for scaleforms
 Config.defaultScaleformName = "pmms_texture_renderer"
+
+-- Automatically disable static emitters when media is playing
+Config.autoDisableStaticEmitters = true

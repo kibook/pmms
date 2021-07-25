@@ -9,6 +9,7 @@ local statusIsShown = false
 local uiIsOpen = false
 local syncIsEnabled = true
 local tooltipsEnabled = true
+local staticEmittersDisabled = false
 
 local permissions = {}
 permissions.interact = false
@@ -784,6 +785,18 @@ local function deleteMediaPlayer(entity)
 	DeleteEntity(entity)
 end
 
+local function disableStaticEmitters()
+	for _, emitter in ipairs(StaticEmitters) do
+		SetStaticEmitterEnabled(emitter.name, false)
+	end
+end
+
+local function restoreStaticEmitters()
+	for _, emitter in ipairs(StaticEmitters) do
+		SetStaticEmitterEnabled(emitter.name, emitter.enabled)
+	end
+end
+
 exports("enableEntity", enableEntity)
 exports("disableEntity", disableEntity)
 exports("createMediaPlayer", createMediaPlayer)
@@ -1414,6 +1427,10 @@ AddEventHandler("onResourceStop", function(resource)
 end)
 
 Citizen.CreateThread(function()
+	if Config.autoDisableStaticEmitters then
+		restoreStaticEmitters()
+	end
+
 	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix, "Open the media player control panel.")
 
 	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "play", "Play something on the closest media player.", {
@@ -1596,7 +1613,21 @@ Citizen.CreateThread(function()
 			items[1].duiBrowser:draw()
 		end
 
-		Citizen.Wait(canWait and 1000 or 0)
+		if canWait then
+			if Config.autoDisableStaticEmitters and staticEmittersDisabled then
+				restoreStaticEmitters()
+				staticEmittersDisabled = false
+			end
+
+			Citizen.Wait(1000)
+		else
+			if Config.autoDisableStaticEmitters and not staticEmittersDisabled then
+				disableStaticEmitters()
+				staticEmittersDisabled = true
+			end
+
+			Citizen.Wait(0)
+		end
 	end
 end)
 

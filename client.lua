@@ -230,6 +230,26 @@ local function startMediaPlayer(handle, options)
 		options.offset = "0"
 	end
 
+	options.volume = Clamp(options.volume, 0, 100, 100)
+	options.videoSize = Clamp(options.videoSize, 10, 100, Config.defaultVideoSize)
+
+	if options.filter == nil then
+		options.filter = Config.enableFilterByDefault
+	end
+
+	if options.attenuation then
+		options.attenuation.sameRoom = Clamp(options.attenuation.sameRoom, 0.0, 10.0, Config.defaultSameRoomAttenuation)
+		options.attenuation.diffRoom = Clamp(options.attenuation.diffRoom, 0.0, 10.0, Config.defaultDiffRoomAttenuation)
+	else
+		options.attenuation = {
+			sameRoom = Config.defaultSameRoomAttenuation,
+			diffRoom = Config.defaultDiffRoomAttenuation
+		}
+	end
+
+	options.diffRoomVolume = Clamp(options.diffRoomVolume, 0.0, 1.0, Config.defaultDiffRoomVolume)
+	options.range = Clamp(options.range, 0, Config.maxRange, Config.defaultRange)
+
 	if NetworkDoesNetworkIdExist(handle) then
 		local entity = NetworkGetEntityFromNetworkId(handle)
 
@@ -1441,18 +1461,7 @@ Citizen.CreateThread(function()
 
 	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "play", "Play something on the closest media player.", {
 		{name = "url", help = "URL or preset name of music to play. Use \"random\" to play a random preset."},
-		{name = "filter", help = "0 = no filter, 1 = add immersive filter"},
-		{name = "loop", help = "0 = play once, 1 = loop"},
-		{name = "time", help = "Time to start playing at. Specify in seconds (e.g., 120) or hh:mm:ss (e.g., 00:02:00)."},
-		{name = "lock", help = "0 = unlocked, 1 = locked"},
-		{name = "video", help = "0 = hide video, 1 = show video"},
-		{name = "size", help = "Video size"},
-		{name = "mute", help = "0 = unmuted, 1 = muted"},
-		{name = "sameRoom", help = "Sound attenuation multiplier when in the same room"},
-		{name = "diffRoom", help = "Sound attenuation multiplier when in a different room"},
-		{name = "volumeDiff", help = "Difference in volume between the same and different rooms. Default: " .. Config.defaultDiffRoomVolume},
-		{name = "range", help = "Maximum range of the media player"},
-		{name = "visualization", help = "Audio visualization type"}
+		{name = "options", help = "-filter, -nofilter, -loop, -offset, -lock, -video, -size <value>, -mute, -sra <value>, -dra <value>, -drv <value>, -range <value>, -veh, -notveh, -visualization <value>, -volume <value>"}
 	})
 
 	TriggerEvent("chat:addSuggestion", "/" .. Config.commandPrefix .. Config.commandSeparator .. "pause", "Pause the closest media player.")

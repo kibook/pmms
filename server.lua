@@ -1120,27 +1120,88 @@ RegisterCommand(Config.commandPrefix, function(source, args, raw)
 	TriggerClientEvent("pmms:showControls", source)
 end, true)
 
+local function parseOptions(args, requiredArguments, fn)
+	local i = 1
+
+	while i <= #args do
+		local option
+		local argument
+
+		if args[i]:sub(1, 1) == "-" then
+			option = args[i]:sub(2)
+
+			if requiredArguments[option] then
+				argument = args[i + 1]
+				i = i + 1
+			end
+		else
+			argument = args[i]
+		end
+
+		fn(option, argument)
+
+		i = i + 1
+	end
+end
+
 RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "play", function(source, args, raw)
 	if #args > 0 then
 		local options = {}
 
-		options.url = args[1]
-		options.filter = args[2] and args[2] == "1"
-		options.loop = args[3] == "1"
-		options.offset = args[4]
-		options.locked = args[5] == "1"
-		options.video = args[6] == "1"
-		options.videoSize = tonumber(args[7]) or Config.defaultVideoSize
-		options.muted = args[8] == "1"
-		options.attenuation = {}
-		options.attenuation.sameRoom =  tonumber(args[9]) or Config.defaultSameRoomAttenuation
-		options.attenuation.diffRoom = tonumber(args[10]) or Config.defaultDiffRoomAttenuation
-		options.diffRoomVolume = tonumber(args[11]) or Config.defaultDiffRoomVolume
-		options.range = tonumber(args[12]) or Config.defaultRange
-		options.isVehicle = args[13] and args[13] == "1"
-		options.visualization = args[14]
+		local requiredArguments = {
+			["offset"] = true,
+			["size"] = true,
+			["sra"] = true,
+			["dra"] = true,
+			["drv"] = true,
+			["range"] = true,
+			["visualization"] = true,
+			["volume"] = true
+		}
 
-		options.volume = 100
+		parseOptions(args, requiredArguments, function(option, argument)
+			if option == "filter" then
+				options.filter = true
+			elseif option == "nofilter" then
+				options.filter = false
+			elseif option == "loop" then
+				options.loop = true
+			elseif option == "offset" then
+				options.offset = argument
+			elseif option == "lock" then
+				options.locked = true
+			elseif option == "video" then
+				options.video = true
+			elseif option == "size" then
+				options.videoSize = tonumber(argument)
+			elseif option == "mute" then
+				options.muted = true
+			elseif option == "sra" then
+				if not options.attenuation then
+					options.attenuation = {}
+				end
+				options.attenuation.sameRoom = tonumber(argument)
+			elseif option == "dra" then
+				if not options.attenuation then
+					options.attenuation = {}
+				end
+				options.attenuation.diffRoom = tonumber(argument)
+			elseif option == "drv" then
+				options.diffRoomVolume = tonumber(argument)
+			elseif option == "range" then
+				options.range = tonumber(argument)
+			elseif option == "veh" then
+				options.vehicle = true
+			elseif option == "notveh" then
+				options.vehicle = false
+			elseif option == "visualization" then
+				options.visualization = argument
+			elseif option == "volume" then
+				options.volume = tonumber(argument)
+			elseif not option then
+				options.url = argument
+			end
+		end)
 
 		TriggerClientEvent("pmms:startClosestMediaPlayer", source, options)
 	else

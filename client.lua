@@ -10,6 +10,7 @@ local uiIsOpen = false
 local syncIsEnabled = true
 local tooltipsEnabled = true
 local staticEmittersDisabled = false
+local disableIdleCam = false
 
 local permissions = {}
 permissions.interact = false
@@ -795,6 +796,11 @@ local function restoreStaticEmitters()
 	for _, emitter in ipairs(StaticEmitters) do
 		SetStaticEmitterEnabled(emitter.name, emitter.enabled)
 	end
+end
+
+local function invalidateIdleCams()
+	InvalidateIdleCam()
+	InvalidateVehicleIdleCam()
 end
 
 exports("enableEntity", enableEntity)
@@ -1619,11 +1625,20 @@ Citizen.CreateThread(function()
 				staticEmittersDisabled = false
 			end
 
+			if disableIdleCam then
+				disableIdleCam = false
+			end
+
 			Citizen.Wait(1000)
 		else
 			if Config.autoDisableStaticEmitters and not staticEmittersDisabled then
 				disableStaticEmitters()
 				staticEmittersDisabled = true
+			end
+
+			if Config.autoDisableIdleCam and not disableIdleCam then
+				invalidateIdleCams()
+				disableIdleCam = true
 			end
 
 			Citizen.Wait(0)
@@ -1658,5 +1673,14 @@ Citizen.CreateThread(function()
 		end
 
 		Citizen.Wait(1000)
+	end
+end)
+
+Citizen.CreateThread(function()
+	while true do
+		if disableIdleCam then
+			invalidateIdleCams()
+		end
+		Citizen.Wait(10000)
 	end
 end)

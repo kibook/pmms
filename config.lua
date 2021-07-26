@@ -823,3 +823,6 @@ Config.defaultScaleformName = "pmms_texture_renderer"
 
 -- Automatically disable static emitters when media is playing
 Config.autoDisableStaticEmitters = true
+
+-- Automatically disable the idle cam when media is playing
+Config.autoDisableIdleCam = true

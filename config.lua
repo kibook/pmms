@@ -75,6 +75,9 @@ Config.models = {
 	[`prop_boombox_01`] = {
 		label = "Boombox"
 	},
+	[`prop_tapeplayer_01`] = {
+		label = "Tape Player"
+	},
 	[`bkr_prop_clubhouse_jukebox_01a`] = {
 		label = "Jukebox"
 	},

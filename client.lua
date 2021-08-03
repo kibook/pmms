@@ -819,8 +819,12 @@ local function restoreStaticEmitters()
 end
 
 local function invalidateIdleCams()
-	InvalidateIdleCam()
-	InvalidateVehicleIdleCam()
+	if Config.isRDR then
+		Citizen.InvokeNative(0x634F4A0562CF19B8)
+	else
+		InvalidateIdleCam()
+		InvalidateVehicleIdleCam()
+	end
 end
 
 exports("enableEntity", enableEntity)

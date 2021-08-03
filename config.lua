@@ -829,3 +829,6 @@ Config.autoDisableStaticEmitters = true
 
 -- Automatically disable the idle cam when media is playing
 Config.autoDisableIdleCam = true
+
+-- Automatically disable a vehicle's radio when media is playing on it
+Config.autoDisableVehicleRadio = true

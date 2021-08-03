@@ -1663,6 +1663,20 @@ Citizen.CreateThread(function()
 			if info.coords and not (info.scaleform and info.scaleform.standalone) then
 				getLocalMediaPlayer(info.coords, myPos, info.range)
 			end
+
+			if not Config.isRDR and Config.autoDisableVehicleRadio then
+				local entity
+
+				if info.coords then
+					entity = localMediaPlayers[handle]
+				elseif NetworkDoesNetworkIdExist(handle) then
+					entity = NetworkGetEntityFromNetworkId(handle)
+				end
+
+				if doesEntityExist(entity) and IsEntityAVehicle(entity) then
+					SetVehRadioStation(entity, "OFF")
+				end
+			end
 		end
 
 		for _, mediaPlayer in ipairs(Config.defaultMediaPlayers) do
@@ -1690,6 +1704,7 @@ Citizen.CreateThread(function()
 		if disableIdleCam then
 			invalidateIdleCams()
 		end
+
 		Citizen.Wait(10000)
 	end
 end)

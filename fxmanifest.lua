@@ -5,6 +5,7 @@ rdr3_warning "I acknowledge that this is a prerelease build of RedM, and I am aw
 name "pmms"
 description "FiveM and RedM syncronized media player"
 author "kibukj"
+repository "https://github.com/kibook/pmms"
 
 shared_scripts {
 	"config.lua",

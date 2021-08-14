@@ -206,7 +206,8 @@ function initPlayer(id, handle, options) {
 			hideLoadingIcon();
 
 			sendMessage('initError', {
-				url: options.url
+				url: options.url,
+				message: media.error.message
 			});
 
 			media.remove();
@@ -225,7 +226,8 @@ function initPlayer(id, handle, options) {
 				hideLoadingIcon();
 
 				sendMessage('playError', {
-					url: options.url
+					url: options.url,
+					message: media.error.message
 				});
 
 				if (!media.pmms.initialized) {

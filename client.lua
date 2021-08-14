@@ -878,12 +878,12 @@ RegisterNUICallback("init", function(data, cb)
 end)
 
 RegisterNUICallback("initError", function(data, cb)
-	TriggerEvent("pmms:error", "Error loading " .. data.url)
+	TriggerEvent("pmms:error", "Error loading " .. data.url .. ": " .. data.message)
 	cb({})
 end)
 
 RegisterNUICallback("playError", function(data, cb)
-	TriggerEvent("pmms:error", "Error playing " .. data.url)
+	TriggerEvent("pmms:error", "Error playing " .. data.url .. ": " .. data.message)
 	cb({})
 end)
 

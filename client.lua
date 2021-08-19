@@ -15,6 +15,7 @@ local disableIdleCam = false
 local permissions = {}
 permissions.interact = false
 permissions.anyEntity = false
+permissions.customUrl = false
 permissions.anyUrl = false
 permissions.manage = false
 

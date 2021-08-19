@@ -832,3 +832,10 @@ Config.autoDisableIdleCam = true
 
 -- Automatically disable a vehicle's radio when media is playing on it
 Config.autoDisableVehicleRadio = true
+
+-- Allowed URL patterns for players without pmms.anyUrl
+Config.allowedUrls = {
+	"^https?://w?w?w?%.?youtube.com/.*$",
+	"^https?://w?w?w?%.?youtu.be/.*$",
+	"^https?://w?w?w?%.?twitch.tv/.*$"
+}

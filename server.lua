@@ -57,6 +57,16 @@ local function removeFromQueue(handle, index)
 	table.remove(mediaPlayers[handle].queue, index)
 end
 
+local function isUrlAllowed(url)
+	for _, pattern in ipairs(Config.allowedUrls) do
+		if url:match(pattern) then
+			return true
+		end
+	end
+
+	return false
+end
+
 local function addMediaPlayer(handle, options)
 	if mediaPlayers[handle] then
 		return
@@ -640,10 +650,14 @@ AddEventHandler("pmms:start", function(handle, options)
 			options.url    = Config.presets[options.url].url
 
 			TriggerClientEvent("pmms:start", source, handle, options)
-		elseif IsPlayerAceAllowed(source, "pmms.anyUrl") then
-			options.title = false
+		elseif IsPlayerAceAllowed(source, "pmms.customUrl") then
+			if IsPlayerAceAllowed(source, "pmms.anyUrl") or isUrlAllowed(options.url) then
+				options.title = false
 
-			TriggerClientEvent("pmms:start", source, handle, options)
+				TriggerClientEvent("pmms:start", source, handle, options)
+			else
+				errorMessage(source, "You do not have permission to play the specified URL")
+			end
 		else
 			errorMessage(source, "You must select from one of the pre-defined songs (" .. Config.commandPrefix .. Config.commandSeparator .. "presets)")
 		end
@@ -1110,6 +1124,7 @@ AddEventHandler("pmms:loadPermissions", function()
 
 	permissions.interact  = IsPlayerAceAllowed(source, "pmms.interact")
 	permissions.anyEntity = IsPlayerAceAllowed(source, "pmms.anyEntity")
+	permissions.customUrl = IsPlayerAceAllowed(source, "pmms.customUrl")
 	permissions.anyUrl    = IsPlayerAceAllowed(source, "pmms.anyUrl")
 	permissions.manage    = IsPlayerAceAllowed(source, "pmms.manage")
 

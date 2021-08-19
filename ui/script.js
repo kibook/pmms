@@ -957,7 +957,7 @@ function updateUi(data) {
 		var presetKeys = Object.keys(presets).sort();
 
 		if (presetKeys.length > 0) {
-			if (data.permissions.anyUrl) {
+			if (data.permissions.customUrl) {
 				presetSelect.innerHTML = '<option value="">&#xf0c1; Custom URL</option>';
 			} else {
 				presetSelect.innerHTML = '';
@@ -1134,7 +1134,7 @@ function updateUi(data) {
 			}
 		}
 
-		if (data.permissions.anyUrl) {
+		if (data.permissions.customUrl) {
 			urlInput.style.display = 'inline-block';
 			document.getElementById('filter-container').style.display = 'inline-block';
 		} else {

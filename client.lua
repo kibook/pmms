@@ -591,6 +591,10 @@ end
 local function createMediaPlayerEntity(options, networked)
 	local model = options.model or Config.defaultModel
 
+	if type(model) == "string" then
+		model = GetHashKey(model)
+	end
+
 	if not IsModelInCdimage(model) then
 		print("Invalid model: " .. tostring(model))
 		return

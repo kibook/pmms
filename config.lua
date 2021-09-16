@@ -75,6 +75,9 @@ Config.models = {
 	[`prop_boombox_01`] = {
 		label = "Boombox"
 	},
+	[`prop_portable_hifi_01`] = {
+		label = "Boombox"
+	},
 	[`prop_tapeplayer_01`] = {
 		label = "Tape Player"
 	},

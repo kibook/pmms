@@ -1136,9 +1136,11 @@ function updateUi(data) {
 
 		if (data.permissions.customUrl) {
 			urlInput.style.display = 'inline-block';
+			urlInput.parentNode.style.pointerEvents = null;
 			document.getElementById('filter-container').style.display = 'inline-block';
 		} else {
 			urlInput.style.display = 'none';
+			urlInput.parentNode.style.pointerEvents = 'none';
 			document.getElementById('filter-container').style.display = 'none';
 		}
 

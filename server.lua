@@ -1326,6 +1326,8 @@ RegisterCommand(Config.commandPrefix .. Config.commandSeparator .. "refresh_perm
 	TriggerClientEvent("pmms:refreshPermissions", -1)
 end, true)
 
+SetHttpHandler(exports.httpmanager:createHttpHandler())
+
 Citizen.CreateThread(function()
 	loadSettings()
 

@@ -7,6 +7,8 @@ description "FiveM and RedM syncronized media player"
 author "kibukj"
 repository "https://github.com/kibook/pmms"
 
+dependency "httpmanager" -- https://github.com/kibook/httpmanager
+
 shared_scripts {
 	"config.lua",
 	"common.lua"

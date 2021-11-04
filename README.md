@@ -32,9 +32,15 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from entiti
 |[![FiveM basic audio](https://i.imgur.com/CofS0VPm.jpg)](https://imgur.com/CofS0VP)|[![FiveM DUI example](https://i.imgur.com/ndZwPvDm.jpg)](https://imgur.com/ndZwPvD)|[![DUI render target proximity](https://i.imgur.com/m2KddI6m.jpg)](https://imgur.com/m2KddI6)|
 |[![Audio Visualizations](https://i.imgur.com/4E42m4tm.jpg)](https://imgur.com/4E42m4t)|[![Vehicle modes](https://i.imgur.com/gkx5oRym.jpg)](https://imgur.com/gkx5oRy)|[![Scaleform adjustment](https://i.imgur.com/AcAiGzzm.jpg)](https://imgur.com/AcAiGzz)|
 
+# Dependencies
+
+- [httpmanager](https://github.com/kibook/httpmanager)
+
 # Installing
 
-1. Place the files from this repository in a new folder in your resources directory.
+1. Install all [dependencies](#dependencies).
+
+2. Place the files from this repository in a new folder in your resources directory.
 
    Example: `resources/[local]/pmms`
    
@@ -42,7 +48,7 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from entiti
    > 
    > The name of the resource **must** be in all lowercase in order for it to function properly. This is due to how [NUI callbacks](https://docs.fivem.net/docs/scripting-manual/nui-development/nui-callbacks/) work.
 
-2. Add the following in server.cfg:
+3. Add the following in server.cfg:
    ```
    exec resources/[local]/pmms/permissions.cfg
    start pmms

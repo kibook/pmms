@@ -56,6 +56,24 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from entiti
    
    Adjust as necessary based on where you installed the resource and what you named it.
 
+# Permissions
+
+The default permissions allow members of `group.admin` full access to pmms, while other players will only be able to perform basic interactions with media players and only be able to play preset songs (those defined in `Config.presets` in [config.lua](config.lua)).
+
+To allow all players to be able to play custom URLs, in [permissions.cfg](permissions.cfg), uncomment or add the following line:
+
+```
+add_ace builtin.everyone pmms.customUrl allow
+```
+
+Even with this ace, URLs will be restricted to those allowed by `Config.allowedUrls`, which includes generally safe sites such as YouTube. To allow players to use URLs from other sites, you can either add the appropriate pattern to `Config.allowedUrls`, or uncomment or add the following line to remove the restriction entirely:
+
+```
+add_ace builtin.everyone pmms.anyUrl allow
+```
+
+Keep in mind that media played with pmms is loaded individually by all players, meaning each player will be accessing the URL from their own connection. Therefore, allowing any player to play a random URL can present some risk of exposing players' IP addresses to an attacker playing something from their own web server and logging the connections.
+
 # Commands
 
 > **Note**

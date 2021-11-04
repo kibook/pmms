@@ -9,6 +9,7 @@ var defaultRange = 50;
 var defaultScaleformName = 'pmms_texture_renderer';
 var defaultVideoSize = 30;
 var audioVisualizations = {};
+var currentServerEndpoint = '127.0.0.1:30120';
 
 var tooltipsEnabled = true;
 
@@ -199,10 +200,18 @@ function hideLoadingIcon() {
 	document.getElementById('loading').style.display = 'none';
 }
 
+function resolveUrl(url) {
+	if (url.startsWith('http://') || url.startsWith('https://')) {
+		return url;
+	} else {
+		return 'http://' + currentServerEndpoint + '/pmms/media/' + url;
+	}
+}
+
 function initPlayer(id, handle, options) {
 	var player = document.createElement('video');
 	player.id = id;
-	player.src = options.url;
+	player.src = resolveUrl(options.url);
 	document.body.appendChild(player);
 
 	new MediaElement(id, {
@@ -1663,6 +1672,10 @@ window.addEventListener('load', () => {
 		defaultDiffRoomAttenuation = resp.defaultDiffRoomAttenuation;
 		defaultDiffRoomVolume = resp.defaultDiffRoomVolume;
 		defaultRange = resp.defaultRange;
+
+		if (resp.currentServerEndpoint != undefined) {
+			currentServerEndpoint = resp.currentServerEndpoint;
+		}
 
 		document.getElementById('filter').checked = resp.enableFilterByDefault;
 

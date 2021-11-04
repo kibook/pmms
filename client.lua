@@ -854,14 +854,16 @@ RegisterNUICallback("startup", function(data, cb)
 		defaultScaleformName = Config.defaultScaleformName,
 		defaultVideoSize = Config.defaultVideoSize,
 		audioVisualizations = Config.audioVisualizations,
-		tooltipsEnabled = tooltipsEnabled
+		tooltipsEnabled = tooltipsEnabled,
+		currentServerEndpoint = GetCurrentServerEndpoint()
 	}
 end)
 
 RegisterNUICallback("duiStartup", function(data, cb)
 	cb {
 		isRDR = Config.isRDR,
-		audioVisualizations = Config.audioVisualizations
+		audioVisualizations = Config.audioVisualizations,
+		currentServerEndpoint = GetCurrentServerEndpoint()
 	}
 end)
 

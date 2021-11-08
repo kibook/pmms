@@ -704,13 +704,34 @@ Config.defaultMediaPlayerSpawnDistance = Config.maxRange + 10.0
 -- DUI configuration
 Config.dui = {}
 
+-- DUI page URL configuration
+Config.dui.urls = {}
+
+-- The URL of the DUI page used for HTTPS links.
+--
+-- Most people can just use the default URL. If you do want to host your own
+-- page, there are two options:
+--
+-- 	a. Using GitHub pages:
+-- 		Fork https://github.com/kibook/pmms-dui on GitHub. You will
+-- 		then have a page at https://<your username>.github.io/pmms-dui.
+--
+-- 	b. Using your own web server:
+-- 		Clone https://github.com/kibook/pmms-dui and install on your
+-- 		web server.
+--
+Config.dui.urls.https = "https://kibook.github.io/pmms-dui"
+
+-- The URL of the DUI page used for HTTP links. If left unset, the internal DUI page is used.
+--Config.dui.urls.http = ""
+
 -- The screen width of the DUI browser
 Config.dui.screenWidth = 1280
 
 -- The screen height of the DUI browser.
 Config.dui.screenHeight = 720
 
--- Time to wait on a connection to the DUI server
+-- Time to wait on a connection to the DUI page.
 Config.dui.timeout = 30000
 
 -- Prefix for commands

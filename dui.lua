@@ -52,7 +52,7 @@ function DuiBrowser:waitForConnection()
 	if self.initDone then
 		return true
 	else
-		print(("Failed to initialize DUI browser within %d ms"):format(Config.dui.timeout))
+		print(("Failed to initialize DUI browser: Could not connect to %s within %d ms"):format(self.duiUrl, Config.dui.timeout))
 		return false
 	end
 end
@@ -158,7 +158,7 @@ function DuiBrowser:disable()
 	end
 end
 
-function DuiBrowser:new(mediaPlayerHandle, model, renderTarget, scaleform)
+function DuiBrowser:new(mediaPlayerHandle, model, renderTarget, scaleform, url)
 	local self = Class.new(self)
 
 	if DuiBrowser.initQueue[mediaPlayerHandle] then
@@ -176,8 +176,19 @@ function DuiBrowser:new(mediaPlayerHandle, model, renderTarget, scaleform)
 
 	local thisResource = GetCurrentResourceName()
 
-	local duiUrl = ("http://%s/%s/dui/"):format(GetCurrentServerEndpoint(), thisResource)
-	self.duiObject = CreateDui(duiUrl .. "?resourceName=" .. thisResource, Config.dui.screenWidth, Config.dui.screenHeight)
+	local useHttps = url:sub(1, 8) == "https://"
+
+	if useHttps then
+		self.duiUrl = Config.dui.urls.https
+	else
+		if Config.dui.urls.http then
+			self.duiUrl = Config.dui.urls.http
+		else
+			self.duiUrl = ("http://%s/%s/dui/"):format(GetCurrentServerEndpoint(), thisResource)
+		end
+	end
+
+	self.duiObject = CreateDui(self.duiUrl .. "?resourceName=" .. thisResource, Config.dui.screenWidth, Config.dui.screenHeight)
 	self.duiHandle = GetDuiHandle(self.duiObject)
 
 	if self.renderTarget or self.scaleform then

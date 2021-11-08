@@ -759,7 +759,7 @@ local function sendMediaMessage(handle, coords, data)
 				local ped, listenPos, viewerPos, viewerFov = getListenerAndViewerInfo()
 
 				if #(viewerPos - mediaPos) < (data.range or Config.maxRange) then
-					duiBrowser = DuiBrowser:new(handle, model, renderTarget, scaleform)
+					duiBrowser = DuiBrowser:new(handle, model, renderTarget, scaleform, data.options.url)
 				end
 			end
 		end

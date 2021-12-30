@@ -50,11 +50,9 @@ pmms (Poodle's MultiMedia System) allows players to play music/video from entiti
 
 3. Add the following in server.cfg:
    ```
-   exec resources/[local]/pmms/permissions.cfg
+   exec @pmms/permissions.cfg
    start pmms
    ```
-   
-   Adjust as necessary based on where you installed the resource and what you named it.
 
 # Permissions
 

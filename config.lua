@@ -78,6 +78,12 @@ Config.models = {
 	[`prop_portable_hifi_01`] = {
 		label = "Boombox"
 	},
+	[`prop_ghettoblast_01`] = {
+		label = "Boombox"
+	},
+	[`prop_ghettoblast_02`] = {
+		label = "Boombox"
+	},
 	[`prop_tapeplayer_01`] = {
 		label = "Tape Player"
 	},

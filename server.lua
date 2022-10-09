@@ -684,6 +684,32 @@ AddEventHandler("pmms:init", function(handle, options)
 		return
 	end
 
+	if options.url:find('file://') then
+		errorMessage(source, "You do not have permission to play the specified URL")
+		return
+	end
+
+	if options.url == "random" then
+		options.url = getRandomPreset()
+	end
+
+	if Config.presets[options.url] then
+		options.title  = Config.presets[options.url].title
+		options.filter = Config.presets[options.url].filter or false
+		options.video  = Config.presets[options.url].video or options.visualization ~= nil
+		options.url    = Config.presets[options.url].url
+	elseif IsPlayerAceAllowed(source, "pmms.customUrl") then
+		if IsPlayerAceAllowed(source, "pmms.anyUrl") or isUrlAllowed(options.url) then
+			options.title = false
+		else
+			errorMessage(source, "You do not have permission to play the specified URL")
+			return
+		end
+	else
+		errorMessage(source, "You must select from one of the pre-defined songs (" .. Config.commandPrefix .. Config.commandSeparator .. "presets)")
+		return
+	end
+
 	addMediaPlayer(handle, options)
 end)
 

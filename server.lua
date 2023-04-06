@@ -626,41 +626,46 @@ AddEventHandler("pmms:start", function(handle, options)
 		restrictedHandles[handle] = nil
 	end
 
+	if options.url == "random" then
+		options.url = getRandomPreset()
+	end
+
+	if Config.presets[options.url] then
+		options.title  = Config.presets[options.url].title
+		options.filter = Config.presets[options.url].filter or false
+		options.video  = Config.presets[options.url].video or options.visualization ~= nil
+		options.url    = Config.presets[options.url].url
+	elseif IsPlayerAceAllowed(source, "pmms.customUrl") then
+		if IsPlayerAceAllowed(source, "pmms.anyUrl") or isUrlAllowed(options.url) then
+			options.title = false
+		else
+			errorMessage(source, "You do not have permission to play the specified URL")
+			return
+		end
+	else
+		errorMessage(source, "You must select from one of the pre-defined songs (" .. Config.commandPrefix .. Config.commandSeparator .. "presets)")
+		return
+	end
+
+	if not IsPlayerAceAllowed(source, "pmms.interact") then
+		errorMessage(source, "You do not have permission to play a song on a media player")
+		return
+	end
+
+	if (locked or isLockedDefaultMediaPlayer(handle)) and not IsPlayerAceAllowed(source, "pmms.manage") then
+		errorMessage(source, "You do not have permission to play a song on a locked media player")
+		return
+	end
+	
+	if options:find("file://") then
+		errorMessage(source, "This is not a valid URL")
+		return
+	end
+
 	if mediaPlayers[handle] then
 		addToQueue(handle, source, options)
 	else
-		if not IsPlayerAceAllowed(source, "pmms.interact") then
-			errorMessage(source, "You do not have permission to play a song on a media player")
-			return
-		end
-
-		if (locked or isLockedDefaultMediaPlayer(handle)) and not IsPlayerAceAllowed(source, "pmms.manage") then
-			errorMessage(source, "You do not have permission to play a song on a locked media player")
-			return
-		end
-
-		if options.url == "random" then
-			options.url = getRandomPreset()
-		end
-
-		if Config.presets[options.url] then
-			options.title  = Config.presets[options.url].title
-			options.filter = Config.presets[options.url].filter or false
-			options.video  = Config.presets[options.url].video or options.visualization ~= nil
-			options.url    = Config.presets[options.url].url
-
-			TriggerClientEvent("pmms:start", source, handle, options)
-		elseif IsPlayerAceAllowed(source, "pmms.customUrl") then
-			if IsPlayerAceAllowed(source, "pmms.anyUrl") or isUrlAllowed(options.url) then
-				options.title = false
-
-				TriggerClientEvent("pmms:start", source, handle, options)
-			else
-				errorMessage(source, "You do not have permission to play the specified URL")
-			end
-		else
-			errorMessage(source, "You must select from one of the pre-defined songs (" .. Config.commandPrefix .. Config.commandSeparator .. "presets)")
-		end
+		TriggerClientEvent("pmms:start", source, handle, options)
 	end
 end)
 
@@ -676,6 +681,32 @@ AddEventHandler("pmms:init", function(handle, options)
 
 	if (locked or isLockedDefaultMediaPlayer(handle)) and not IsPlayerAceAllowed(source, "pmms.manage") then
 		errorMessage(source, "You do not have permission to play a song on a locked media players")
+		return
+	end
+
+	if options.url:find('file://') then
+		errorMessage(source, "You do not have permission to play the specified URL")
+		return
+	end
+
+	if options.url == "random" then
+		options.url = getRandomPreset()
+	end
+
+	if Config.presets[options.url] then
+		options.title  = Config.presets[options.url].title
+		options.filter = Config.presets[options.url].filter or false
+		options.video  = Config.presets[options.url].video or options.visualization ~= nil
+		options.url    = Config.presets[options.url].url
+	elseif IsPlayerAceAllowed(source, "pmms.customUrl") then
+		if IsPlayerAceAllowed(source, "pmms.anyUrl") or isUrlAllowed(options.url) then
+			options.title = false
+		else
+			errorMessage(source, "You do not have permission to play the specified URL")
+			return
+		end
+	else
+		errorMessage(source, "You must select from one of the pre-defined songs (" .. Config.commandPrefix .. Config.commandSeparator .. "presets)")
 		return
 	end
 

@@ -1557,19 +1557,22 @@ Citizen.CreateThread(function()
 				if info.scaleform and info.scaleform.attached then
 					if entityExists and NetworkGetEntityIsNetworked(entity) then
 						local mediaRot = GetEntityRotation(entity, 0)
+						local forwardVector, rightVector, upVector = GetEntityMatrix(entity)
 
 						local r = math.rad(mediaRot.z)
 						local cosr = math.cos(r)
 						local sinr = math.sin(r)
 
-						local posX = (info.scaleform.position.x * cosr - info.scaleform.position.y * sinr) + mediaPos.x
-						local posY = (info.scaleform.position.y * cosr + info.scaleform.position.x * sinr) + mediaPos.y
-						local posZ = info.scaleform.position.z + mediaPos.z
+						local offsetX = info.scaleform.position.x - info.scaleform.scale.x * 10
+						local offsetY = info.scaleform.position.y
+						local offsetZ = info.scaleform.position.z + info.scaleform.scale.y * 10
+						local pos = mediaPos + (rightVector * offsetX) + (forwardVector * offsetY) + (upVector * offsetZ)
 
-						info.scaleform.finalPosition = vector3(posX, posY, posZ)
+						info.scaleform.finalPosition = pos
 
 						-- FIXME: This really only works for the Z rotation (yaw)
-						info.scaleform.finalRotation = -(mediaRot + info.scaleform.rotation)
+						info.scaleform.finalRotation = mediaRot + info.scaleform.rotation
+	
 					elseif info.scaleform.finalPosition and info.scaleform.finalRotation then
 						info.scaleform.finalPosition = nil
 						info.scaleform.finalRotation = nil
